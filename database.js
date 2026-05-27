@@ -28,14 +28,21 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS admin_config (
     id          INTEGER PRIMARY KEY CHECK (id = 1),
+    usuario     TEXT NOT NULL DEFAULT 'admin',
     senha_hash  TEXT NOT NULL
   );
 `);
 
-// senha padrão: "admin"  →  sha256("admin")
+// migração: adiciona coluna usuario se não existir (banco já criado sem ela)
+try {
+  db.exec("ALTER TABLE admin_config ADD COLUMN usuario TEXT NOT NULL DEFAULT 'admin'");
+} catch (_) { /* coluna já existe */ }
+
+// credenciais padrão: admin / admin  →  sha256("admin")
 const adminExists = db.prepare('SELECT COUNT(*) AS n FROM admin_config').get();
 if (adminExists.n === 0) {
-  db.prepare('INSERT INTO admin_config (id, senha_hash) VALUES (1, ?)').run(
+  db.prepare('INSERT INTO admin_config (id, usuario, senha_hash) VALUES (1, ?, ?)').run(
+    'admin',
     '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
   );
 }

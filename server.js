@@ -9,19 +9,20 @@ app.use(express.static(__dirname)); // serve index.html
 // ── ADMIN AUTH ────────────────────────────────────────────────────────────
 
 app.post('/api/admin/auth', (req, res) => {
-  const { senha_hash } = req.body;
-  const cfg = db.prepare('SELECT senha_hash FROM admin_config WHERE id = 1').get();
-  if (!cfg || cfg.senha_hash !== senha_hash)
-    return res.status(401).json({ erro: 'Senha incorreta.' });
+  const { usuario, senha_hash } = req.body;
+  const cfg = db.prepare('SELECT usuario, senha_hash FROM admin_config WHERE id = 1').get();
+  if (!cfg || cfg.usuario !== usuario || cfg.senha_hash !== senha_hash)
+    return res.status(401).json({ erro: 'Usuário ou senha incorretos.' });
   res.json({ ok: true });
 });
 
 app.put('/api/admin/senha', (req, res) => {
-  const { senha_hash_atual, senha_hash_nova } = req.body;
-  const cfg = db.prepare('SELECT senha_hash FROM admin_config WHERE id = 1').get();
-  if (!cfg || cfg.senha_hash !== senha_hash_atual)
-    return res.status(401).json({ erro: 'Senha atual incorreta.' });
-  db.prepare('UPDATE admin_config SET senha_hash = ? WHERE id = 1').run(senha_hash_nova);
+  const { usuario_atual, senha_hash_atual, usuario_novo, senha_hash_nova } = req.body;
+  const cfg = db.prepare('SELECT usuario, senha_hash FROM admin_config WHERE id = 1').get();
+  if (!cfg || cfg.usuario !== usuario_atual || cfg.senha_hash !== senha_hash_atual)
+    return res.status(401).json({ erro: 'Usuário ou senha atual incorretos.' });
+  db.prepare('UPDATE admin_config SET usuario = ?, senha_hash = ? WHERE id = 1')
+    .run(usuario_novo || usuario_atual, senha_hash_nova);
   res.json({ ok: true });
 });
 

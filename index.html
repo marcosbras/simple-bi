@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Simple BI</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -19,195 +20,201 @@
       --muted:  #888;
       --border: #dde0e7;
       --bg:     #f0f2f5;
+      --sidebar-w: 220px;
+      --header-h:  50px;
     }
 
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); }
-
-    /* ════ VIEWS ════ */
     .view { min-height: 100vh; }
 
-    /* ════ LOGIN ════ */
+    /* ══ LOGIN ══════════════════════════════════════════════════════════════ */
     #viewLogin {
       background: linear-gradient(135deg, var(--dark) 0%, var(--mid) 50%, var(--blue) 100%);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
+      display: flex; align-items: center; justify-content: center; padding: 24px;
     }
     .login-card {
-      background: #fff;
-      border-radius: 16px;
-      padding: 44px 40px 32px;
-      width: 100%;
-      max-width: 400px;
-      box-shadow: 0 24px 60px rgba(0,0,0,.45);
+      background: #fff; border-radius: 16px; padding: 44px 40px 32px;
+      width: 100%; max-width: 400px; box-shadow: 0 24px 60px rgba(0,0,0,.45);
     }
     .login-logo { text-align: center; margin-bottom: 28px; }
     .logo-mark {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center;
       width: 56px; height: 56px;
       background: linear-gradient(135deg, var(--blue), var(--accent));
-      border-radius: 14px;
-      margin-bottom: 12px;
+      border-radius: 14px; margin-bottom: 12px;
     }
     .logo-mark svg { width: 28px; height: 28px; fill: #fff; }
     .login-logo h1 { font-size: 1.4rem; font-weight: 700; color: var(--dark); }
     .login-logo p  { font-size: .78rem; color: var(--muted); margin-top: 4px; }
 
     .login-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
-    .login-field label {
-      font-size: .7rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .5px; color: #555;
-    }
+    .login-field label { font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #555; }
     .input-wrap { position: relative; display: flex; align-items: center; }
-    .input-wrap svg {
-      position: absolute; left: 11px; width: 16px; height: 16px;
-      color: var(--muted); pointer-events: none;
-    }
+    .input-wrap > svg { position: absolute; left: 11px; width: 16px; height: 16px; color: var(--muted); pointer-events: none; }
     .login-field input,
     .login-field select {
-      width: 100%;
-      border: 1.5px solid var(--border);
-      border-radius: 9px;
-      padding: 10px 12px 10px 36px;
-      font-size: .875rem;
-      color: var(--text);
-      outline: none;
-      background: #fafbfc;
-      transition: border-color .15s, box-shadow .15s;
+      width: 100%; border: 1.5px solid var(--border); border-radius: 9px;
+      padding: 10px 12px 10px 36px; font-size: .875rem; color: var(--text);
+      outline: none; background: #fafbfc; transition: border-color .15s, box-shadow .15s;
       appearance: none;
     }
     .login-field input:focus,
-    .login-field select:focus {
-      border-color: var(--blue);
-      box-shadow: 0 0 0 3px rgba(15,52,96,.1);
-      background: #fff;
-    }
-    .select-arrow {
-      position: absolute; right: 11px; pointer-events: none;
-      color: var(--muted);
-    }
+    .login-field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(15,52,96,.1); background: #fff; }
+    .select-arrow { position: absolute; right: 11px; pointer-events: none; color: var(--muted); }
     .select-arrow svg { width: 14px; height: 14px; }
-
-    .login-error {
-      font-size: .78rem; color: var(--red); font-weight: 600;
-      min-height: 18px; margin-bottom: 8px; text-align: center;
-    }
+    .login-error { font-size: .78rem; color: var(--red); font-weight: 600; min-height: 18px; margin-bottom: 8px; text-align: center; }
     .btn-login {
       width: 100%; padding: 12px;
       background: linear-gradient(135deg, var(--blue) 0%, #1a4a7a 100%);
-      color: #fff; border: none; border-radius: 9px;
-      font-size: .95rem; font-weight: 700; cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      transition: filter .15s, transform .1s;
-      margin-top: 4px;
+      color: #fff; border: none; border-radius: 9px; font-size: .95rem; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: filter .15s, transform .1s; margin-top: 4px;
     }
     .btn-login:hover:not(:disabled) { filter: brightness(1.1); }
     .btn-login:active:not(:disabled) { transform: scale(.98); }
     .btn-login:disabled { opacity: .6; cursor: not-allowed; }
-
-    .login-footer {
-      text-align: center; margin-top: 18px;
-      font-size: .72rem; color: #bbb;
-      display: flex; justify-content: center; align-items: center; gap: 12px;
-    }
-    .link-btn {
-      background: none; border: none; cursor: pointer;
-      color: #aaa; font-size: .72rem; text-decoration: underline;
-      padding: 0;
-    }
+    .login-footer { text-align: center; margin-top: 18px; font-size: .72rem; color: #bbb; display: flex; justify-content: center; align-items: center; gap: 12px; }
+    .link-btn { background: none; border: none; cursor: pointer; color: #aaa; font-size: .72rem; text-decoration: underline; padding: 0; }
     .link-btn:hover { color: #666; }
 
-    /* ════ HEADER (dashboard + admin) ════ */
+    /* ══ APP LAYOUT ═════════════════════════════════════════════════════════ */
+    #viewApp { background: var(--bg); display: flex; flex-direction: column; }
+
     .app-header {
+      height: var(--header-h);
       background: linear-gradient(135deg, var(--dark) 0%, var(--mid) 60%, var(--blue) 100%);
-      color: #fff;
-      padding: 13px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.35);
+      color: #fff; padding: 0 20px;
+      display: flex; align-items: center; justify-content: space-between; gap: 14px;
+      box-shadow: 0 2px 10px rgba(0,0,0,.35); flex-shrink: 0; position: sticky; top: 0; z-index: 40;
     }
-    .header-left { display: flex; align-items: center; gap: 10px; }
-    .app-header h1 { font-size: 1rem; font-weight: 600; }
-    .header-tag {
-      background: var(--accent); font-size: .6rem; font-weight: 700;
-      padding: 2px 8px; border-radius: 20px; letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-    .header-empresa {
-      font-size: .75rem; opacity: .7; border-left: 1px solid rgba(255,255,255,.2);
-      padding-left: 10px; margin-left: 2px;
-    }
+    .header-left  { display: flex; align-items: center; gap: 10px; }
     .header-right { display: flex; align-items: center; gap: 8px; }
-    .avatar {
-      width: 30px; height: 30px;
-      background: rgba(255,255,255,.15);
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: .82rem;
-      border: 1.5px solid rgba(255,255,255,.3);
-    }
-    .header-uname { font-size: .8rem; font-weight: 600; opacity: .9; }
+    .app-header h1 { font-size: .95rem; font-weight: 600; }
+    .header-tag { background: var(--accent); font-size: .58rem; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: 1px; text-transform: uppercase; }
+    .header-empresa { font-size: .73rem; opacity: .7; border-left: 1px solid rgba(255,255,255,.2); padding-left: 10px; }
+    .avatar { width: 28px; height: 28px; background: rgba(255,255,255,.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: .78rem; border: 1.5px solid rgba(255,255,255,.3); }
+    .header-uname { font-size: .78rem; font-weight: 600; opacity: .9; }
     .btn-header {
-      background: rgba(255,255,255,.12);
-      border: 1px solid rgba(255,255,255,.25);
-      color: #fff; padding: 5px 12px;
-      border-radius: 6px; font-size: .73rem; font-weight: 600;
-      cursor: pointer; transition: background .15s;
-      display: flex; align-items: center; gap: 5px;
+      background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); color: #fff;
+      padding: 4px 11px; border-radius: 6px; font-size: .72rem; font-weight: 600;
+      cursor: pointer; transition: background .15s; display: flex; align-items: center; gap: 4px;
     }
     .btn-header:hover { background: rgba(255,255,255,.22); }
     .btn-header svg { width: 13px; height: 13px; }
+    .menu-toggle { display: none; background: none; border: none; color: #fff; cursor: pointer; padding: 4px; }
+    .menu-toggle svg { width: 22px; height: 22px; }
 
-    /* ════ DASHBOARD ════ */
-    #viewDashboard { background: var(--bg); }
-
-    .panel {
-      background: #fff;
-      margin: 18px 24px;
-      border-radius: 10px;
-      padding: 16px 20px;
-      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+    .layout {
       display: flex;
-      flex-wrap: wrap;
-      align-items: flex-end;
-      gap: 16px;
+      min-height: calc(100vh - var(--header-h));
     }
-    .panel-title {
-      width: 100%; font-size: .68rem; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 1px; color: var(--muted);
+
+    /* ══ SIDEBAR ════════════════════════════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--mid);
+      display: flex; flex-direction: column;
+      flex-shrink: 0;
+      transition: transform .25s;
     }
+    .sidebar-logo {
+      padding: 18px 16px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.07);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-logo .logo-sm {
+      width: 30px; height: 30px; flex-shrink: 0;
+      background: linear-gradient(135deg, var(--blue), var(--accent));
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-logo .logo-sm svg { width: 16px; height: 16px; fill: #fff; }
+    .sidebar-logo span { font-size: .85rem; font-weight: 700; color: rgba(255,255,255,.85); }
+
+    .sidebar-nav { padding: 10px 8px; flex: 1; display: flex; flex-direction: column; gap: 2px; }
+    .sidebar-section {
+      font-size: .62rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+      color: rgba(255,255,255,.3); padding: 10px 10px 4px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 12px; border: none; background: transparent;
+      color: rgba(255,255,255,.6); border-radius: 8px; cursor: pointer;
+      font-size: .84rem; font-weight: 500; text-align: left; width: 100%;
+      transition: background .15s, color .15s; position: relative;
+    }
+    .nav-item:hover { background: rgba(255,255,255,.07); color: rgba(255,255,255,.9); }
+    .nav-item.active { background: rgba(233,69,96,.12); color: #fff; }
+    .nav-item.active::before {
+      content: ''; position: absolute; left: 0; top: 6px; bottom: 6px;
+      width: 3px; background: var(--accent); border-radius: 0 3px 3px 0;
+    }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; stroke: currentColor; fill: none; }
+
+    /* ══ MAIN CONTENT ═══════════════════════════════════════════════════════ */
+    .main-content { flex: 1; overflow-y: auto; min-width: 0; }
+
+    /* shared panel */
+    .panel {
+      background: #fff; margin: 18px 24px; border-radius: 10px;
+      padding: 16px 20px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      display: flex; flex-wrap: wrap; align-items: flex-end; gap: 14px;
+    }
+    .panel-title { width: 100%; font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
     .field { display: flex; flex-direction: column; gap: 4px; }
     .field label { font-size: .72rem; font-weight: 600; color: #555; }
     .field input[type="date"],
     .field select {
-      border: 1.5px solid var(--border);
-      border-radius: 7px; padding: 8px 10px;
-      font-size: .85rem; color: var(--text);
-      outline: none; transition: border .15s;
-      min-width: 150px; background: #fff;
+      border: 1.5px solid var(--border); border-radius: 7px; padding: 7px 10px;
+      font-size: .84rem; color: var(--text); outline: none; transition: border .15s;
+      min-width: 148px; background: #fff;
     }
-    .field input[type="date"]:focus,
-    .field select:focus { border-color: var(--blue); }
-
-    .btn { padding: 9px 20px; border: none; border-radius: 7px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: filter .15s, transform .1s; }
+    .field input[type="date"]:focus, .field select:focus { border-color: var(--blue); }
+    .btn { padding: 8px 18px; border: none; border-radius: 7px; font-size: .84rem; font-weight: 600; cursor: pointer; transition: filter .15s, transform .1s; }
     .btn:active { transform: scale(.97); }
     .btn-primary { background: var(--blue); color: #fff; }
     .btn-primary:hover { filter: brightness(1.15); }
     .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
 
-    #status { margin: 0 24px 10px; font-size: .82rem; min-height: 20px; color: #555; }
-    #status.error { color: var(--red); font-weight: 600; }
-    #status.ok    { color: var(--green); font-weight: 600; }
+    /* ══ DASHBOARD SECTION ══════════════════════════════════════════════════ */
+    .dash-status { margin: 0 24px 10px; font-size: .8rem; min-height: 18px; color: #555; }
+    .dash-status.error { color: var(--red); font-weight: 600; }
+    .dash-status.ok    { color: var(--green); font-weight: 600; }
 
-    /* cards */
+    .dash-kpis { display: flex; flex-wrap: wrap; gap: 14px; padding: 0 24px 18px; }
+    .kpi-card {
+      flex: 1 1 150px; background: #fff; border-radius: 10px;
+      padding: 14px 18px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      border-left: 4px solid var(--blue);
+    }
+    .kpi-card.green { border-left-color: var(--green); }
+    .kpi-card.red   { border-left-color: var(--red); }
+    .kpi-card.sky   { border-left-color: var(--sky); }
+    .kpi-card label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+    .kpi-card .kpi-val { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 4px; }
+
+    .dash-grid {
+      display: grid;
+      grid-template-columns: 3fr 2fr;
+      gap: 16px;
+      padding: 0 24px 40px;
+    }
+    .chart-card {
+      background: #fff; border-radius: 10px;
+      padding: 16px 18px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
+    }
+    .chart-card-full { grid-column: 1 / -1; }
+    .chart-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); margin-bottom: 14px; }
+    .chart-wrap { position: relative; height: 260px; }
+    .chart-wrap-tall { position: relative; height: 320px; }
+
+    /* ══ RELATÓRIOS SECTION ═════════════════════════════════════════════════ */
+    #relStatus { margin: 0 24px 10px; font-size: .82rem; min-height: 20px; color: #555; }
+    #relStatus.error { color: var(--red); font-weight: 600; }
+    #relStatus.ok    { color: var(--green); font-weight: 600; }
+
     .summary { display: flex; flex-wrap: wrap; gap: 14px; margin: 0 24px 18px; }
     .card {
-      flex: 1 1 160px; background: #fff; border-radius: 10px;
+      flex: 1 1 150px; background: #fff; border-radius: 10px;
       padding: 14px 18px; box-shadow: 0 1px 6px rgba(0,0,0,.08);
       border-left: 4px solid var(--blue);
     }
@@ -217,224 +224,107 @@
     .card label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
     .card .val  { font-size: 1.3rem; font-weight: 700; color: var(--text); margin-top: 4px; }
 
-    /* tabela */
-    .report-wrapper {
-      margin: 0 24px 40px; background: #fff;
-      border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); overflow: hidden;
-    }
-    .report-header {
-      background: var(--blue); color: #fff;
-      padding: 12px 18px;
-      display: flex; justify-content: space-between; align-items: center;
-      flex-wrap: wrap; gap: 8px;
-    }
-    .report-header h3 { font-size: .9rem; font-weight: 600; }
-    .report-header small { font-size: .73rem; opacity: .75; }
+    .report-wrapper { margin: 0 24px 40px; background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); overflow: hidden; }
+    .report-header { background: var(--blue); color: #fff; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+    .report-header h3 { font-size: .88rem; font-weight: 600; }
     .report-header-right { display: flex; align-items: center; gap: 10px; }
-    .btn-pdf {
-      display: flex; align-items: center; gap: 5px;
-      padding: 5px 12px;
-      background: rgba(255,255,255,.15);
-      border: 1px solid rgba(255,255,255,.3);
-      color: #fff; border-radius: 6px;
-      font-size: .74rem; font-weight: 600; cursor: pointer;
-      transition: background .15s;
-    }
+    .report-header small { font-size: .72rem; opacity: .75; }
+    .btn-pdf { display: flex; align-items: center; gap: 5px; padding: 4px 11px; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; border-radius: 6px; font-size: .72rem; font-weight: 600; cursor: pointer; transition: background .15s; }
     .btn-pdf:hover { background: rgba(255,255,255,.28); }
     .btn-pdf svg { width: 13px; height: 13px; }
 
     .table-scroll { overflow-x: auto; }
     table { width: 100%; border-collapse: collapse; font-size: .78rem; }
-    thead th {
-      background: var(--mid); color: #c8d6e5; font-weight: 600;
-      padding: 9px 11px; text-align: left; white-space: nowrap; position: sticky; top: 0;
-    }
+    thead th { background: var(--mid); color: #c8d6e5; font-weight: 600; padding: 9px 11px; text-align: left; white-space: nowrap; position: sticky; top: 0; }
     thead th.num { text-align: right; }
     tbody tr:nth-child(even) { background: #f8f9fb; }
     tbody tr:hover { background: #eef3fb; }
     tbody td { padding: 7px 11px; border-bottom: 1px solid #eee; white-space: nowrap; }
     tbody td.num { text-align: right; font-variant-numeric: tabular-nums; }
-    tfoot td { background: var(--blue); color: #fff; font-weight: 700; padding: 9px 11px; white-space: nowrap; }
+    tfoot td { background: var(--blue); color: #fff; font-weight: 700; padding: 8px 11px; white-space: nowrap; }
     tfoot td.num { text-align: right; }
-
     .badge { display: inline-block; padding: 2px 7px; border-radius: 12px; font-size: .68rem; font-weight: 700; }
     .badge-green  { background: #d5f5e3; color: #1e8449; }
     .badge-yellow { background: #fef9e7; color: #b7950b; }
     .badge-red    { background: #fde8e8; color: #c0392b; }
-    #empty { text-align: center; padding: 36px; color: #aaa; font-size: .88rem; }
+    #tblEmpty { text-align: center; padding: 36px; color: #aaa; font-size: .88rem; }
 
-    /* ════ ADMIN ════ */
+    /* ══ ADMIN VIEW ═════════════════════════════════════════════════════════ */
     #viewAdmin { background: var(--bg); }
     .admin-content { padding: 20px 24px 40px; }
-    .admin-toolbar {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 16px; flex-wrap: wrap; gap: 10px;
-    }
-    .admin-toolbar h2 { font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
-    .btn-new {
-      display: flex; align-items: center; gap: 6px;
-      background: var(--blue); color: #fff;
-      border: none; border-radius: 8px; padding: 9px 18px;
-      font-size: .85rem; font-weight: 600; cursor: pointer;
-      transition: filter .15s;
-    }
+    .admin-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    .admin-toolbar h2 { font-size: .82rem; font-weight: 700; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); }
+    .btn-new { display: flex; align-items: center; gap: 6px; background: var(--blue); color: #fff; border: none; border-radius: 8px; padding: 8px 16px; font-size: .84rem; font-weight: 600; cursor: pointer; transition: filter .15s; }
     .btn-new:hover { filter: brightness(1.15); }
     .btn-new svg { width: 14px; height: 14px; }
-
-    .admin-table-wrap {
-      background: #fff; border-radius: 10px;
-      box-shadow: 0 1px 6px rgba(0,0,0,.08); overflow: hidden;
-    }
+    .admin-table-wrap { background: #fff; border-radius: 10px; box-shadow: 0 1px 6px rgba(0,0,0,.08); overflow: hidden; }
     .admin-table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-    .admin-table thead th {
-      background: var(--mid); color: #c8d6e5; font-weight: 600;
-      padding: 11px 14px; text-align: left; white-space: nowrap;
-    }
+    .admin-table thead th { background: var(--mid); color: #c8d6e5; font-weight: 600; padding: 10px 14px; text-align: left; white-space: nowrap; }
     .admin-table tbody tr:nth-child(even) { background: #f8f9fb; }
     .admin-table tbody tr:hover { background: #eef3fb; }
     .admin-table td { padding: 10px 14px; border-bottom: 1px solid #eee; }
-    .admin-table td code {
-      background: #f0f2f5; padding: 2px 6px; border-radius: 4px;
-      font-size: .75rem; color: var(--blue);
-    }
-    .badge-count {
-      display: inline-flex; align-items: center; justify-content: center;
-      background: var(--blue); color: #fff;
-      width: 22px; height: 22px; border-radius: 50%;
-      font-size: .72rem; font-weight: 700;
-    }
-    .btn-icon {
-      background: #f0f2f5; border: none; border-radius: 6px;
-      padding: 5px 9px; cursor: pointer; font-size: .82rem;
-      transition: background .15s; margin-right: 4px;
-    }
+    .admin-table td code { background: #f0f2f5; padding: 2px 6px; border-radius: 4px; font-size: .74rem; color: var(--blue); }
+    .badge-count { display: inline-flex; align-items: center; justify-content: center; background: var(--blue); color: #fff; width: 22px; height: 22px; border-radius: 50%; font-size: .72rem; font-weight: 700; }
+    .btn-icon { background: #f0f2f5; border: none; border-radius: 6px; padding: 5px 9px; cursor: pointer; font-size: .82rem; transition: background .15s; margin-right: 4px; }
     .btn-icon:hover { background: #dde0e7; }
     .btn-icon-danger:hover { background: #fde8e8; color: var(--red); }
     .admin-empty { text-align: center; padding: 40px; color: #aaa; }
 
-    /* ════ MODAIS ════ */
-    .modal-overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.55);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 200; padding: 16px;
-    }
-    .modal {
-      background: #fff; border-radius: 14px;
-      width: 100%; max-width: 440px;
-      box-shadow: 0 20px 60px rgba(0,0,0,.4);
-      display: flex; flex-direction: column;
-      max-height: 90vh;
-    }
+    /* ══ MODAIS ═════════════════════════════════════════════════════════════ */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 16px; }
+    .modal { background: #fff; border-radius: 14px; width: 100%; max-width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,.4); display: flex; flex-direction: column; max-height: 90vh; }
     .modal-lg { max-width: 680px; }
-    .modal-header {
-      padding: 18px 20px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between; align-items: center;
-    }
-    .modal-header h3 { font-size: 1rem; font-weight: 700; color: var(--dark); }
-    .btn-close {
-      background: none; border: none; cursor: pointer;
-      font-size: 1.3rem; color: #999; line-height: 1;
-      padding: 0 4px; transition: color .15s;
-    }
+    .modal-header { padding: 18px 20px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .modal-header h3 { font-size: .95rem; font-weight: 700; color: var(--dark); }
+    .btn-close { background: none; border: none; cursor: pointer; font-size: 1.3rem; color: #999; line-height: 1; padding: 0 4px; transition: color .15s; }
     .btn-close:hover { color: var(--red); }
-    .modal-body {
-      padding: 20px; overflow-y: auto; flex: 1;
-      display: flex; flex-direction: column; gap: 14px;
-    }
-    .modal-footer {
-      padding: 14px 20px;
-      border-top: 1px solid var(--border);
-      display: flex; gap: 10px; align-items: center;
-    }
-    .modal-footer .spacer { flex: 1; }
-
-    /* form */
+    .modal-body { padding: 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+    .modal-footer { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; align-items: center; }
+    .spacer { flex: 1; }
     .form-row { display: flex; gap: 14px; flex-wrap: wrap; }
     .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px; }
     .form-group label { font-size: .72rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .4px; }
-    .form-group input {
-      border: 1.5px solid var(--border); border-radius: 8px;
-      padding: 9px 11px; font-size: .875rem; color: var(--text);
-      outline: none; transition: border .15s; background: #fafbfc;
-    }
+    .form-group input { border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: .875rem; color: var(--text); outline: none; transition: border .15s; background: #fafbfc; }
     .form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(15,52,96,.1); background: #fff; }
-
     .form-section { border-top: 1px solid var(--border); padding-top: 14px; }
-    .form-section-title {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px;
-      font-size: .72rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: .6px; color: var(--muted);
-    }
-    .btn-add-rel {
-      background: var(--blue); color: #fff; border: none;
-      border-radius: 6px; padding: 5px 12px;
-      font-size: .75rem; font-weight: 600; cursor: pointer;
-      transition: filter .15s;
-    }
-    .btn-add-rel:hover { filter: brightness(1.15); }
-
-    .rel-row {
-      display: flex; gap: 8px; align-items: center; margin-bottom: 8px;
-    }
-    .rel-row input {
-      flex: 1; border: 1.5px solid var(--border); border-radius: 7px;
-      padding: 7px 10px; font-size: .82rem; outline: none;
-      transition: border .15s;
-    }
+    .form-section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
+    .btn-add-rel { background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: .75rem; font-weight: 600; cursor: pointer; }
+    .btn-add-rel:hover { filter: brightness(1.1); }
+    .rel-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .rel-row input { flex: 1; border: 1.5px solid var(--border); border-radius: 7px; padding: 7px 10px; font-size: .82rem; outline: none; transition: border .15s; }
     .rel-row input:focus { border-color: var(--blue); }
-
-    .form-error {
-      font-size: .78rem; color: var(--red); font-weight: 600;
-      min-height: 16px; text-align: center;
-    }
-
-    .btn-cancel { background: #f0f2f5; border: none; border-radius: 7px; padding: 9px 18px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+    .form-error { font-size: .78rem; color: var(--red); font-weight: 600; min-height: 16px; text-align: center; }
+    .btn-cancel { background: #f0f2f5; border: none; border-radius: 7px; padding: 8px 16px; font-size: .84rem; font-weight: 600; cursor: pointer; }
     .btn-cancel:hover { background: var(--border); }
-    .btn-save   { background: var(--blue); color: #fff; border: none; border-radius: 7px; padding: 9px 20px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: filter .15s; }
+    .btn-save   { background: var(--blue); color: #fff; border: none; border-radius: 7px; padding: 8px 18px; font-size: .84rem; font-weight: 600; cursor: pointer; }
     .btn-save:hover { filter: brightness(1.15); }
-    .btn-danger { background: #fde8e8; color: var(--red); border: none; border-radius: 7px; padding: 9px 16px; font-size: .82rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+    .btn-danger { background: #fde8e8; color: var(--red); border: none; border-radius: 7px; padding: 8px 14px; font-size: .82rem; font-weight: 600; cursor: pointer; }
     .btn-danger:hover { background: #fbd0d0; }
 
     /* loader */
-    .loader {
-      display: inline-block; width: 15px; height: 15px;
-      border: 2.5px solid rgba(255,255,255,.3);
-      border-top-color: #fff; border-radius: 50%;
-      animation: spin .6s linear infinite; vertical-align: middle;
-    }
+    .loader { display: inline-block; width: 15px; height: 15px; border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; }
+    .loader-dark { border-color: rgba(0,0,0,.15); border-top-color: var(--blue); }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ════ IMPRESSÃO / PDF ════ */
+    /* ══ PRINT / PDF ════════════════════════════════════════════════════════ */
     #printHeader { display: none; }
 
     @media print {
       @page { size: A4 landscape; margin: 10mm 12mm; }
-
-      #viewLogin, .app-header, .panel, #status, .summary, .btn-pdf { display: none !important; }
-
+      #viewLogin, .app-header, .sidebar, .panel, #relStatus, .summary, .btn-pdf { display: none !important; }
       body { background: #fff; font-size: 8pt; }
-      #viewDashboard { display: block !important; min-height: unset; }
-
-      #printHeader {
-        display: flex !important;
-        justify-content: space-between;
-        align-items: flex-end;
-        border-bottom: 2px solid #0f3460;
-        padding-bottom: 6px;
-        margin-bottom: 10px;
-      }
+      #viewApp { display: block !important; min-height: unset; }
+      .layout { display: block; }
+      #secDashboard { display: none !important; }
+      #secRelatorios { display: block !important; }
+      #printHeader { display: flex !important; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #0f3460; padding-bottom: 6px; margin-bottom: 10px; }
       #printHeader .ph-left h2 { font-size: 12pt; font-weight: 700; color: #0f3460; }
       #printHeader .ph-left p  { font-size: 7.5pt; color: #555; margin-top: 3px; }
       #printHeader .ph-right   { text-align: right; font-size: 7pt; color: #666; line-height: 1.6; }
-
       .report-wrapper { margin: 0; box-shadow: none; border: 1px solid #ddd; border-radius: 0; }
       .report-header { background: #0f3460 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 7px 12px; }
       .report-header h3 { font-size: 8.5pt; }
       .report-header small { font-size: 7pt; }
-
       table { font-size: 6.5pt; }
       thead th { background: #16213e !important; color: #c8d6e5 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; padding: 5px 7px; }
       tbody td { padding: 4px 7px; }
@@ -445,16 +335,30 @@
       .badge-red    { background: #fde8e8 !important; color: #c0392b !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       tbody tr { page-break-inside: avoid; }
     }
+
+    /* ══ RESPONSIVE ═════════════════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .sidebar { position: fixed; left: 0; top: var(--header-h); bottom: 0; z-index: 50; transform: translateX(-100%); }
+      .sidebar.open { transform: translateX(0); }
+      .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 49; }
+      .sidebar-overlay.open { display: block; }
+      .menu-toggle { display: flex; }
+      .dash-grid { grid-template-columns: 1fr; }
+      .chart-card-full { grid-column: 1; }
+      .panel { margin: 14px 14px; }
+      .dash-kpis, .summary { padding-left: 14px; padding-right: 14px; }
+      .dash-grid, .report-wrapper { padding: 0 14px 28px; }
+      .report-wrapper { margin: 0 14px 28px; }
+    }
   </style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════
+<!-- ═══════════════════════════════════════
      VIEW: LOGIN
-════════════════════════════════════ -->
+════════════════════════════════════════ -->
 <div id="viewLogin" class="view">
   <div class="login-card">
-
     <div class="login-logo">
       <div class="logo-mark">
         <svg viewBox="0 0 24 24"><rect x="2" y="10" width="4" height="12" rx="1"/><rect x="9" y="6" width="4" height="16" rx="1"/><rect x="16" y="2" width="4" height="20" rx="1"/></svg>
@@ -467,9 +371,7 @@
       <label>Empresa</label>
       <div class="input-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-        <select id="selEmpresa">
-          <option value="">— Selecione a empresa —</option>
-        </select>
+        <select id="selEmpresa"><option value="">— Selecione a empresa —</option></select>
         <span class="select-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
       </div>
     </div>
@@ -491,9 +393,7 @@
     </div>
 
     <div id="loginError" class="login-error"></div>
-
     <button class="btn-login" id="btnLogin" onclick="fazerLogin()">Entrar</button>
-
     <div class="login-footer">
       <span>Simple BI &copy; 2026</span>
       <button class="link-btn" onclick="abrirAdmin()">⚙ Administração</button>
@@ -501,14 +401,18 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     VIEW: DASHBOARD
-════════════════════════════════════ -->
-<div id="viewDashboard" class="view" style="display:none">
+<!-- ═══════════════════════════════════════
+     VIEW: APP (sidebar + conteúdo)
+════════════════════════════════════════ -->
+<div id="viewApp" class="view" style="display:none">
 
+  <!-- HEADER -->
   <div class="app-header">
     <div class="header-left">
-      <h1>Relatório de Vendas</h1>
+      <button class="menu-toggle" onclick="toggleSidebar()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <h1>Simple BI</h1>
       <span class="header-tag">BI</span>
       <span class="header-empresa" id="headerEmpresa"></span>
     </div>
@@ -523,99 +427,176 @@
     </div>
   </div>
 
-  <div class="panel">
-    <div class="panel-title">Configuração do Relatório</div>
+  <div class="layout">
 
-    <div class="field" id="fieldRelatorio" style="display:none">
-      <label>Relatório</label>
-      <select id="selRelatorio"></select>
-    </div>
-
-    <div class="field">
-      <label>Data inicial</label>
-      <input type="date" id="dt_de" />
-    </div>
-
-    <div class="field">
-      <label>Data final</label>
-      <input type="date" id="dt_ate" />
-    </div>
-
-    <button class="btn btn-primary" id="btnGerar" onclick="gerarRelatorio()">
-      Gerar Relatório
-    </button>
-  </div>
-
-  <div id="status"></div>
-
-  <div class="summary" id="summary" style="display:none">
-    <div class="card blue"><label>Total de Grupos</label><div class="val" id="cardItens">0</div></div>
-    <div class="card green"><label>Total Venda (R$)</label><div class="val" id="cardVenda">0,00</div></div>
-    <div class="card red"><label>Total Custo (R$)</label><div class="val" id="cardCusto">0,00</div></div>
-    <div class="card"><label>Margem Bruta (R$)</label><div class="val" id="cardMargem">0,00</div></div>
-    <div class="card"><label>Margem (%)</label><div class="val" id="cardMargemPct">0%</div></div>
-  </div>
-
-  <div class="report-wrapper" id="reportWrapper" style="display:none">
-
-    <div id="printHeader">
-      <div class="ph-left">
-        <h2>Simple BI — <span id="phEmpresa"></span></h2>
-        <p id="phPeriodo"></p>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-sm">
+          <svg viewBox="0 0 24 24"><rect x="2" y="10" width="4" height="12" rx="1"/><rect x="9" y="6" width="4" height="16" rx="1"/><rect x="16" y="2" width="4" height="20" rx="1"/></svg>
+        </div>
+        <span id="sidebarCompany">Simple BI</span>
       </div>
-      <div class="ph-right">
-        <div>Relatório: <strong id="phRelatorio"></strong></div>
-        <div>Usuário: <strong id="phUsuario"></strong></div>
-        <div>Emitido: <strong id="phDataHora"></strong></div>
-      </div>
-    </div>
 
-    <div class="report-header">
-      <h3 id="reportTitulo">Relatório de Vendas Sintético</h3>
-      <div class="report-header-right">
-        <small id="reportPeriodo"></small>
-        <button class="btn-pdf" onclick="gerarPDF()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
-          Exportar PDF
+      <nav class="sidebar-nav">
+        <div class="sidebar-section">Menu</div>
+
+        <button class="nav-item active" id="navDash" onclick="navTo('dashboard')">
+          <svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          Dashboard
         </button>
+
+        <button class="nav-item" id="navRel" onclick="navTo('relatorios')">
+          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+          Relatórios
+        </button>
+      </nav>
+    </aside>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="main-content">
+
+      <!-- ── SEÇÃO: DASHBOARD ──────────────────────────────────────── -->
+      <div id="secDashboard">
+        <div class="panel">
+          <div class="panel-title">Período do Dashboard</div>
+          <div class="field" id="fieldRelDash" style="display:none">
+            <label>Relatório</label>
+            <select id="selRelatorioDash"></select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="dd_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="dd_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnDash" onclick="gerarDashboard()">
+            Gerar Dashboard
+          </button>
+        </div>
+        <div id="dashStatus" class="dash-status"></div>
+
+        <div id="dashKpis" class="dash-kpis" style="display:none">
+          <div class="kpi-card sky"><label>Clientes únicos</label><div class="kpi-val" id="kpiClientes">0</div></div>
+          <div class="kpi-card green"><label>Total Venda (R$)</label><div class="kpi-val" id="kpiVenda">0,00</div></div>
+          <div class="kpi-card red"><label>Total Custo (R$)</label><div class="kpi-val" id="kpiCusto">0,00</div></div>
+          <div class="kpi-card"><label>Margem Bruta (R$)</label><div class="kpi-val" id="kpiMargem">0,00</div></div>
+          <div class="kpi-card"><label>Margem (%)</label><div class="kpi-val" id="kpiMargemPct">0%</div></div>
+        </div>
+
+        <div id="dashGrid" class="dash-grid" style="display:none">
+          <!-- clientes + vendedor -->
+          <div class="chart-card">
+            <div class="chart-title">Top 10 Clientes por Venda (R$)</div>
+            <div class="chart-wrap-tall"><canvas id="chartClientes"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Participação por Vendedor</div>
+            <div class="chart-wrap-tall"><canvas id="chartVendedor"></canvas></div>
+          </div>
+          <!-- produtos - linha inteira -->
+          <div class="chart-card chart-card-full">
+            <div class="chart-title">Top 10 Produtos por Venda (R$)</div>
+            <div class="chart-wrap"><canvas id="chartProdutos"></canvas></div>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="table-scroll">
-      <table>
-        <thead>
-          <tr>
-            <th>Cód. Prod.</th><th>Descrição</th>
-            <th>Cód. Vend.</th><th>Vendedor</th>
-            <th>Cód. Cli.</th><th>Cliente</th><th>CEP</th>
-            <th class="num">Qtde.</th>
-            <th class="num">Custo (R$)</th>
-            <th class="num">Venda (R$)</th>
-            <th class="num">Margem</th>
-          </tr>
-        </thead>
-        <tbody id="tbody"></tbody>
-        <tfoot>
-          <tr id="tfootRow">
-            <td colspan="7"><strong>TOTAL GERAL</strong></td>
-            <td class="num" id="ftQtde"></td>
-            <td class="num" id="ftCusto"></td>
-            <td class="num" id="ftVenda"></td>
-            <td class="num" id="ftMargem"></td>
-          </tr>
-        </tfoot>
-      </table>
-      <div id="empty" style="display:none">Nenhum registro encontrado para o período.</div>
-    </div>
+      <!-- ── SEÇÃO: RELATÓRIOS ─────────────────────────────────────── -->
+      <div id="secRelatorios" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Período do Relatório</div>
+          <div class="field" id="fieldRelatorio" style="display:none">
+            <label>Relatório</label>
+            <select id="selRelatorio"></select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="dt_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="dt_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnGerar" onclick="gerarRelatorio()">
+            Gerar Relatório
+          </button>
+        </div>
+
+        <div id="relStatus"></div>
+
+        <div class="summary" id="summary" style="display:none">
+          <div class="card blue"><label>Total de Grupos</label><div class="val" id="cardItens">0</div></div>
+          <div class="card green"><label>Total Venda (R$)</label><div class="val" id="cardVenda">0,00</div></div>
+          <div class="card red"><label>Total Custo (R$)</label><div class="val" id="cardCusto">0,00</div></div>
+          <div class="card"><label>Margem Bruta (R$)</label><div class="val" id="cardMargem">0,00</div></div>
+          <div class="card"><label>Margem (%)</label><div class="val" id="cardMargemPct">0%</div></div>
+        </div>
+
+        <div class="report-wrapper" id="reportWrapper" style="display:none">
+          <div id="printHeader">
+            <div class="ph-left">
+              <h2>Simple BI — <span id="phEmpresa"></span></h2>
+              <p id="phPeriodo"></p>
+            </div>
+            <div class="ph-right">
+              <div>Relatório: <strong id="phRelatorio"></strong></div>
+              <div>Usuário: <strong id="phUsuario"></strong></div>
+              <div>Emitido: <strong id="phDataHora"></strong></div>
+            </div>
+          </div>
+
+          <div class="report-header">
+            <h3 id="reportTitulo">Relatório de Vendas Sintético</h3>
+            <div class="report-header-right">
+              <small id="reportPeriodo"></small>
+              <button class="btn-pdf" onclick="gerarPDF()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                Exportar PDF
+              </button>
+            </div>
+          </div>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cód. Prod.</th><th>Descrição</th>
+                  <th>Cód. Vend.</th><th>Vendedor</th>
+                  <th>Cód. Cli.</th><th>Cliente</th><th>CEP</th>
+                  <th class="num">Qtde.</th>
+                  <th class="num">Custo (R$)</th>
+                  <th class="num">Venda (R$)</th>
+                  <th class="num">Margem</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+              <tfoot>
+                <tr id="tfootRow">
+                  <td colspan="7"><strong>TOTAL GERAL</strong></td>
+                  <td class="num" id="ftQtde"></td>
+                  <td class="num" id="ftCusto"></td>
+                  <td class="num" id="ftVenda"></td>
+                  <td class="num" id="ftMargem"></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div id="tblEmpty" style="display:none">Nenhum registro encontrado para o período.</div>
+          </div>
+        </div>
+      </div>
+
+    </main>
   </div>
+</div><!-- /viewApp -->
 
-</div><!-- /viewDashboard -->
-
-<!-- ═══════════════════════════════════
+<!-- ═══════════════════════════════════════
      VIEW: ADMIN
-════════════════════════════════════ -->
+════════════════════════════════════════ -->
 <div id="viewAdmin" class="view" style="display:none">
-
   <div class="app-header">
     <div class="header-left">
       <h1>Painel Administrativo</h1>
@@ -624,12 +605,11 @@
     <div class="header-right">
       <button class="btn-header" onclick="abrirAlterarSenha()">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
-        Alterar Senha
+        Alterar Credenciais
       </button>
-      <button class="btn-header" onclick="voltarDashboard()">← Voltar</button>
+      <button class="btn-header" onclick="voltarApp()">← Voltar</button>
     </div>
   </div>
-
   <div class="admin-content">
     <div class="admin-toolbar">
       <h2>Empresas Cadastradas</h2>
@@ -638,7 +618,6 @@
         Nova Empresa
       </button>
     </div>
-
     <div class="admin-table-wrap">
       <table class="admin-table">
         <thead>
@@ -656,22 +635,25 @@
       </table>
     </div>
   </div>
+</div>
 
-</div><!-- /viewAdmin -->
-
-<!-- ═══════════════════════════════════
+<!-- ═══════════════════════════════════════
      MODAL: ADMIN AUTH
-════════════════════════════════════ -->
+════════════════════════════════════════ -->
 <div id="modalAdminAuth" class="modal-overlay" style="display:none">
   <div class="modal">
     <div class="modal-header">
-      <h3>⚙ Acesso Administrativo</h3>
+      <h3>⚙ Acesso Restrito</h3>
       <button class="btn-close" onclick="hideModal('modalAdminAuth')">×</button>
     </div>
     <div class="modal-body">
       <div class="form-group">
-        <label>Senha de Administrador</label>
-        <input type="password" id="adminSenha" placeholder="••••••••" />
+        <label>Usuário</label>
+        <input type="text" id="adminUsuario" placeholder="Digite o usuário" autocomplete="username" />
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="adminSenha" placeholder="••••••••" autocomplete="current-password" />
       </div>
       <div id="adminAuthError" class="form-error"></div>
     </div>
@@ -683,27 +665,41 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     MODAL: ALTERAR SENHA ADMIN
-════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     MODAL: ALTERAR CREDENCIAIS
+════════════════════════════════════════ -->
 <div id="modalAlterarSenha" class="modal-overlay" style="display:none">
   <div class="modal">
     <div class="modal-header">
-      <h3>Alterar Senha de Administrador</h3>
+      <h3>Alterar Credenciais de Admin</h3>
       <button class="btn-close" onclick="hideModal('modalAlterarSenha')">×</button>
     </div>
     <div class="modal-body">
-      <div class="form-group">
-        <label>Senha Atual</label>
-        <input type="password" id="senhaAtual" placeholder="••••••••" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>Usuário Atual</label>
+          <input type="text" id="usuarioAtual" placeholder="Usuário atual" />
+        </div>
+        <div class="form-group">
+          <label>Senha Atual</label>
+          <input type="password" id="senhaAtual" placeholder="••••••••" />
+        </div>
       </div>
-      <div class="form-group">
-        <label>Nova Senha</label>
-        <input type="password" id="senhaNova" placeholder="••••••••" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>Novo Usuário</label>
+          <input type="text" id="usuarioNovo" placeholder="Deixe em branco para manter" />
+        </div>
       </div>
-      <div class="form-group">
-        <label>Confirmar Nova Senha</label>
-        <input type="password" id="senhaNovaConf" placeholder="••••••••" />
+      <div class="form-row">
+        <div class="form-group">
+          <label>Nova Senha</label>
+          <input type="password" id="senhaNova" placeholder="••••••••" />
+        </div>
+        <div class="form-group">
+          <label>Confirmar Nova Senha</label>
+          <input type="password" id="senhaNovaConf" placeholder="••••••••" />
+        </div>
       </div>
       <div id="alterarSenhaError" class="form-error"></div>
     </div>
@@ -715,9 +711,9 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
-     MODAL: EMPRESA (criar / editar)
-════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════
+     MODAL: EMPRESA
+════════════════════════════════════════ -->
 <div id="modalEmpresa" class="modal-overlay" style="display:none">
   <div class="modal modal-lg">
     <div class="modal-header">
@@ -726,14 +722,12 @@
     </div>
     <div class="modal-body">
       <input type="hidden" id="empId" />
-
       <div class="form-row">
         <div class="form-group" style="flex:2">
           <label>Nome da Empresa *</label>
           <input type="text" id="empNome" placeholder="Ex: Empresa XYZ" />
         </div>
       </div>
-
       <div class="form-row">
         <div class="form-group" style="flex:3">
           <label>URL Base da API *</label>
@@ -744,18 +738,14 @@
           <input type="text" id="empLoginEp" placeholder="/usuario/login" />
         </div>
       </div>
-
       <div class="form-section">
         <div class="form-section-title">
           <span>Relatórios</span>
           <button class="btn-add-rel" onclick="addRelRow()">+ Adicionar</button>
         </div>
         <div id="relRows"></div>
-        <div id="relRowsEmpty" style="font-size:.8rem;color:var(--muted);text-align:center;padding:10px 0">
-          Nenhum relatório. Clique em "+ Adicionar".
-        </div>
+        <div id="relRowsEmpty" style="font-size:.8rem;color:var(--muted);text-align:center;padding:10px 0">Nenhum relatório. Clique em "+ Adicionar".</div>
       </div>
-
       <div id="modalEmpError" class="form-error"></div>
     </div>
     <div class="modal-footer">
@@ -767,32 +757,26 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════
+<!-- ═══════════════════════════════════════
      JAVASCRIPT
-════════════════════════════════════ -->
+════════════════════════════════════════ -->
 <script>
-  // ── ESTADO ───────────────────────────────────────────────────────────────
-  let _token       = null;
-  let _nomeUsuario = '';
-  let _empresa     = null;
-  let _relatorio   = null;
-  let _adminAuthed = false;
+  // ── ESTADO ────────────────────────────────────────────────────────────────
+  let _token = null, _nomeUsuario = '', _empresa = null, _relatorio = null, _adminAuthed = false;
+  let _charts = { clientes: null, vendedor: null, produtos: null };
+
+  const PALETTE = ['#0f3460','#e94560','#27ae60','#2980b9','#f39c12','#8e44ad','#16a085','#d35400','#c0392b','#7f8c8d'];
 
   // ── UTILS ─────────────────────────────────────────────────────────────────
   const toNum    = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
   const fmtNum   = v => toNum(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtPct   = v => toNum(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
   const dateToApi = v => v.replace(/-/g, '.');
+  const truncate  = (s, n = 28) => s && s.length > n ? s.substring(0, n) + '…' : (s || '');
 
   async function sha256(text) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
     return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-  }
-
-  function setStatus(msg, type = '') {
-    const el = document.getElementById('status');
-    el.textContent = msg;
-    el.className = type;
   }
 
   function badgeMargem(pct) {
@@ -800,23 +784,40 @@
     return `<span class="badge ${cls}">${fmtPct(pct)}</span>`;
   }
 
-  // ── NAVEGAÇÃO ─────────────────────────────────────────────────────────────
-  const DISPLAY = { viewLogin: 'flex', viewDashboard: 'block', viewAdmin: 'block' };
+  // ── NAVEGAÇÃO DE VIEWS ────────────────────────────────────────────────────
+  const DISPLAY_MAP = { viewLogin: 'flex', viewApp: 'flex', viewAdmin: 'block' };
 
   function showView(id) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
-    document.getElementById(id).style.display = DISPLAY[id] || 'block';
+    document.getElementById(id).style.display = DISPLAY_MAP[id] || 'block';
   }
 
   function showModal(id) { document.getElementById(id).style.display = 'flex'; }
   function hideModal(id) { document.getElementById(id).style.display = 'none'; }
 
-  // ── EMPRESAS (carrega no select do login) ─────────────────────────────────
+  // ── SIDEBAR ───────────────────────────────────────────────────────────────
+  function toggleSidebar() {
+    document.getElementById('sidebar').classList.toggle('open');
+    document.getElementById('sidebarOverlay').classList.toggle('open');
+  }
+
+  // ── NAVEGAÇÃO DE SEÇÕES ───────────────────────────────────────────────────
+  function navTo(section) {
+    document.getElementById('secDashboard').style.display  = section === 'dashboard'  ? '' : 'none';
+    document.getElementById('secRelatorios').style.display = section === 'relatorios' ? '' : 'none';
+    document.getElementById('navDash').classList.toggle('active', section === 'dashboard');
+    document.getElementById('navRel').classList.toggle('active',  section === 'relatorios');
+    // fecha sidebar no mobile
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('open');
+  }
+
+  // ── EMPRESAS (login select) ───────────────────────────────────────────────
   async function carregarEmpresas() {
     try {
-      const res     = await fetch('/api/empresas');
-      const lista   = await res.json();
-      const sel     = document.getElementById('selEmpresa');
+      const res   = await fetch('/api/empresas');
+      const lista = await res.json();
+      const sel   = document.getElementById('selEmpresa');
       sel.innerHTML = '<option value="">— Selecione a empresa —</option>';
       lista.forEach(e => {
         const opt = document.createElement('option');
@@ -824,7 +825,7 @@
         opt.textContent = e.nome;
         sel.appendChild(opt);
       });
-    } catch { /* servidor não iniciado: ignora */ }
+    } catch { /* servidor offline */ }
   }
 
   // ── LOGIN ─────────────────────────────────────────────────────────────────
@@ -861,25 +862,31 @@
       document.getElementById('headerNome').textContent    = _nomeUsuario;
       document.getElementById('headerAvatar').textContent  = _nomeUsuario.charAt(0).toUpperCase();
       document.getElementById('headerEmpresa').textContent = _empresa.nome;
+      document.getElementById('sidebarCompany').textContent = _empresa.nome;
 
-      // monta seletor de relatórios
-      const rels   = _empresa.relatorios || [];
-      const selRel = document.getElementById('selRelatorio');
-      selRel.innerHTML = '';
-      rels.forEach(r => {
-        const opt = document.createElement('option');
-        opt.value       = JSON.stringify(r);
-        opt.textContent = r.nome;
-        selRel.appendChild(opt);
+      // popula selects de relatório
+      const rels = _empresa.relatorios || [];
+      ['selRelatorioDash', 'selRelatorio'].forEach(selId => {
+        const s = document.getElementById(selId);
+        s.innerHTML = '';
+        rels.forEach(r => {
+          const opt = document.createElement('option');
+          opt.value       = JSON.stringify(r);
+          opt.textContent = r.nome;
+          s.appendChild(opt);
+        });
       });
-      document.getElementById('fieldRelatorio').style.display = rels.length > 1 ? '' : 'none';
+      const showSel = rels.length > 1;
+      document.getElementById('fieldRelDash').style.display     = showSel ? '' : 'none';
+      document.getElementById('fieldRelatorio').style.display   = showSel ? '' : 'none';
       _relatorio = rels[0] || null;
 
-      showView('viewDashboard');
+      showView('viewApp');
+      navTo('dashboard');
     } catch (err) {
       errEl.textContent = err.message;
     } finally {
-      btn.disabled  = false;
+      btn.disabled    = false;
       btn.textContent = 'Entrar';
     }
   }
@@ -890,100 +897,93 @@
     document.getElementById('loginError').textContent = '';
     document.getElementById('summary').style.display = 'none';
     document.getElementById('reportWrapper').style.display = 'none';
-    document.getElementById('status').textContent = '';
+    document.getElementById('dashKpis').style.display = 'none';
+    document.getElementById('dashGrid').style.display = 'none';
     document.getElementById('tbody').innerHTML = '';
+    destroyCharts();
     showView('viewLogin');
   }
 
-  function voltarDashboard() {
-    if (_token) showView('viewDashboard');
+  function voltarApp() {
+    if (_token) showView('viewApp');
     else        showView('viewLogin');
   }
 
   // ── ADMIN AUTH ────────────────────────────────────────────────────────────
   function abrirAdmin() {
-    if (_adminAuthed) {
-      carregarAdminEmpresas();
-      showView('viewAdmin');
-      return;
-    }
-    document.getElementById('adminSenha').value = '';
+    if (_adminAuthed) { carregarAdminEmpresas(); showView('viewAdmin'); return; }
+    document.getElementById('adminUsuario').value = '';
+    document.getElementById('adminSenha').value   = '';
     document.getElementById('adminAuthError').textContent = '';
     showModal('modalAdminAuth');
   }
 
   async function confirmarAdminAuth() {
+    const usuario  = document.getElementById('adminUsuario').value.trim();
     const senhaVal = document.getElementById('adminSenha').value;
     const errEl    = document.getElementById('adminAuthError');
-    if (!senhaVal) { errEl.textContent = 'Informe a senha.'; return; }
+    errEl.textContent = '';
+    if (!usuario)  { errEl.textContent = 'Informe o usuário.'; return; }
+    if (!senhaVal) { errEl.textContent = 'Informe a senha.';   return; }
 
     try {
       const hash = await sha256(senhaVal);
       const res  = await fetch('/api/admin/auth', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha_hash: hash })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario, senha_hash: hash })
       });
-      if (!res.ok) {
-        const d = await res.json();
-        errEl.textContent = d.erro || 'Senha incorreta.';
-        return;
-      }
+      if (!res.ok) { const d = await res.json(); errEl.textContent = d.erro || 'Acesso negado.'; return; }
       _adminAuthed = true;
       hideModal('modalAdminAuth');
       await carregarAdminEmpresas();
       showView('viewAdmin');
-    } catch {
-      errEl.textContent = 'Erro de conexão com o servidor.';
-    }
+    } catch { errEl.textContent = 'Erro de conexão.'; }
   }
 
-  // ── ALTERAR SENHA ADMIN ───────────────────────────────────────────────────
+  // ── ALTERAR CREDENCIAIS ───────────────────────────────────────────────────
   function abrirAlterarSenha() {
-    ['senhaAtual','senhaNova','senhaNovaConf'].forEach(id => document.getElementById(id).value = '');
+    ['usuarioAtual','senhaAtual','usuarioNovo','senhaNova','senhaNovaConf']
+      .forEach(id => document.getElementById(id).value = '');
     document.getElementById('alterarSenhaError').textContent = '';
     showModal('modalAlterarSenha');
   }
 
   async function confirmarAlterarSenha() {
-    const atual = document.getElementById('senhaAtual').value;
-    const nova  = document.getElementById('senhaNova').value;
-    const conf  = document.getElementById('senhaNovaConf').value;
-    const errEl = document.getElementById('alterarSenhaError');
+    const uAtual = document.getElementById('usuarioAtual').value.trim();
+    const sAtual = document.getElementById('senhaAtual').value;
+    const uNovo  = document.getElementById('usuarioNovo').value.trim();
+    const sNova  = document.getElementById('senhaNova').value;
+    const sConf  = document.getElementById('senhaNovaConf').value;
+    const errEl  = document.getElementById('alterarSenhaError');
     errEl.textContent = '';
 
-    if (!atual || !nova || !conf) { errEl.textContent = 'Preencha todos os campos.'; return; }
-    if (nova !== conf) { errEl.textContent = 'Nova senha não confere.'; return; }
-    if (nova.length < 4) { errEl.textContent = 'Nova senha deve ter ao menos 4 caracteres.'; return; }
+    if (!uAtual || !sAtual || !sNova || !sConf) { errEl.textContent = 'Preencha os campos obrigatórios.'; return; }
+    if (sNova !== sConf)   { errEl.textContent = 'Nova senha não confere.'; return; }
+    if (sNova.length < 4)  { errEl.textContent = 'Mínimo 4 caracteres.'; return; }
 
     try {
-      const [hAtual, hNova] = await Promise.all([sha256(atual), sha256(nova)]);
+      const [hAtual, hNova] = await Promise.all([sha256(sAtual), sha256(sNova)]);
       const res = await fetch('/api/admin/senha', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ senha_hash_atual: hAtual, senha_hash_nova: hNova })
+        method: 'PUT', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_atual: uAtual, senha_hash_atual: hAtual, usuario_novo: uNovo || uAtual, senha_hash_nova: hNova })
       });
       if (!res.ok) { const d = await res.json(); errEl.textContent = d.erro || 'Erro.'; return; }
+      _adminAuthed = false;
       hideModal('modalAlterarSenha');
-      alert('Senha alterada com sucesso!');
-    } catch {
-      errEl.textContent = 'Erro de conexão.';
-    }
+      alert('Credenciais alteradas! Faça login novamente no admin.');
+    } catch { errEl.textContent = 'Erro de conexão.'; }
   }
 
-  // ── ADMIN: LISTA DE EMPRESAS ──────────────────────────────────────────────
+  // ── ADMIN: EMPRESAS ───────────────────────────────────────────────────────
   async function carregarAdminEmpresas() {
     try {
-      const res    = await fetch('/api/empresas');
-      const lista  = await res.json();
-      const tbody  = document.getElementById('tbodyAdmin');
-
-      if (lista.length === 0) {
+      const res   = await fetch('/api/empresas');
+      const lista = await res.json();
+      const tbody = document.getElementById('tbodyAdmin');
+      if (!lista.length) {
         tbody.innerHTML = '<tr><td colspan="5" class="admin-empty">Nenhuma empresa cadastrada.</td></tr>';
-        await carregarEmpresas();
-        return;
+        await carregarEmpresas(); return;
       }
-
       tbody.innerHTML = '';
       lista.forEach(e => {
         const tr = document.createElement('tr');
@@ -991,22 +991,20 @@
           <td><strong>${e.nome}</strong></td>
           <td><code>${e.api_base}</code></td>
           <td><code>${e.login_endpoint}</code></td>
-          <td style="text-align:center"><span class="badge-count">${(e.relatorios || []).length}</span></td>
+          <td style="text-align:center"><span class="badge-count">${(e.relatorios||[]).length}</span></td>
           <td>
-            <button class="btn-icon" title="Editar" onclick='abrirModalEmpresa(${JSON.stringify(e)})'>✎ Editar</button>
-            <button class="btn-icon btn-icon-danger" title="Excluir" onclick="excluirEmpresa(${e.id})">🗑</button>
+            <button class="btn-icon" onclick='abrirModalEmpresa(${JSON.stringify(e)})'>✎ Editar</button>
+            <button class="btn-icon btn-icon-danger" onclick="excluirEmpresa(${e.id})">🗑</button>
           </td>`;
         tbody.appendChild(tr);
       });
-
-      await carregarEmpresas(); // atualiza select do login
+      await carregarEmpresas();
     } catch {
       document.getElementById('tbodyAdmin').innerHTML =
         '<tr><td colspan="5" class="admin-empty" style="color:var(--red)">Erro ao conectar com o servidor.</td></tr>';
     }
   }
 
-  // ── MODAL EMPRESA ─────────────────────────────────────────────────────────
   function abrirModalEmpresa(empresa) {
     document.getElementById('empId').value      = empresa?.id ?? '';
     document.getElementById('empNome').value    = empresa?.nome ?? '';
@@ -1015,12 +1013,10 @@
     document.getElementById('modalEmpTitle').textContent = empresa ? 'Editar Empresa' : 'Nova Empresa';
     document.getElementById('btnExcluirEmp').style.display = empresa ? '' : 'none';
     document.getElementById('modalEmpError').textContent = '';
-
     const container = document.getElementById('relRows');
     container.innerHTML = '';
     (empresa?.relatorios ?? []).forEach(r => addRelRow(r));
     syncRelRowsEmpty();
-
     showModal('modalEmpresa');
   }
 
@@ -1030,7 +1026,7 @@
     div.innerHTML = `
       <input type="text" placeholder="Nome do relatório" value="${rel?.nome ?? ''}" class="rel-nome" />
       <input type="text" placeholder="/endpoint" value="${rel?.endpoint ?? ''}" class="rel-endpoint" />
-      <button class="btn-icon btn-icon-danger" onclick="this.parentElement.remove(); syncRelRowsEmpty()">×</button>`;
+      <button class="btn-icon btn-icon-danger" onclick="this.parentElement.remove();syncRelRowsEmpty()">×</button>`;
     document.getElementById('relRows').appendChild(div);
     syncRelRowsEmpty();
   }
@@ -1041,41 +1037,29 @@
   }
 
   async function salvarEmpresa() {
-    const id           = document.getElementById('empId').value;
-    const nome         = document.getElementById('empNome').value.trim();
-    const api_base     = document.getElementById('empApiBase').value.trim();
+    const id  = document.getElementById('empId').value;
+    const nome = document.getElementById('empNome').value.trim();
+    const api_base = document.getElementById('empApiBase').value.trim();
     const login_endpoint = document.getElementById('empLoginEp').value.trim();
-    const errEl        = document.getElementById('modalEmpError');
-
+    const errEl = document.getElementById('modalEmpError');
     errEl.textContent = '';
-    if (!nome || !api_base || !login_endpoint) {
-      errEl.textContent = 'Preencha todos os campos obrigatórios.'; return;
-    }
+    if (!nome || !api_base || !login_endpoint) { errEl.textContent = 'Preencha todos os campos obrigatórios.'; return; }
 
     const relatorios = [...document.querySelectorAll('.rel-row')].map(row => ({
-      nome:     row.querySelector('.rel-nome').value.trim(),
+      nome: row.querySelector('.rel-nome').value.trim(),
       endpoint: row.querySelector('.rel-endpoint').value.trim(),
     })).filter(r => r.nome && r.endpoint);
 
-    const url    = id ? `/api/empresas/${id}` : '/api/empresas';
-    const method = id ? 'PUT' : 'POST';
-
     try {
-      const res = await fetch(url, {
-        method,
+      const res = await fetch(id ? `/api/empresas/${id}` : '/api/empresas', {
+        method: id ? 'PUT' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ nome, api_base, login_endpoint, relatorios })
       });
-      if (!res.ok) {
-        const d = await res.json();
-        errEl.textContent = d.erro || 'Erro ao salvar.';
-        return;
-      }
+      if (!res.ok) { const d = await res.json(); errEl.textContent = d.erro || 'Erro ao salvar.'; return; }
       hideModal('modalEmpresa');
       await carregarAdminEmpresas();
-    } catch {
-      errEl.textContent = 'Erro de conexão.';
-    }
+    } catch { errEl.textContent = 'Erro de conexão.'; }
   }
 
   async function excluirEmpresaAtual() {
@@ -1087,16 +1071,15 @@
   }
 
   async function excluirEmpresa(id) {
-    if (!confirm('Excluir esta empresa e todos os seus relatórios?')) return;
+    if (!confirm('Excluir esta empresa?')) return;
     await fetch(`/api/empresas/${id}`, { method: 'DELETE' });
     await carregarAdminEmpresas();
   }
 
-  // ── DADOS DE VENDAS ───────────────────────────────────────────────────────
-  async function fetchVendas(dtDe, dtAte) {
-    const selVal = document.getElementById('selRelatorio').value;
+  // ── FETCH VENDAS ──────────────────────────────────────────────────────────
+  async function fetchVendas(dtDe, dtAte, relSelId) {
+    const selVal = document.getElementById(relSelId).value;
     if (selVal) _relatorio = JSON.parse(selVal);
-
     const url = `${_empresa.api_base}${_relatorio.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
     if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
@@ -1111,11 +1094,10 @@
       const key = `${r.codprod}|${r.codvendedor}|${r.codcliente}`;
       if (!map.has(key)) {
         map.set(key, {
-          codprod: r.codprod ?? '—',      decprod: r.decprod ?? '—',
+          codprod: r.codprod ?? '—', decprod: r.decprod ?? '—',
           codvendedor: r.codvendedor ?? '—', nomevendedor: r.nomevendedor ?? '—',
-          codcliente: r.codcliente ?? '—',  nomecliente: r.nomecliente ?? '—',
-          cepcliente: r.cepcliente ?? '—',
-          qtde: 0, custo: 0, venda: 0,
+          codcliente: r.codcliente ?? '—', nomecliente: r.nomecliente ?? '—',
+          cepcliente: r.cepcliente ?? '—', qtde: 0, custo: 0, venda: 0,
         });
       }
       const g = map.get(key);
@@ -1130,25 +1112,193 @@
     );
   }
 
-  // ── RENDERIZAÇÃO ──────────────────────────────────────────────────────────
-  function renderizar(grupos, dtDe, dtAte) {
+  // ── DASHBOARD ─────────────────────────────────────────────────────────────
+  function destroyCharts() {
+    Object.keys(_charts).forEach(k => { if (_charts[k]) { _charts[k].destroy(); _charts[k] = null; } });
+  }
+
+  async function gerarDashboard() {
+    const dtDeRaw  = document.getElementById('dd_de').value;
+    const dtAteRaw = document.getElementById('dd_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setDashStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setDashStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+    if (!_relatorio)           { setDashStatus('Nenhum relatório configurado.', 'error'); return; }
+
+    const btn = document.getElementById('btnDash');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('dashKpis').style.display = 'none';
+    document.getElementById('dashGrid').style.display = 'none';
+
+    try {
+      setDashStatus('Buscando dados…');
+      const rows   = await fetchVendas(dateToApi(dtDeRaw), dateToApi(dtAteRaw), 'selRelatorioDash');
+      const grupos = agrupar(rows);
+      renderDashboard(grupos);
+      setDashStatus(`Dashboard atualizado — ${rows.length} registro(s).`, 'ok');
+    } catch (err) {
+      setDashStatus(err.message, 'error');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Gerar Dashboard';
+    }
+  }
+
+  function setDashStatus(msg, type = '') {
+    const el = document.getElementById('dashStatus');
+    el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
+  }
+
+  function renderDashboard(grupos) {
+    // KPIs
+    const clientesUnicos = new Set(grupos.map(g => g.codcliente)).size;
+    const totVenda  = grupos.reduce((s, g) => s + g.venda, 0);
+    const totCusto  = grupos.reduce((s, g) => s + g.custo, 0);
+    const totMargem = totVenda > 0 ? ((totVenda - totCusto) / totVenda) * 100 : 0;
+    document.getElementById('kpiClientes').textContent   = clientesUnicos;
+    document.getElementById('kpiVenda').textContent      = 'R$ ' + fmtNum(totVenda);
+    document.getElementById('kpiCusto').textContent      = 'R$ ' + fmtNum(totCusto);
+    document.getElementById('kpiMargem').textContent     = 'R$ ' + fmtNum(totVenda - totCusto);
+    document.getElementById('kpiMargemPct').textContent  = fmtPct(totMargem);
+    document.getElementById('dashKpis').style.display = 'flex';
+
+    // agrega por cliente / produto / vendedor
+    const byCliente  = {}, byProduto = {}, byVendedor = {};
+    grupos.forEach(g => {
+      byCliente[g.nomecliente]  = (byCliente[g.nomecliente]  || 0) + g.venda;
+      byProduto[g.decprod]      = (byProduto[g.decprod]      || 0) + g.venda;
+      byVendedor[g.nomevendedor] = (byVendedor[g.nomevendedor] || 0) + g.venda;
+    });
+
+    const top10Clientes = Object.entries(byCliente).sort((a,b) => b[1]-a[1]).slice(0, 10);
+    const top10Produtos = Object.entries(byProduto).sort((a,b) => b[1]-a[1]).slice(0, 10);
+    const vendedores    = Object.entries(byVendedor).sort((a,b) => b[1]-a[1]);
+
+    destroyCharts();
+
+    // chart: Top Clientes (horizontal bar)
+    _charts.clientes = new Chart(document.getElementById('chartClientes'), {
+      type: 'bar',
+      data: {
+        labels: top10Clientes.map(([k]) => truncate(k)),
+        datasets: [{
+          data: top10Clientes.map(([,v]) => v),
+          backgroundColor: top10Clientes.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor:     top10Clientes.map((_, i) => PALETTE[i % PALETTE.length]),
+          borderWidth: 1, borderRadius: 4,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } }
+        },
+        scales: {
+          x: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+          y: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    // chart: Vendedores (doughnut)
+    _charts.vendedor = new Chart(document.getElementById('chartVendedor'), {
+      type: 'doughnut',
+      data: {
+        labels: vendedores.map(([k]) => truncate(k, 20)),
+        datasets: [{
+          data: vendedores.map(([,v]) => v),
+          backgroundColor: vendedores.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor: '#fff', borderWidth: 2,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 10 } },
+          tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } }
+        }
+      }
+    });
+
+    // chart: Top Produtos (horizontal bar)
+    _charts.produtos = new Chart(document.getElementById('chartProdutos'), {
+      type: 'bar',
+      data: {
+        labels: top10Produtos.map(([k]) => truncate(k, 32)),
+        datasets: [{
+          data: top10Produtos.map(([,v]) => v),
+          backgroundColor: PALETTE[0] + 'BB',
+          borderColor: PALETTE[0],
+          borderWidth: 1, borderRadius: 4,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } }
+        },
+        scales: {
+          x: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+          y: { ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    document.getElementById('dashGrid').style.display = 'grid';
+  }
+
+  // ── RELATÓRIO (tabela) ────────────────────────────────────────────────────
+  function setRelStatus(msg, type = '') {
+    const el = document.getElementById('relStatus');
+    el.textContent = msg; el.className = type;
+  }
+
+  async function gerarRelatorio() {
+    const dtDeRaw  = document.getElementById('dt_de').value;
+    const dtAteRaw = document.getElementById('dt_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setRelStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setRelStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+    if (!_relatorio)           { setRelStatus('Nenhum relatório configurado.', 'error'); return; }
+
+    const btn = document.getElementById('btnGerar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('summary').style.display = 'none';
+    document.getElementById('reportWrapper').style.display = 'none';
+
+    try {
+      setRelStatus('Buscando dados…');
+      const rows   = await fetchVendas(dateToApi(dtDeRaw), dateToApi(dtAteRaw), 'selRelatorio');
+      const grupos = agrupar(rows);
+      renderTabela(grupos, dateToApi(dtDeRaw), dateToApi(dtAteRaw));
+      setRelStatus(`Relatório gerado — ${grupos.length} grupo(s).`, 'ok');
+    } catch (err) {
+      setRelStatus(err.message, 'error');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Gerar Relatório';
+    }
+  }
+
+  function renderTabela(grupos, dtDe, dtAte) {
     const tbody = document.getElementById('tbody');
     tbody.innerHTML = '';
 
-    if (grupos.length === 0) {
-      document.getElementById('empty').style.display = '';
+    if (!grupos.length) {
+      document.getElementById('tblEmpty').style.display = '';
       document.getElementById('tfootRow').style.display = 'none';
       return;
     }
-    document.getElementById('empty').style.display = 'none';
+    document.getElementById('tblEmpty').style.display = 'none';
     document.getElementById('tfootRow').style.display = '';
 
     let totQtde = 0, totCusto = 0, totVenda = 0;
-
-    for (const g of grupos) {
-      totQtde  += g.qtde;
-      totCusto += g.custo;
-      totVenda += g.venda;
+    grupos.forEach(g => {
+      totQtde += g.qtde; totCusto += g.custo; totVenda += g.venda;
       const margem = g.venda > 0 ? ((g.venda - g.custo) / g.venda) * 100 : 0;
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -1161,7 +1311,7 @@
         <td class="num">${fmtNum(g.venda)}</td>
         <td class="num">${badgeMargem(margem)}</td>`;
       tbody.appendChild(tr);
-    }
+    });
 
     const totMargem = totVenda > 0 ? ((totVenda - totCusto) / totVenda) * 100 : 0;
     document.getElementById('ftQtde').textContent  = fmtNum(totQtde);
@@ -1179,45 +1329,15 @@
     const periodo = `Período: ${fmtDate(dtDe)} a ${fmtDate(dtAte)} — ${grupos.length} grupos`;
     document.getElementById('reportPeriodo').textContent = periodo;
     document.getElementById('reportTitulo').textContent  = _relatorio?.nome ?? 'Relatório';
-
-    document.getElementById('phEmpresa').textContent  = _empresa?.nome ?? '';
+    document.getElementById('phEmpresa').textContent   = _empresa?.nome ?? '';
     document.getElementById('phRelatorio').textContent = _relatorio?.nome ?? '';
-    document.getElementById('phPeriodo').textContent  = periodo;
-    document.getElementById('phUsuario').textContent  = _nomeUsuario;
-    document.getElementById('phDataHora').textContent =
+    document.getElementById('phPeriodo').textContent   = periodo;
+    document.getElementById('phUsuario').textContent   = _nomeUsuario;
+    document.getElementById('phDataHora').textContent  =
       new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
 
     document.getElementById('summary').style.display = 'flex';
     document.getElementById('reportWrapper').style.display = '';
-  }
-
-  // ── GERAR RELATÓRIO ───────────────────────────────────────────────────────
-  async function gerarRelatorio() {
-    const dtDeRaw  = document.getElementById('dt_de').value;
-    const dtAteRaw = document.getElementById('dt_ate').value;
-
-    if (!dtDeRaw || !dtAteRaw) { setStatus('Selecione o período.', 'error'); return; }
-    if (dtDeRaw > dtAteRaw)    { setStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
-    if (!_relatorio)           { setStatus('Nenhum relatório configurado para esta empresa.', 'error'); return; }
-
-    const btn = document.getElementById('btnGerar');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loader"></span> Aguarde…';
-    document.getElementById('summary').style.display = 'none';
-    document.getElementById('reportWrapper').style.display = 'none';
-
-    try {
-      setStatus('Buscando dados…');
-      const rows   = await fetchVendas(dateToApi(dtDeRaw), dateToApi(dtAteRaw));
-      const grupos = agrupar(rows);
-      renderizar(grupos, dateToApi(dtDeRaw), dateToApi(dtAteRaw));
-      setStatus(`Relatório gerado — ${grupos.length} grupo(s).`, 'ok');
-    } catch (err) {
-      setStatus(err.message, 'error');
-    } finally {
-      btn.disabled    = false;
-      btn.textContent = 'Gerar Relatório';
-    }
   }
 
   // ── PDF ───────────────────────────────────────────────────────────────────
@@ -1232,17 +1352,18 @@
 
   // ── INIT ──────────────────────────────────────────────────────────────────
   (function init() {
-    const hoje = new Date();
-    const sete = new Date(hoje);
+    const hoje = new Date(), sete = new Date(hoje);
     sete.setDate(sete.getDate() - 7);
     const iso = d => d.toISOString().slice(0, 10);
-    document.getElementById('dt_de').value  = iso(sete);
-    document.getElementById('dt_ate').value = iso(hoje);
+    ['dd_de','dt_de'].forEach(id => document.getElementById(id).value = iso(sete));
+    ['dd_ate','dt_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
 
-    document.getElementById('lLogin').addEventListener('keydown',   e => { if (e.key === 'Enter') document.getElementById('lSenha').focus(); });
-    document.getElementById('lSenha').addEventListener('keydown',   e => { if (e.key === 'Enter') fazerLogin(); });
-    document.getElementById('adminSenha').addEventListener('keydown', e => { if (e.key === 'Enter') confirmarAdminAuth(); });
-    document.getElementById('selRelatorio').addEventListener('change', e => { _relatorio = JSON.parse(e.target.value); });
+    document.getElementById('lLogin').addEventListener('keydown',    e => { if (e.key === 'Enter') document.getElementById('lSenha').focus(); });
+    document.getElementById('lSenha').addEventListener('keydown',    e => { if (e.key === 'Enter') fazerLogin(); });
+    document.getElementById('adminUsuario').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('adminSenha').focus(); });
+    document.getElementById('adminSenha').addEventListener('keydown',   e => { if (e.key === 'Enter') confirmarAdminAuth(); });
+    document.getElementById('selRelatorio').addEventListener('change',  e => { _relatorio = JSON.parse(e.target.value); });
+    document.getElementById('selRelatorioDash').addEventListener('change', e => { _relatorio = JSON.parse(e.target.value); });
 
     carregarEmpresas();
   })();
