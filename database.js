@@ -57,14 +57,14 @@ const empCount = db.prepare('SELECT COUNT(*) AS n FROM empresas').get();
 if (empCount.n === 0) {
   const r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('SGB', 'http://localhost:3007/sgbrbi', '/usuario/login');
+  ).run('SGB', 'http://dbcayemecolchoes.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
   ).run(r.lastInsertRowid, 'Vendas Sintético', '/vendas/analitico');
 
-  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
-  ).run(r.lastInsertRowid, 'Produção', '/produzido');
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Produção', '/produzido', 'producao');
 }
 
 module.exports = db;
