@@ -212,6 +212,11 @@
     #relStatus.error { color: var(--red); font-weight: 600; }
     #relStatus.ok    { color: var(--green); font-weight: 600; }
 
+    /* ══ COMPRAS SECTION ════════════════════════════════════════════════════ */
+    #comprasStatus { margin: 0 24px 10px; font-size: .82rem; min-height: 20px; color: #555; }
+    #comprasStatus.error { color: var(--red); font-weight: 600; }
+    #comprasStatus.ok    { color: var(--green); font-weight: 600; }
+
     /* ══ PRODUÇÃO SECTION ═══════════════════════════════════════════════════ */
     #prodStatus { margin: 0 24px 10px; font-size: .82rem; min-height: 20px; color: #555; }
     #prodStatus.error { color: var(--red); font-weight: 600; }
@@ -475,6 +480,16 @@
             Detalhes
           </button>
 
+          <!-- Compras -->
+          <button class="nav-item" id="navComprasDash" onclick="navTo('comprasdash')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+            Compras
+          </button>
+          <button class="nav-item nav-child" id="navComprasDet" onclick="navTo('comprasdet')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+            Detalhes
+          </button>
+
           <!-- Produção -->
           <button class="nav-item" id="navProdDash" onclick="navTo('producaodash')">
             <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="3" width="6" height="18" rx="1"/><rect x="9" y="8" width="6" height="13" rx="1"/><rect x="16" y="13" width="6" height="8" rx="1"/></svg>
@@ -672,6 +687,134 @@
           </div>
         </div>
       </div>
+
+      <!-- ── SEÇÃO: DASHBOARD COMPRAS ─────────────────────────────── -->
+      <div id="secComprasDash" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Período do Dashboard de Compras</div>
+          <div class="field" id="fieldRelComprasDash" style="display:none">
+            <label>Relatório</label>
+            <select id="selRelComprasDash"></select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="comprasd_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="comprasd_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnComprasDash" onclick="gerarDashboardCompras()">
+            Gerar Dashboard
+          </button>
+        </div>
+        <div id="dashComprasStatus" class="dash-status"></div>
+
+        <div id="dashComprasKpis" class="dash-kpis" style="display:none">
+          <div class="kpi-card sky"><label>NFs</label><div class="kpi-val" id="kpiComprasNFs">0</div></div>
+          <div class="kpi-card"><label>Fornecedores</label><div class="kpi-val" id="kpiComprasForn">0</div></div>
+          <div class="kpi-card red"><label>Total Comprado (R$)</label><div class="kpi-val" id="kpiComprasTotal">0,00</div></div>
+          <div class="kpi-card green"><label>Ticket Médio NF (R$)</label><div class="kpi-val" id="kpiComprasTicket">0,00</div></div>
+        </div>
+
+        <div id="dashComprasGrid" class="dash-grid" style="display:none">
+          <div class="chart-card">
+            <div class="chart-title">Top 10 Fornecedores por Valor (R$)</div>
+            <div class="chart-wrap-tall"><canvas id="chartComprasForn"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Participação por UF</div>
+            <div class="chart-wrap-tall"><canvas id="chartComprasUF"></canvas></div>
+          </div>
+          <div class="chart-card chart-card-full">
+            <div class="chart-title">Top 10 Produtos por Valor Comprado (R$)</div>
+            <div class="chart-wrap"><canvas id="chartComprasProd"></canvas></div>
+          </div>
+        </div>
+      </div><!-- /secComprasDash -->
+
+      <!-- ── SEÇÃO: DETALHES COMPRAS ────────────────────────────── -->
+      <div id="secComprasDet" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Período das Compras</div>
+          <div class="field" id="fieldRelComprasDet" style="display:none">
+            <label>Relatório</label>
+            <select id="selRelComprasDet"></select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="compras_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="compras_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnCompras" onclick="gerarCompras()">
+            Gerar Relatório
+          </button>
+        </div>
+
+        <div id="comprasStatus"></div>
+
+        <div class="summary" id="comprasSummary" style="display:none">
+          <div class="card blue"><label>Total de Grupos</label><div class="val" id="comprasCardItens">0</div></div>
+          <div class="card red"><label>Total Comprado (R$)</label><div class="val" id="comprasCardTotal">0,00</div></div>
+        </div>
+
+        <div class="report-wrapper" id="comprasWrapper" style="display:none">
+          <div id="printHeaderCompras" style="display:none">
+            <div class="ph-left">
+              <h2>Simple BI — <span id="phEmpresaCompras"></span></h2>
+              <p id="phPeriodoCompras"></p>
+            </div>
+            <div class="ph-right">
+              <div>Relatório: <strong>Compras</strong></div>
+              <div>Usuário: <strong id="phUsuarioCompras"></strong></div>
+              <div>Emitido: <strong id="phDataHoraCompras"></strong></div>
+            </div>
+          </div>
+
+          <div class="report-header">
+            <h3>Compras</h3>
+            <div class="report-header-right">
+              <small id="comprasPeriodo"></small>
+              <button class="btn-pdf" onclick="exportarCSVCompras()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                Exportar CSV
+              </button>
+              <button class="btn-pdf" onclick="gerarPDFCompras()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 18 15 15"/></svg>
+                Exportar PDF
+              </button>
+            </div>
+          </div>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cód. Prod.</th><th>Produto</th>
+                  <th>Cód. Forn.</th><th>Fornecedor</th>
+                  <th>Cidade</th><th>UF</th>
+                  <th class="num">Qtde.</th>
+                  <th class="num">Valor Unit. (R$)</th>
+                  <th class="num">Total (R$)</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyCompras"></tbody>
+              <tfoot>
+                <tr id="tfootCompras">
+                  <td colspan="6"><strong>TOTAL GERAL</strong></td>
+                  <td class="num" id="ftComprasQtde"></td>
+                  <td class="num">—</td>
+                  <td class="num" id="ftComprasTotal"></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div id="tblComprasEmpty" style="display:none;text-align:center;padding:36px;color:#aaa;font-size:.88rem">Nenhum registro encontrado para o período.</div>
+          </div>
+        </div>
+      </div><!-- /secComprasDet -->
 
       <!-- ── SEÇÃO: PRODUÇÃO ──────────────────────────────────────── -->
       <div id="secProducao" style="display:none">
@@ -900,8 +1043,8 @@
 <script>
   // ── ESTADO ────────────────────────────────────────────────────────────────
   let _token = null, _nomeUsuario = '', _empresa = null, _adminAuthed = false;
-  let _relatorio = null, _relatorioProducao = null;
-  let _gruposVendas = [], _rowsProducao = [];
+  let _relatorio = null, _relatorioProducao = null, _relatorioCompras = null;
+  let _gruposVendas = [], _rowsProducao = [], _gruposCompras = [];
   let _charts = { clientes: null, vendedor: null, produtos: null };
 
   const PALETTE = ['#0f3460','#e94560','#27ae60','#2980b9','#f39c12','#8e44ad','#16a085','#d35400','#c0392b','#7f8c8d'];
@@ -953,16 +1096,20 @@
     const map = {
       dashboard:   'secDashboard',
       relatorios:  'secRelatorios',
+      comprasdash: 'secComprasDash',
+      comprasdet:  'secComprasDet',
       producaodash:'secProducaoDash',
       producaodet: 'secProducao',
     };
     Object.entries(map).forEach(([s, id]) => {
       document.getElementById(id).style.display = s === section ? '' : 'none';
     });
-    document.getElementById('navDash').classList.toggle('active',    section === 'dashboard');
-    document.getElementById('navRel').classList.toggle('active',     section === 'relatorios');
-    document.getElementById('navProdDash').classList.toggle('active',section === 'producaodash');
-    document.getElementById('navProdDet').classList.toggle('active', section === 'producaodet');
+    document.getElementById('navDash').classList.toggle('active',       section === 'dashboard');
+    document.getElementById('navRel').classList.toggle('active',        section === 'relatorios');
+    document.getElementById('navComprasDash').classList.toggle('active',section === 'comprasdash');
+    document.getElementById('navComprasDet').classList.toggle('active', section === 'comprasdet');
+    document.getElementById('navProdDash').classList.toggle('active',   section === 'producaodash');
+    document.getElementById('navProdDet').classList.toggle('active',    section === 'producaodet');
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
@@ -1020,9 +1167,10 @@
       document.getElementById('sidebarCompany').textContent = _empresa.nome;
 
       // popula selects de relatório por tipo
-      const rels      = _empresa.relatorios || [];
-      const relsV     = rels.filter(r => (r.tipo || 'vendas') === 'vendas');
-      const relsProd  = rels.filter(r => r.tipo === 'producao');
+      const rels       = _empresa.relatorios || [];
+      const relsV      = rels.filter(r => (r.tipo || 'vendas') === 'vendas');
+      const relsCompras= rels.filter(r => r.tipo === 'compras');
+      const relsProd   = rels.filter(r => r.tipo === 'producao');
 
       const populaSel = (selIds, lista) => selIds.forEach(selId => {
         const s = document.getElementById(selId);
@@ -1039,6 +1187,12 @@
       document.getElementById('fieldRelDash').style.display   = showSelV ? '' : 'none';
       document.getElementById('fieldRelatorio').style.display = showSelV ? '' : 'none';
       _relatorio = relsV[0] || null;
+
+      populaSel(['selRelComprasDash', 'selRelComprasDet'], relsCompras);
+      const showSelC = relsCompras.length > 1;
+      document.getElementById('fieldRelComprasDash').style.display = showSelC ? '' : 'none';
+      document.getElementById('fieldRelComprasDet').style.display  = showSelC ? '' : 'none';
+      _relatorioCompras = relsCompras[0] || null;
 
       populaSel(['selRelProducaoDash', 'selRelProducaoDet'], relsProd);
       const showSelP = relsProd.length > 1;
@@ -1058,7 +1212,7 @@
 
   function sair() {
     _token = null; _nomeUsuario = ''; _empresa = null;
-    _relatorio = null; _relatorioProducao = null;
+    _relatorio = null; _relatorioCompras = null; _relatorioProducao = null;
     document.getElementById('lSenha').value = '';
     document.getElementById('loginError').textContent = '';
     document.getElementById('summary').style.display = 'none';
@@ -1069,6 +1223,12 @@
     document.getElementById('prodSummary').style.display = 'none';
     document.getElementById('dashProdKpis').style.display = 'none';
     document.getElementById('dashProdGrid').style.display = 'none';
+    document.getElementById('comprasWrapper').style.display = 'none';
+    document.getElementById('comprasSummary').style.display = 'none';
+    document.getElementById('dashComprasKpis').style.display = 'none';
+    document.getElementById('dashComprasGrid').style.display = 'none';
+    document.getElementById('tbodyCompras').innerHTML = '';
+    destroyChartsCompras();
     document.getElementById('tbody').innerHTML = '';
     document.getElementById('tbodyProd').innerHTML = '';
     document.getElementById('theadProd').innerHTML = '';
@@ -1201,6 +1361,7 @@
       <input type="text" placeholder="/endpoint" value="${rel?.endpoint ?? ''}" class="rel-endpoint" />
       <select class="rel-tipo" style="border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:.82rem;outline:none;background:#fafbfc;color:var(--text)">
         <option value="vendas">Vendas</option>
+        <option value="compras">Compras</option>
         <option value="producao">Produção</option>
       </select>
       <button class="btn-icon btn-icon-danger" onclick="this.parentElement.remove();syncRelRowsEmpty()">×</button>`;
@@ -1518,6 +1679,246 @@
 
     document.getElementById('summary').style.display = 'flex';
     document.getElementById('reportWrapper').style.display = '';
+  }
+
+  // ── COMPRAS ───────────────────────────────────────────────────────────────
+  let _chartsCompras = { forn: null, uf: null, prod: null };
+
+  function destroyChartsCompras() {
+    Object.keys(_chartsCompras).forEach(k => {
+      if (_chartsCompras[k]) { _chartsCompras[k].destroy(); _chartsCompras[k] = null; }
+    });
+  }
+
+  function agruparCompras(rows) {
+    const map = new Map();
+    for (const r of rows) {
+      const key = `${r.codproduto}|${r.codfornecedor}`;
+      if (!map.has(key)) {
+        map.set(key, {
+          codproduto: r.codproduto ?? '—', produto: r.produto ?? '—',
+          codfornecedor: r.codfornecedor ?? '—', fornecedor: r.fornecedor ?? '—',
+          cidade: r.cidade ?? '—', uf: r.uf ?? '—',
+          qtde: 0, valor: 0,
+        });
+      }
+      const g = map.get(key);
+      const q = toNum(r.qtde);
+      g.qtde  += q;
+      g.valor += q * toNum(r.valorunitariocompra);
+    }
+    return [...map.values()].sort((a, b) =>
+      String(a.fornecedor).localeCompare(String(b.fornecedor)) ||
+      String(a.produto).localeCompare(String(b.produto))
+    );
+  }
+
+  async function fetchCompras(dtDe, dtAte, relSelId) {
+    const selVal = document.getElementById(relSelId).value;
+    if (selVal) _relatorioCompras = JSON.parse(selVal);
+    if (!_relatorioCompras) throw new Error('Nenhum relatório de compras configurado.');
+    const url = `${_empresa.api_base}${_relatorioCompras.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+    if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
+    return res.json();
+  }
+
+  // — Dashboard compras —
+  function setDashComprasStatus(msg, type = '') {
+    const el = document.getElementById('dashComprasStatus');
+    el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
+  }
+
+  async function gerarDashboardCompras() {
+    const dtDeRaw  = document.getElementById('comprasd_de').value;
+    const dtAteRaw = document.getElementById('comprasd_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setDashComprasStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setDashComprasStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+
+    const btn = document.getElementById('btnComprasDash');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('dashComprasKpis').style.display = 'none';
+    document.getElementById('dashComprasGrid').style.display = 'none';
+
+    try {
+      setDashComprasStatus('Buscando dados…');
+      const rows   = await fetchCompras(dateToApi(dtDeRaw), dateToApi(dtAteRaw), 'selRelComprasDash');
+      const grupos = agruparCompras(rows);
+      renderDashboardCompras(rows, grupos);
+      setDashComprasStatus(`Dashboard atualizado — ${rows.length} registro(s).`, 'ok');
+    } catch (err) {
+      setDashComprasStatus(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Gerar Dashboard';
+    }
+  }
+
+  function renderDashboardCompras(rows, grupos) {
+    const nfs     = new Set(rows.map(r => r.controle)).size;
+    const forn    = new Set(rows.map(r => r.codfornecedor)).size;
+    const total   = grupos.reduce((s, g) => s + g.valor, 0);
+    const ticket  = nfs > 0 ? total / nfs : 0;
+
+    document.getElementById('kpiComprasNFs').textContent    = nfs;
+    document.getElementById('kpiComprasForn').textContent   = forn;
+    document.getElementById('kpiComprasTotal').textContent  = 'R$ ' + fmtNum(total);
+    document.getElementById('kpiComprasTicket').textContent = 'R$ ' + fmtNum(ticket);
+    document.getElementById('dashComprasKpis').style.display = 'flex';
+
+    const byForn = {}, byUF = {}, byProd = {};
+    grupos.forEach(g => {
+      byForn[g.fornecedor] = (byForn[g.fornecedor] || 0) + g.valor;
+      byUF[g.uf]           = (byUF[g.uf]           || 0) + g.valor;
+      byProd[g.produto]    = (byProd[g.produto]     || 0) + g.valor;
+    });
+
+    const top10Forn = Object.entries(byForn).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const top10Prod = Object.entries(byProd).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const ufs       = Object.entries(byUF).sort((a, b) => b[1] - a[1]);
+
+    destroyChartsCompras();
+
+    _chartsCompras.forn = new Chart(document.getElementById('chartComprasForn'), {
+      type: 'bar',
+      data: {
+        labels: top10Forn.map(([k]) => truncate(k)),
+        datasets: [{ data: top10Forn.map(([, v]) => v),
+          backgroundColor: top10Forn.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor:     top10Forn.map((_, i) => PALETTE[i % PALETTE.length]),
+          borderWidth: 1, borderRadius: 4 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } },
+        scales: { x: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+                  y: { ticks: { font: { size: 10 } } } } }
+    });
+
+    _chartsCompras.uf = new Chart(document.getElementById('chartComprasUF'), {
+      type: 'doughnut',
+      data: {
+        labels: ufs.map(([k]) => k),
+        datasets: [{ data: ufs.map(([, v]) => v),
+          backgroundColor: ufs.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor: '#fff', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 10 } },
+                   tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } } }
+    });
+
+    _chartsCompras.prod = new Chart(document.getElementById('chartComprasProd'), {
+      type: 'bar',
+      data: {
+        labels: top10Prod.map(([k]) => truncate(k, 32)),
+        datasets: [{ data: top10Prod.map(([, v]) => v),
+          backgroundColor: PALETTE[0] + 'BB', borderColor: PALETTE[0],
+          borderWidth: 1, borderRadius: 4 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } },
+        scales: { x: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+                  y: { ticks: { font: { size: 10 } } } } }
+    });
+
+    document.getElementById('dashComprasGrid').style.display = 'grid';
+  }
+
+  // — Detalhes compras —
+  function setComprasStatus(msg, type = '') {
+    const el = document.getElementById('comprasStatus');
+    el.textContent = msg; el.className = type;
+  }
+
+  async function gerarCompras() {
+    const dtDeRaw  = document.getElementById('compras_de').value;
+    const dtAteRaw = document.getElementById('compras_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setComprasStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setComprasStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+
+    const btn = document.getElementById('btnCompras');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('comprasWrapper').style.display = 'none';
+    document.getElementById('comprasSummary').style.display = 'none';
+
+    try {
+      setComprasStatus('Buscando dados…');
+      const rows   = await fetchCompras(dateToApi(dtDeRaw), dateToApi(dtAteRaw), 'selRelComprasDet');
+      const grupos = agruparCompras(rows);
+      renderTabelaCompras(grupos, dateToApi(dtDeRaw), dateToApi(dtAteRaw));
+      setComprasStatus(`Relatório gerado — ${grupos.length} grupo(s).`, 'ok');
+    } catch (err) {
+      setComprasStatus(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Gerar Relatório';
+    }
+  }
+
+  function renderTabelaCompras(grupos, dtDe, dtAte) {
+    _gruposCompras = grupos;
+    const tbody = document.getElementById('tbodyCompras');
+    tbody.innerHTML = '';
+
+    if (!grupos.length) {
+      document.getElementById('tblComprasEmpty').style.display = '';
+      document.getElementById('tfootCompras').style.display    = 'none';
+      return;
+    }
+    document.getElementById('tblComprasEmpty').style.display = 'none';
+    document.getElementById('tfootCompras').style.display    = '';
+
+    let totQtde = 0, totValor = 0;
+    grupos.forEach(g => {
+      totQtde += g.qtde; totValor += g.valor;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${g.codproduto}</td><td>${g.produto}</td>
+        <td>${g.codfornecedor}</td><td>${g.fornecedor}</td>
+        <td>${g.cidade}</td><td>${g.uf}</td>
+        <td class="num">${fmtNum(g.qtde)}</td>
+        <td class="num">${g.qtde > 0 ? fmtNum(g.valor / g.qtde) : '—'}</td>
+        <td class="num">${fmtNum(g.valor)}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    document.getElementById('ftComprasQtde').textContent  = fmtNum(totQtde);
+    document.getElementById('ftComprasTotal').textContent = 'R$ ' + fmtNum(totValor);
+
+    document.getElementById('comprasCardItens').textContent = grupos.length;
+    document.getElementById('comprasCardTotal').textContent = 'R$ ' + fmtNum(totValor);
+
+    const fmtDate = d => d.split('.').reverse().join('/');
+    const periodo = `Período: ${fmtDate(dtDe)} a ${fmtDate(dtAte)}`;
+    document.getElementById('comprasPeriodo').textContent   = `${fmtDate(dtDe)} a ${fmtDate(dtAte)}`;
+    document.getElementById('phEmpresaCompras').textContent = _empresa?.nome ?? '';
+    document.getElementById('phPeriodoCompras').textContent = periodo;
+    document.getElementById('phUsuarioCompras').textContent = _nomeUsuario;
+    document.getElementById('phDataHoraCompras').textContent =
+      new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+
+    document.getElementById('comprasSummary').style.display = 'flex';
+    document.getElementById('comprasWrapper').style.display = '';
+  }
+
+  function exportarCSVCompras() {
+    if (!_gruposCompras.length) return;
+    const periodo = document.getElementById('comprasPeriodo').textContent.replace(/\//g, '-');
+    const header  = ['Cod.Prod.','Produto','Cod.Forn.','Fornecedor','Cidade','UF',
+                     'Qtde','Valor Unit. (R$)','Total (R$)'];
+    const data = _gruposCompras.map(g => [
+      g.codproduto, g.produto, g.codfornecedor, g.fornecedor, g.cidade, g.uf,
+      g.qtde, g.qtde > 0 ? (g.valor / g.qtde).toFixed(2) : '', g.valor.toFixed(2),
+    ]);
+    downloadCSV(`${_empresa?.nome ?? 'BI'}_Compras_${periodo}.csv`, [header, ...data]);
+  }
+
+  function gerarPDFCompras() {
+    const original = document.title;
+    const periodo  = document.getElementById('comprasPeriodo').textContent.replace(/\//g, '-');
+    document.title = `${_empresa?.nome ?? 'BI'}_Compras_${periodo}`;
+    window.print();
+    document.title = original;
   }
 
   // ── DASHBOARD PRODUCAO ───────────────────────────────────────────────────
@@ -1850,8 +2251,8 @@
     const hoje = new Date(), sete = new Date(hoje);
     sete.setDate(sete.getDate() - 7);
     const iso = d => d.toISOString().slice(0, 10);
-    ['dd_de','dt_de','prod_de','prodd_de'].forEach(id => document.getElementById(id).value = iso(sete));
-    ['dd_ate','dt_ate','prod_ate','prodd_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
+    ['dd_de','dt_de','compras_de','comprasd_de','prod_de','prodd_de'].forEach(id => document.getElementById(id).value = iso(sete));
+    ['dd_ate','dt_ate','compras_ate','comprasd_ate','prod_ate','prodd_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
 
     document.getElementById('lLogin').addEventListener('keydown',    e => { if (e.key === 'Enter') document.getElementById('lSenha').focus(); });
     document.getElementById('lSenha').addEventListener('keydown',    e => { if (e.key === 'Enter') fazerLogin(); });
@@ -1859,6 +2260,8 @@
     document.getElementById('adminSenha').addEventListener('keydown',   e => { if (e.key === 'Enter') confirmarAdminAuth(); });
     document.getElementById('selRelatorio').addEventListener('change',      e => { _relatorio = JSON.parse(e.target.value); });
     document.getElementById('selRelatorioDash').addEventListener('change',  e => { _relatorio = JSON.parse(e.target.value); });
+    document.getElementById('selRelComprasDash').addEventListener('change',  e => { _relatorioCompras  = JSON.parse(e.target.value); });
+    document.getElementById('selRelComprasDet').addEventListener('change',   e => { _relatorioCompras  = JSON.parse(e.target.value); });
     document.getElementById('selRelProducaoDash').addEventListener('change', e => { _relatorioProducao = JSON.parse(e.target.value); });
     document.getElementById('selRelProducaoDet').addEventListener('change',  e => { _relatorioProducao = JSON.parse(e.target.value); });
 

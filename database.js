@@ -65,6 +65,9 @@ if (empCount.n === 0) {
 
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Produção', '/produzido', 'producao');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 }
 
 module.exports = db;
