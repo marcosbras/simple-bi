@@ -666,19 +666,26 @@
                   <th>Cód. Prod.</th><th>Descrição</th>
                   <th>Cód. Vend.</th><th>Vendedor</th>
                   <th>Cód. Cli.</th><th>Cliente</th><th>CEP</th>
-                  <th class="num">Qtde.</th>
-                  <th class="num">Custo (R$)</th>
                   <th class="num">Venda (R$)</th>
-                  <th class="num">Margem</th>
+                  <th class="num">Qtde.</th>
+                  <th>Und.</th>
+                  <th class="num">Custo (R$)</th>
+                  <th class="num">Qtde. Conv.</th>
+                  <th>Und. Conv.</th>
+                  <th class="num">Margem Contrib. (R$)</th>
+                  <th class="num">Margem (%)</th>
                 </tr>
               </thead>
               <tbody id="tbody"></tbody>
               <tfoot>
                 <tr id="tfootRow">
                   <td colspan="7"><strong>TOTAL GERAL</strong></td>
-                  <td class="num" id="ftQtde"></td>
-                  <td class="num" id="ftCusto"></td>
                   <td class="num" id="ftVenda"></td>
+                  <td class="num" id="ftQtde"></td>
+                  <td></td>
+                  <td class="num" id="ftCusto"></td>
+                  <td></td><td></td>
+                  <td class="num" id="ftMargContrib"></td>
                   <td class="num" id="ftMargem"></td>
                 </tr>
               </tfoot>
@@ -1680,18 +1687,23 @@
         <td>${r.codvendedor ?? '—'}</td><td>${r.nomevendedor ?? '—'}</td>
         <td>${r.codcliente ?? '—'}</td><td>${r.nomecliente ?? '—'}</td>
         <td>${r.cepcliente ?? '—'}</td>
-        <td class="num">${fmtNum(qtde)}</td>
-        <td class="num">${fmtNum(custo)}</td>
         <td class="num">${fmtNum(venda)}</td>
+        <td class="num">${fmtNum(qtde)}</td>
+        <td>${r.und ?? '—'}</td>
+        <td class="num">${fmtNum(custo)}</td>
+        <td class="num">${fmtNum(toNum(r.qtdeconvertidavd))}</td>
+        <td>${r.unconvertida || '—'}</td>
+        <td class="num">${fmtNum(venda - custo)}</td>
         <td class="num">${badgeMargem(margem)}</td>`;
       tbody.appendChild(tr);
     });
 
     const totMargem = totVenda > 0 ? ((totVenda - totCusto) / totVenda) * 100 : 0;
-    document.getElementById('ftQtde').textContent   = fmtNum(totQtde);
-    document.getElementById('ftCusto').textContent  = 'R$ ' + fmtNum(totCusto);
-    document.getElementById('ftVenda').textContent  = 'R$ ' + fmtNum(totVenda);
-    document.getElementById('ftMargem').textContent = fmtPct(totMargem);
+    document.getElementById('ftVenda').textContent      = 'R$ ' + fmtNum(totVenda);
+    document.getElementById('ftQtde').textContent       = fmtNum(totQtde);
+    document.getElementById('ftCusto').textContent      = 'R$ ' + fmtNum(totCusto);
+    document.getElementById('ftMargContrib').textContent = 'R$ ' + fmtNum(totVenda - totCusto);
+    document.getElementById('ftMargem').textContent     = fmtPct(totMargem);
 
     document.getElementById('cardItens').textContent     = rows.length;
     document.getElementById('cardVenda').textContent     = 'R$ ' + fmtNum(totVenda);
@@ -2284,7 +2296,8 @@
     const periodo = document.getElementById('reportPeriodo').textContent
       .replace('Período: ', '').split(' —')[0].replace(/\//g, '-');
     const header = ['Cod.Prod.','Descricao','Cod.Vend.','Vendedor','Cod.Cli.','Cliente','CEP',
-                    'Qtde','Custo (R$)','Venda (R$)','Margem (%)'];
+                    'Venda (R$)','Qtde','Und.','Custo (R$)','Qtde Conv.','Und. Conv.',
+                    'Margem Contrib. (R$)','Margem (%)'];
     const data = _gruposVendas.map(r => {
       const qtde  = toNum(r.qtdevendida);
       const custo = qtde * toNum(r.precocustoitem);
@@ -2292,7 +2305,9 @@
       const margem = venda > 0 ? ((venda - custo) / venda * 100) : 0;
       return [r.codprod, r.descproditemvenda, r.codvendedor, r.nomevendedor,
               r.codcliente, r.nomecliente, r.cepcliente,
-              qtde, custo.toFixed(2), venda.toFixed(2), margem.toFixed(2)];
+              venda.toFixed(2), qtde, r.und ?? '—', custo.toFixed(2),
+              toNum(r.qtdeconvertidavd), r.unconvertida || '—',
+              (venda - custo).toFixed(2), margem.toFixed(2)];
     });
     downloadCSV(`${_empresa?.nome ?? 'BI'}_Vendas_${periodo}.csv`, [header, ...data]);
   }
