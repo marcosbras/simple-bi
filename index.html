@@ -687,7 +687,7 @@
                 <tr>
                   <th>Cód. Prod.</th><th>Descrição</th>
                   <th>Cód. Vend.</th><th>Vendedor</th>
-                  <th>Cód. Cli.</th><th>Cliente</th><th>CEP</th>
+                  <th>Cód. Cli.</th><th>Cliente</th><th>Nº DAV</th>
                   <th class="num">Venda (R$)</th>
                   <th class="num">Qtde.</th>
                   <th>Und.</th>
@@ -1732,7 +1732,7 @@
         <td>${r.codprod ?? '—'}</td><td>${r.descproditemvenda ?? '—'}</td>
         <td>${r.codvendedor ?? '—'}</td><td>${r.nomevendedor ?? '—'}</td>
         <td>${r.codcliente ?? '—'}</td><td>${r.nomecliente ?? '—'}</td>
-        <td>${r.cepcliente ?? '—'}</td>
+        <td>${r.ndav ?? '—'}</td>
         <td class="num">${fmtNum(venda)}</td>
         <td class="num">${fmtNum(qtde)}</td>
         <td>${r.und ?? '—'}</td>
@@ -2341,7 +2341,7 @@
     if (!_gruposVendas.length) return;
     const periodo = document.getElementById('reportPeriodo').textContent
       .replace('Período: ', '').split(' —')[0].replace(/\//g, '-');
-    const header = ['Cod.Prod.','Descricao','Cod.Vend.','Vendedor','Cod.Cli.','Cliente','CEP',
+    const header = ['Cod.Prod.','Descricao','Cod.Vend.','Vendedor','Cod.Cli.','Cliente','Nº DAV',
                     'Venda (R$)','Qtde','Und.','Custo (R$)','Qtde Conv.','Und. Conv.',
                     'Margem Contrib. (R$)','Margem (%)'];
     const data = _gruposVendas.map(r => {
@@ -2350,7 +2350,7 @@
       const venda = qtde * toNum(r.valorunit);
       const margem = venda > 0 ? ((venda - custo) / venda * 100) : 0;
       return [r.codprod, r.descproditemvenda, r.codvendedor, r.nomevendedor,
-              r.codcliente, r.nomecliente, r.cepcliente,
+              r.codcliente, r.nomecliente, r.ndav ?? '',
               venda.toFixed(2), qtde, r.und ?? '—', custo.toFixed(2),
               toNum(r.qtdeconvertidavd), r.unconvertida || '—',
               (venda - custo).toFixed(2), margem.toFixed(2)];
