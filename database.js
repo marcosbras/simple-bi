@@ -75,4 +75,20 @@ if (empCount.n === 0) {
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 }
 
+// migração: seed relatório "Venda Detalhada" para cada empresa que ainda não o tenha
+try {
+  const empresas = db.prepare('SELECT id FROM empresas WHERE ativo = 1').all();
+  const insStmt  = db.prepare(
+    'INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  );
+  empresas.forEach(e => {
+    const existe = db.prepare(
+      "SELECT COUNT(*) AS n FROM relatorios WHERE empresa_id = ? AND tipo = 'vendadet'"
+    ).get(e.id);
+    if (existe.n === 0) {
+      insStmt.run(e.id, 'Venda Detalhada', '/venda/detalhada', 'vendadet');
+    }
+  });
+} catch (_) {}
+
 module.exports = db;

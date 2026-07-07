@@ -378,3 +378,6 @@ USD 0.00
 Simple Storage Service
 USD 0.00
 Total taxUSD 9.
+
+prompt de exemplo, não utilize.
+consuma https://dbcayemecolchoes.centraldoaplicativo.com.br/sgbrbi/venda/detalhada?dt_de=2026.05.18&dt_ate=2026.05.22 verifique quais relatórios de analise de dados podemos extrair

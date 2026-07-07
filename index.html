@@ -479,6 +479,10 @@
             <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
             Detalhes
           </button>
+          <button class="nav-item nav-child" id="navVendaDet" onclick="navTo('vendadet')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/><polyline points="12 17 14 19 18 15"/></svg>
+            Detalhada
+          </button>
 
           <!-- Compras -->
           <button class="nav-item" id="navComprasDash" onclick="navTo('comprasdash')">
@@ -917,6 +921,79 @@
         </div>
       </div><!-- /secProducao -->
 
+      <!-- ── SEÇÃO: VENDA DETALHADA ────────────────────────────────── -->
+      <div id="secVendaDet" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Período — Venda Detalhada</div>
+          <div class="field" id="fieldRelVendaDet" style="display:none">
+            <label>Relatório</label>
+            <select id="selRelVendaDet"></select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="vdet_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="vdet_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnVendaDet" onclick="gerarVendaDet()">
+            Gerar Relatório
+          </button>
+        </div>
+
+        <div id="vendaDetStatus" style="margin:0 24px 10px;font-size:.82rem;min-height:20px;color:#555"></div>
+
+        <div class="summary" id="vendaDetSummary" style="display:none">
+          <div class="card blue"><label>Total de Itens</label><div class="val" id="vdetCardItens">0</div></div>
+          <div class="card green"><label>Total Venda (R$)</label><div class="val" id="vdetCardVenda">0,00</div></div>
+          <div class="card red"><label>Total Custo (R$)</label><div class="val" id="vdetCardCusto">0,00</div></div>
+          <div class="card"><label>Margem Bruta (R$)</label><div class="val" id="vdetCardMargem">0,00</div></div>
+          <div class="card"><label>Margem (%)</label><div class="val" id="vdetCardMargemPct">0%</div></div>
+        </div>
+
+        <div class="report-wrapper" id="vendaDetWrapper" style="display:none">
+          <div class="report-header">
+            <h3>Venda Detalhada</h3>
+            <div class="report-header-right">
+              <small id="vendaDetPeriodo"></small>
+              <button class="btn-pdf" onclick="exportarCSVVendaDet()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Nº DAV</th>
+                  <th>Data Fec.</th>
+                  <th>Vendedor</th>
+                  <th>Cliente</th>
+                  <th>CEP</th>
+                  <th class="num">Total (R$)</th>
+                  <th>Status</th>
+                  <th style="text-align:center">Itens</th>
+                  <th style="text-align:center">Receber</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyVendaDet"></tbody>
+              <tfoot>
+                <tr id="tfootVendaDet">
+                  <td colspan="5"><strong>TOTAL GERAL</strong></td>
+                  <td class="num" id="ftVdetTotal"></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+            <div id="tblVdetEmpty" style="display:none;text-align:center;padding:36px;color:#aaa;font-size:.88rem">Nenhum registro encontrado para o período.</div>
+          </div>
+        </div>
+      </div><!-- /secVendaDet -->
+
       <!-- ── SEÇÃO: FINANCEIRO / RECEBER ────────────────────────────── -->
       <div id="secReceber" style="display:none">
         <div class="panel">
@@ -1111,7 +1188,7 @@
 <script>
   // ── ESTADO ────────────────────────────────────────────────────────────────
   let _token = null, _nomeUsuario = '', _empresa = null, _adminAuthed = false;
-  let _relatorio = null, _relatorioProducao = null, _relatorioCompras = null;
+  let _relatorio = null, _relatorioProducao = null, _relatorioCompras = null, _relatorioVendaDet = null;
   let _gruposVendas = [], _rowsProducao = [], _gruposCompras = [];
   let _charts = { clientes: null, vendedor: null, produtos: null };
 
@@ -1170,12 +1247,14 @@
       producaodet: 'secProducao',
       receber:     'secReceber',
       pagar:       'secPagar',
+      vendadet:    'secVendaDet',
     };
     Object.entries(map).forEach(([s, id]) => {
       document.getElementById(id).style.display = s === section ? '' : 'none';
     });
     document.getElementById('navDash').classList.toggle('active',       section === 'dashboard');
     document.getElementById('navRel').classList.toggle('active',        section === 'relatorios');
+    document.getElementById('navVendaDet').classList.toggle('active',   section === 'vendadet');
     document.getElementById('navComprasDash').classList.toggle('active',section === 'comprasdash');
     document.getElementById('navComprasDet').classList.toggle('active', section === 'comprasdet');
     document.getElementById('navProdDash').classList.toggle('active',   section === 'producaodash');
@@ -1240,9 +1319,10 @@
 
       // popula selects de relatório por tipo
       const rels       = _empresa.relatorios || [];
-      const relsV      = rels.filter(r => (r.tipo || 'vendas') === 'vendas');
-      const relsCompras= rels.filter(r => r.tipo === 'compras');
-      const relsProd   = rels.filter(r => r.tipo === 'producao');
+      const relsV       = rels.filter(r => (r.tipo || 'vendas') === 'vendas');
+      const relsCompras = rels.filter(r => r.tipo === 'compras');
+      const relsProd    = rels.filter(r => r.tipo === 'producao');
+      const relsVendaDet= rels.filter(r => r.tipo === 'vendadet');
 
       const populaSel = (selIds, lista) => selIds.forEach(selId => {
         const s = document.getElementById(selId);
@@ -1272,6 +1352,10 @@
       document.getElementById('fieldRelProducaoDet').style.display  = showSelP ? '' : 'none';
       _relatorioProducao = relsProd[0] || null;
 
+      populaSel(['selRelVendaDet'], relsVendaDet);
+      document.getElementById('fieldRelVendaDet').style.display = relsVendaDet.length > 1 ? '' : 'none';
+      _relatorioVendaDet = relsVendaDet[0] || null;
+
       showView('viewApp');
       navTo('dashboard');
     } catch (err) {
@@ -1284,7 +1368,7 @@
 
   function sair() {
     _token = null; _nomeUsuario = ''; _empresa = null;
-    _relatorio = null; _relatorioCompras = null; _relatorioProducao = null;
+    _relatorio = null; _relatorioCompras = null; _relatorioProducao = null; _relatorioVendaDet = null;
     document.getElementById('lSenha').value = '';
     document.getElementById('loginError').textContent = '';
     document.getElementById('summary').style.display = 'none';
@@ -1304,6 +1388,9 @@
     document.getElementById('tbody').innerHTML = '';
     document.getElementById('tbodyProd').innerHTML = '';
     document.getElementById('theadProd').innerHTML = '';
+    document.getElementById('tbodyVendaDet').innerHTML = '';
+    document.getElementById('vendaDetSummary').style.display = 'none';
+    document.getElementById('vendaDetWrapper').style.display = 'none';
     destroyCharts();
     destroyChartsProd();
     showView('viewLogin');
@@ -1436,6 +1523,7 @@
       <input type="text" placeholder="/endpoint" value="${rel?.endpoint ?? ''}" class="rel-endpoint" />
       <select class="rel-tipo" style="border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:.82rem;outline:none;background:#fafbfc;color:var(--text)">
         <option value="vendas">Vendas</option>
+        <option value="vendadet">Venda Detalhada</option>
         <option value="compras">Compras</option>
         <option value="producao">Produção</option>
       </select>
@@ -2378,6 +2466,266 @@
     downloadCSV(`${_empresa?.nome ?? 'BI'}_Producao_${periodo}.csv`, [header, ...data]);
   }
 
+  // ── VENDA DETALHADA ───────────────────────────────────────────────────────
+  let _rowsVendaDet = [];
+
+  function setVdetStatus(msg, type = '') {
+    const el = document.getElementById('vendaDetStatus');
+    el.textContent = msg; el.className = type;
+  }
+
+  async function gerarVendaDet() {
+    const dtDeRaw  = document.getElementById('vdet_de').value;
+    const dtAteRaw = document.getElementById('vdet_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setVdetStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setVdetStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+    if (!_relatorioVendaDet)   { setVdetStatus('Nenhum relatório configurado.', 'error'); return; }
+
+    const btn = document.getElementById('btnVendaDet');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('vendaDetSummary').style.display = 'none';
+    document.getElementById('vendaDetWrapper').style.display = 'none';
+
+    try {
+      const selVal = document.getElementById('selRelVendaDet').value;
+      if (selVal) _relatorioVendaDet = JSON.parse(selVal);
+      const url = `${_empresa.api_base}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}`;
+      setVdetStatus(`Buscando: ${url}`);
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
+      const rows = await res.json();
+      if (rows.length > 0) console.log('[VendaDet] campos:', Object.keys(rows[0]), rows[0]);
+      renderVendaDet(rows, dtDeRaw, dtAteRaw);
+      setVdetStatus(`Relatório gerado — ${rows.length} registro(s).`, 'ok');
+    } catch (err) {
+      setVdetStatus(err.message, 'error');
+    } finally {
+      btn.disabled    = false;
+      btn.textContent = 'Gerar Relatório';
+    }
+  }
+
+  function renderVendaDet(rows, dtDe, dtAte) {
+    _rowsVendaDet = rows;
+    const tbody = document.getElementById('tbodyVendaDet');
+    tbody.innerHTML = '';
+
+    const periodo = `${dtDe.split('-').reverse().join('/')} — ${dtAte.split('-').reverse().join('/')}`;
+    document.getElementById('vendaDetPeriodo').textContent = `Período: ${periodo}`;
+
+    if (!rows.length) {
+      document.getElementById('tblVdetEmpty').style.display = '';
+      document.getElementById('tfootVendaDet').style.display = 'none';
+      document.getElementById('vendaDetSummary').style.display = 'none';
+      document.getElementById('vendaDetWrapper').style.display = '';
+      return;
+    }
+    document.getElementById('tblVdetEmpty').style.display = 'none';
+    document.getElementById('tfootVendaDet').style.display = '';
+
+    // Log campos de itens[] e receber[] do primeiro pedido para diagnóstico
+    if (rows[0]?.itens?.length > 0)
+      console.log('[VendaDet] campos de itens[]:', Object.keys(rows[0].itens[0]), rows[0].itens[0]);
+    if (rows[0]?.itens?.length > 0)
+      console.log('[VendaDet] campos de itens[]:', Object.keys(rows[0].itens[0]), rows[0].itens[0]);
+
+    let totTotal = 0, totCusto = 0, totItens = 0;
+
+    rows.forEach((ped, i) => {
+      const itens   = ped.itens   || [];
+      const receber = ped.receber || [];
+      const pedTotal = toNum(ped.totalprodutos);
+
+      // Custo: calcula a partir dos itens
+      let pedCusto = 0;
+      itens.forEach(it => {
+        const q = toNum(it.qtde ?? it.qtdevendida);
+        pedCusto += q * toNum(it.prcu1m ?? it.precocustoitem ?? it.custo ?? 0);
+      });
+
+      totTotal += pedTotal;
+      totCusto += pedCusto;
+      totItens += itens.length;
+
+      const statusRaw = (ped.cancelado === 'S' || ped.cancelado === 1) ? 'Cancelado' : (ped.statuspedido || ped.status || '');
+      const statusBadge = statusRaw === 'Cancelado'
+        ? '<span class="badge badge-red">Cancelado</span>'
+        : statusRaw === 'F'
+          ? '<span class="badge badge-green">Finalizado</span>'
+          : statusRaw
+            ? `<span class="badge badge-yellow">${statusRaw}</span>`
+            : '—';
+
+      // Linha do pedido (nível cabeçalho)
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><strong>${ped.controle ?? '—'}</strong></td>
+        <td>${ped.datafec ?? '—'}</td>
+        <td>${ped.vendedor ?? '—'}</td>
+        <td>${ped.cliente ?? '—'}</td>
+        <td>${ped.cep ?? '—'}</td>
+        <td class="num"><strong>${fmtNum(pedTotal)}</strong></td>
+        <td>${statusBadge}</td>
+        <td style="text-align:center">
+          ${itens.length > 0
+            ? `<button class="btn-icon" id="btn-vdet-items-${i}" data-count="${itens.length}" onclick="toggleVdetItems(${i})">&#9654; ${itens.length}</button>`
+            : '—'}
+        </td>
+        <td style="text-align:center">
+          ${receber.length > 0
+            ? `<button class="btn-icon" id="btn-vdet-receber-${i}" data-count="${receber.length}" onclick="toggleVdetReceber(${i})">&#9654; ${receber.length}</button>`
+            : '—'}
+        </td>`;
+      tbody.appendChild(tr);
+
+      if (itens.length > 0) {
+        const trItems = document.createElement('tr');
+        trItems.id = `vdet-items-${i}`;
+        trItems.style.display = 'none';
+        trItems.innerHTML = `<td colspan="9" style="padding:0;background:#f0f4fb">
+          <table style="width:100%;border-collapse:collapse;font-size:.75rem">
+            <thead>
+              <tr style="background:#dce4f5">
+                <th style="padding:6px 11px;text-align:left;color:#4a5568;font-weight:600">Cód. Prod.</th>
+                <th style="padding:6px 11px;text-align:left;color:#4a5568;font-weight:600">Nome Produto</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Preço Unit. (R$)</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Qtde</th>
+                <th style="padding:6px 11px;text-align:left;color:#4a5568;font-weight:600">Und.</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Total (R$)</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Custo Unit. (R$)</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Custo Total (R$)</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Qtde Conv.</th>
+                <th style="padding:6px 11px;text-align:left;color:#4a5568;font-weight:600">Und. Conv.</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Margem Contrib. (R$)</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Margem (%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itens.map(it => {
+                const qtde     = toNum(it.qtde ?? it.qtdevendida);
+                const vUnit    = toNum(it.valorunit ?? it.preco ?? it.valorunitario);
+                const total    = toNum(it.total ?? it.valortotal ?? (qtde * vUnit));
+                const custoUni = toNum(it.prcu1m ?? it.precocustoitem ?? it.custo);
+                const custoTot = qtde * custoUni;
+                const margem   = total > 0 ? ((total - custoTot) / total) * 100 : 0;
+                const und      = it.und ?? it.unidade ?? '—';
+                const descr    = it.decprod ?? it.descricao ?? it.produto ?? it.nome ?? '—';
+                const codprod  = it.codprod ?? it.cod ?? '—';
+                const hasConv  = (it.unconvertida ?? it.undconvertida ?? '').trim() !== '';
+                const undConv  = it.unconvertida ?? it.undconvertida ?? '';
+                const qtdeConv = toNum(it.qtdeconvertidavd ?? it.qtdeconvertida);
+                return `<tr>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${codprod}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${descr}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(vUnit)}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(qtde)}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${und}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(total)}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(custoUni)}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(custoTot)}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${hasConv ? fmtNum(qtdeConv) : '—'}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${hasConv ? undConv : '—'}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(total - custoTot)}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${badgeMargem(margem)}</td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </td>`;
+        tbody.appendChild(trItems);
+      }
+
+      if (receber.length > 0) {
+        const trRec = document.createElement('tr');
+        trRec.id = `vdet-receber-${i}`;
+        trRec.style.display = 'none';
+        trRec.innerHTML = `<td colspan="9" style="padding:0;background:#f5f0fb">
+          <table style="width:100%;border-collapse:collapse;font-size:.75rem">
+            <thead>
+              <tr style="background:#e8dff5">
+                <th style="padding:6px 11px;text-align:left;color:#4a5568;font-weight:600">Descrição Lançamento</th>
+                <th style="padding:6px 11px;text-align:left;color:#4a5568;font-weight:600">Espécie</th>
+                <th style="padding:6px 11px;text-align:right;color:#4a5568;font-weight:600">Valor Original (R$)</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${receber.map(rc => `<tr>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${rc.descricaolancamento ?? '—'}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${rc.especie ?? '—'}</td>
+                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(toNum(rc.valororiginal))}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </td>`;
+        tbody.appendChild(trRec);
+      }
+    });
+
+    const totMargem = totTotal > 0 ? ((totTotal - totCusto) / totTotal) * 100 : 0;
+    document.getElementById('ftVdetTotal').textContent = 'R$ ' + fmtNum(totTotal);
+
+    document.getElementById('vdetCardItens').textContent     = totItens;
+    document.getElementById('vdetCardVenda').textContent     = fmtNum(totTotal);
+    document.getElementById('vdetCardCusto').textContent     = fmtNum(totCusto);
+    document.getElementById('vdetCardMargem').textContent    = fmtNum(totTotal - totCusto);
+    document.getElementById('vdetCardMargemPct').textContent = fmtPct(totMargem);
+
+    document.getElementById('vendaDetSummary').style.display = '';
+    document.getElementById('vendaDetWrapper').style.display = '';
+  }
+
+  function toggleVdetItems(i) {
+    const tr  = document.getElementById(`vdet-items-${i}`);
+    const btn = document.getElementById(`btn-vdet-items-${i}`);
+    const open = tr.style.display === 'none';
+    tr.style.display = open ? '' : 'none';
+    btn.innerHTML = (open ? '&#9660; ' : '&#9654; ') + btn.dataset.count;
+  }
+
+  function toggleVdetReceber(i) {
+    const tr  = document.getElementById(`vdet-receber-${i}`);
+    const btn = document.getElementById(`btn-vdet-receber-${i}`);
+    const open = tr.style.display === 'none';
+    tr.style.display = open ? '' : 'none';
+    btn.innerHTML = (open ? '&#9660; ' : '&#9654; ') + btn.dataset.count;
+  }
+
+  function exportarCSVVendaDet() {
+    if (!_rowsVendaDet.length) return;
+    const periodo = document.getElementById('vendaDetPeriodo').textContent
+      .replace('Período: ', '').replace(/\//g, '-');
+    const header = ['Nº Controle','Data Fec.','Vendedor','Cliente','CEP','Status',
+                    'Cod.Prod.','Nome Produto','Preco Unit.(R$)','Qtde','Und.',
+                    'Total(R$)','Custo Unit.(R$)','Custo Total(R$)',
+                    'Qtde Conv.','Und. Conv.','Margem Contrib.(R$)','Margem(%)'];
+    const data = [];
+    _rowsVendaDet.forEach(ped => {
+      const itens      = ped.itens || [];
+      const statusRaw  = ped.cancelado ? 'Cancelado' : (ped.statuspedido || ped.status || '');
+      itens.forEach(it => {
+        const qtde     = toNum(it.qtde ?? it.qtdevendida);
+        const vUnit    = toNum(it.valorunit ?? it.preco ?? it.valorunitario);
+        const total    = toNum(it.total ?? it.valortotal ?? (qtde * vUnit));
+        const custoUni = toNum(it.prcu1m ?? it.precocustoitem ?? it.custo);
+        const custoTot = qtde * custoUni;
+        const margem   = total > 0 ? ((total - custoTot) / total * 100) : 0;
+        const hasConv  = (it.unconvertida ?? it.undconvertida ?? '').trim() !== '';
+        data.push([
+          ped.controle ?? '', ped.datafec ?? '', ped.vendedor ?? '', ped.cliente ?? '',
+          ped.cep ?? '', statusRaw,
+          it.codprod ?? it.cod ?? '', it.decprod ?? it.descricao ?? it.produto ?? '',
+          vUnit.toFixed(2), qtde.toFixed(2), it.und ?? it.unidade ?? '',
+          total.toFixed(2), custoUni.toFixed(2), custoTot.toFixed(2),
+          hasConv ? toNum(it.qtdeconvertidavd ?? it.qtdeconvertida).toFixed(2) : '',
+          hasConv ? (it.unconvertida ?? it.undconvertida ?? '') : '',
+          (total - custoTot).toFixed(2), margem.toFixed(2)
+        ]);
+      });
+    });
+    downloadCSV(`${_empresa?.nome ?? 'BI'}_VendaDetalhada_${periodo}.csv`, [header, ...data]);
+  }
+
   // ── PDF ───────────────────────────────────────────────────────────────────
   function gerarPDF() {
     const original = document.title;
@@ -2393,8 +2741,8 @@
     const hoje = new Date(), sete = new Date(hoje);
     sete.setDate(sete.getDate() - 7);
     const iso = d => d.toISOString().slice(0, 10);
-    ['dd_de','dt_de','compras_de','comprasd_de','prod_de','prodd_de'].forEach(id => document.getElementById(id).value = iso(sete));
-    ['dd_ate','dt_ate','compras_ate','comprasd_ate','prod_ate','prodd_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
+    ['dd_de','dt_de','compras_de','comprasd_de','prod_de','prodd_de','vdet_de'].forEach(id => document.getElementById(id).value = iso(sete));
+    ['dd_ate','dt_ate','compras_ate','comprasd_ate','prod_ate','prodd_ate','vdet_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
 
     document.getElementById('lLogin').addEventListener('keydown',    e => { if (e.key === 'Enter') document.getElementById('lSenha').focus(); });
     document.getElementById('lSenha').addEventListener('keydown',    e => { if (e.key === 'Enter') fazerLogin(); });
@@ -2406,6 +2754,7 @@
     document.getElementById('selRelComprasDet').addEventListener('change',   e => { _relatorioCompras  = JSON.parse(e.target.value); });
     document.getElementById('selRelProducaoDash').addEventListener('change', e => { _relatorioProducao = JSON.parse(e.target.value); });
     document.getElementById('selRelProducaoDet').addEventListener('change',  e => { _relatorioProducao = JSON.parse(e.target.value); });
+    document.getElementById('selRelVendaDet').addEventListener('change',     e => { _relatorioVendaDet = JSON.parse(e.target.value); });
 
     carregarEmpresas();
   })();
