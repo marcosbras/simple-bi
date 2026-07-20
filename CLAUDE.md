@@ -26,7 +26,7 @@ Prefixo `nav`: `navDash`, `navRel`, `navComprasDash`, `navComprasDet`, `navProdD
 ### Variáveis de estado globais
 ```js
 _token            // JWT da sessão atual
-_empresa          // objeto empresa selecionada (api_base, login_endpoint, relatorios[])
+_empresa          // objeto empresa selecionada (uuid, api_base, login_endpoint, relatorios[])
 _relatorio        // relatório de vendas ativo
 _relatorioCompras // relatório de compras ativo
 _relatorioProducao// relatório de produção ativo
@@ -71,18 +71,26 @@ _charts           // instâncias Chart.js ativas (destruir antes de recriar)
 
 ## Padrão de fetch para APIs externas
 
+O navegador nunca chama a API do ERP (fonte de dados) diretamente — sempre
+passa pelo proxy `/api/erp/:uuid/*` do próprio `server.js`, que repassa a
+chamada para o `api_base` real (guardado só no banco, server-side). O `:uuid`
+é o identificador opaco da empresa (coluna `uuid`, gerado no cadastro), não o
+`id` sequencial — evita enumerar empresas pela URL. Isso também evita expor o
+domínio/IP da fonte de dados no lado do cliente e elimina CORS, já que a
+chamada do navegador é sempre same-origin.
+
 ```js
 async function fetchXxx(dtDe, dtAte, relSelId) {
   const selVal = document.getElementById(relSelId).value;
   if (selVal) _relatorioXxx = JSON.parse(selVal);
-  const url = `${_empresa.api_base}${_relatorioXxx.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+  const url = `/api/erp/${_empresa.uuid}${_relatorioXxx.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
   const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
   if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
   return res.json();
 }
 ```
 - Datas no formato `DD.MM.YYYY` (função `dateToApi` converte de `YYYY-MM-DD`)
-- Autenticação sempre via header `Authorization: Bearer <token>`
+- Autenticação sempre via header `Authorization: Bearer <token>` (o proxy repassa esse header para o ERP sem alterá-lo)
 
 ## Utilitários disponíveis
 
@@ -147,5 +155,5 @@ hideModal(id)     // oculta modal overlay
 
 - Não criar arquivos JS/CSS separados — o projeto é intencionalmente single-file
 - Não introduzir dependências npm de frontend — sem bundler disponível
-- Não adicionar lógica de negócio no server.js — ele só gerencia configuração local
+- Não adicionar lógica de negócio no server.js — ele só gerencia configuração local e faz o proxy passthrough `/api/erp/:empresaId/*` (repasse puro, sem transformar dados)
 - Não usar `cepcliente` na tabela de detalhes de vendas — substituído por `ndav`

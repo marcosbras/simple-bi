@@ -814,4 +814,25 @@ Instale o Docker Desktop de novo.
 Atenção: isso apaga imagens, containers, volumes e bancos locais que estejam dentro do Docker. Se você tinha PostgreSQL/MySQL/Redis/etc. com dados importantes em volumes Docker, exporte antes.
 No seu caso, como o arquivo está com ~28,3 GiB e o Docker ainda deu erro 500 ao consultar uso, desinstalar/reinstalar é uma solução razoável se você não tem dados importantes dentro dos containers.
 
-12:41
+
+
+Confirmed — that's exactly what the proxy change accomplishes.
+
+Once you set api_base = http://34.230.78.208:3007 (plus the relevant login_endpoint/report endpoints) in the admin panel, the browser will never see that IP. Here's the flow now:
+
+Browser calls POST /api/erp/{empresaId}/usuario/login (and similarly for report endpoints) — always on your own app's domain.
+server.js looks up api_base from the database (server-side only) and makes the real request to http://34.230.78.208:3007/... from inside the container.
+The response is passed back to the browser as-is.
+The IP/domain in api_base is stored in SQLite and only ever read server-side (db.prepare('SELECT * FROM empresas...') inside the /api/erp/:empresaId/* handler) — it's not included in any response the client fetches for normal report usage. Network tab, page source, JS memory during report fetches: none of it will show 34.230.78.208.
+
+One caveat, unchanged from before: GET /api/empresas (used to populate the admin table and the login-screen company list) still returns api_base in that JSON response, since the admin UI needs to display/edit it. So it's not visible during data fetching, but it is visible to anyone who calls /api/empresas directly (that endpoint has no auth check today) or opens the admin panel. If you need it hidden from that response too, that's a separate, slightly bigger change (splitting a public-safe empresa list from an authenticated admin-only one) — let me know if you want that as well.
+
+Confirmed working as intended: the numeric path is correctly rejected, and the new UUID path is matched and attempts to reach the real ERP (still timing out only because that backend is still down — same known issue as before, unrelated to this change).
+
+Summary of changes:
+
+database.js: added uuid column migration on empresas, backfilled for existing/seeded rows via crypto.randomUUID().
+server.js: POST /api/empresas now generates a uuid for new companies; the proxy route is now /api/erp/:uuid/*, looked up by uuid instead of the sequential id.
+index.html: all 5 ERP fetch call sites now use _empresa.uuid.
+CLAUDE.md: docs updated to match.
+Net effect: /api/erp/{empresaId} (sequential, enumerable) is gone — URLs are now unguessable opaque UUIDs, so nobody can probe /api/erp/1/, /api/erp/2/, etc. to discover other companies' proxied endpoints.

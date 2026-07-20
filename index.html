@@ -1300,7 +1300,7 @@
 
     try {
       const hash = await sha256(senhaVal);
-      const res  = await fetch(`${_empresa.api_base}${_empresa.login_endpoint}`, {
+      const res  = await fetch(`/api/erp/${_empresa.uuid}${_empresa.login_endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login: loginVal, senha: hash })
@@ -1592,7 +1592,7 @@
   async function fetchVendas(dtDe, dtAte, relSelId) {
     const selVal = document.getElementById(relSelId).value;
     if (selVal) _relatorio = JSON.parse(selVal);
-    const url = `${_empresa.api_base}${_relatorio.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const url = `/api/erp/${_empresa.uuid}${_relatorio.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
     if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
     return res.json();
@@ -1896,7 +1896,7 @@
     const selVal = document.getElementById(relSelId).value;
     if (selVal) _relatorioCompras = JSON.parse(selVal);
     if (!_relatorioCompras) throw new Error('Nenhum relatório de compras configurado.');
-    const url = `${_empresa.api_base}${_relatorioCompras.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const url = `/api/erp/${_empresa.uuid}${_relatorioCompras.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
     if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
     return res.json();
@@ -2236,7 +2236,7 @@
     const selVal = document.getElementById(relSelId).value;
     if (selVal) _relatorioProducao = JSON.parse(selVal);
     if (!_relatorioProducao) throw new Error('Nenhum relatório de produção configurado.');
-    const url = `${_empresa.api_base}${_relatorioProducao.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const url = `/api/erp/${_empresa.uuid}${_relatorioProducao.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
     if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
     return res.json();
@@ -2490,7 +2490,7 @@
     try {
       const selVal = document.getElementById('selRelVendaDet').value;
       if (selVal) _relatorioVendaDet = JSON.parse(selVal);
-      const url = `${_empresa.api_base}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}`;
+      const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}`;
       setVdetStatus(`Buscando: ${url}`);
       const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
       if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);

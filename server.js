@@ -1,5 +1,6 @@
 const express = require('express');
 const path    = require('path');
+const { randomUUID } = require('crypto');
 const db      = require('./database');
 
 const app = express();
@@ -45,8 +46,8 @@ app.post('/api/empresas', (req, res) => {
     return res.status(400).json({ erro: 'Campos obrigatórios ausentes.' });
 
   const r = db.prepare(
-    'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run(nome.trim(), api_base.trim(), login_endpoint.trim());
+    'INSERT INTO empresas (nome, api_base, login_endpoint, uuid) VALUES (?, ?, ?, ?)'
+  ).run(nome.trim(), api_base.trim(), login_endpoint.trim(), randomUUID());
 
   const relStmt = db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint, tipo, campo_exibicao) VALUES (?, ?, ?, ?, ?)'
@@ -83,6 +84,41 @@ app.put('/api/empresas/:id', (req, res) => {
 app.delete('/api/empresas/:id', (req, res) => {
   db.prepare('UPDATE empresas SET ativo = 0 WHERE id = ?').run(Number(req.params.id));
   res.json({ ok: true });
+});
+
+// ── PROXY PARA A FONTE DE DADOS (ERP) ────────────────────────────────────
+// O navegador nunca chama a API do ERP diretamente — sempre esta própria
+// origem. O api_base real fica só no banco, do lado do servidor.
+
+app.all('/api/erp/:uuid/*', async (req, res) => {
+  const empresa = db.prepare(
+    'SELECT * FROM empresas WHERE uuid = ? AND ativo = 1'
+  ).get(req.params.uuid);
+  if (!empresa) return res.status(404).json({ erro: 'Empresa não encontrada.' });
+
+  const subpath     = '/' + req.params[0];
+  const queryIdx     = req.originalUrl.indexOf('?');
+  const query        = queryIdx === -1 ? '' : req.originalUrl.slice(queryIdx);
+  const url          = `${empresa.api_base}${subpath}${query}`;
+
+  try {
+    const upstream = await fetch(url, {
+      method: req.method,
+      headers: {
+        ...(req.headers.authorization ? { Authorization: req.headers.authorization } : {}),
+        'Content-Type': 'application/json',
+      },
+      body: ['GET', 'HEAD'].includes(req.method) ? undefined : JSON.stringify(req.body),
+      signal: AbortSignal.timeout(120000),
+    });
+    const body = await upstream.text();
+    res.status(upstream.status);
+    res.set('Content-Type', upstream.headers.get('content-type') || 'application/json');
+    res.send(body);
+  } catch (err) {
+    const timedOut = err.name === 'TimeoutError' || err.name === 'AbortError';
+    res.status(timedOut ? 504 : 502).json({ erro: `Erro ao acessar fonte de dados (${err.message})` });
+  }
 });
 
 // ── START ─────────────────────────────────────────────────────────────────
