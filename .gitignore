@@ -3,3 +3,5 @@ bi.db
 bi.db-shm
 bi.db-wal
 .env
+historico.txt
+readme.txt
