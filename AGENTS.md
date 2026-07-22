@@ -143,6 +143,35 @@ hideModal(id)     // oculta modal overlay
 - Não há sessão server-side — o token JWT é mantido apenas no navegador
 - Banco SQLite com WAL mode; migrations feitas com `ALTER TABLE … ADD COLUMN` em try/catch
 
+## Infraestrutura de rede — fonte de dados (dbgateway)
+
+Nota de troubleshooting: erros HTTP 500/502/504 ao chamar a fonte de dados
+(ERP) via `dbgateway.dominio.com.br` **não** foram resolvidos alterando o
+túnel do Cloudflare — não é necessário mexer nele. A causa raiz era a
+ausência de um proxy reverso estável na ponta do servidor Windows que hospeda
+a fonte de dados. A solução foi instalar um **nginx** nesse servidor Windows
+atuando como proxy reverso local:
+
+```
+Cloudflare (CNAME dbgateway.dominio.com.br)
+        │
+        ▼
+domínio aponta para o servidor Windows da fonte de dados
+        │
+        ▼
+nginx (proxy reverso, na própria máquina)
+        │
+        ▼
+http://ip:porta  (serviço real da fonte de dados, local)
+```
+
+Ou seja: o CNAME DNS `dbgateway.dominio.com.br` no Cloudflare aponta para o
+domínio do servidor Windows da fonte de dados; esse domínio, por sua vez, é
+recebido pelo nginx local, que faz o proxy reverso para `http://ip:porta` na
+própria máquina. Se erros 500/502/504 voltarem a ocorrer, verificar primeiro
+a configuração/health do nginx nesse servidor antes de tocar no túnel
+Cloudflare.
+
 ## O que NÃO fazer
 
 - Não criar arquivos JS/CSS separados — o projeto é intencionalmente single-file
