@@ -2490,7 +2490,7 @@
     try {
       const selVal = document.getElementById('selRelVendaDet').value;
       if (selVal) _relatorioVendaDet = JSON.parse(selVal);
-      const url = `${_empresa.api_base}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}`;
+      const url = `${_empresa.api_base}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}&statuspedido=F`;
       setVdetStatus(`Buscando: ${url}`);
       const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
       if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
