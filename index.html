@@ -391,11 +391,11 @@
     </div>
 
     <div class="login-field">
-      <label>Empresa</label>
+      <label>Código de Identificação (ID)</label>
       <div class="input-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-        <select id="selEmpresa"><option value="">— Selecione a empresa —</option></select>
-        <span class="select-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+        <input type="text" id="selEmpresa" list="empresasList" placeholder="Digite o código de identificação" autocomplete="off" />
+        <datalist id="empresasList"></datalist>
       </div>
     </div>
 
@@ -419,7 +419,6 @@
     <button class="btn-login" id="btnLogin" onclick="fazerLogin()">Entrar</button>
     <div class="login-footer">
       <span>Simple BI &copy; 2026</span>
-      <button class="link-btn" onclick="abrirAdmin()">⚙ Administração</button>
     </div>
   </div>
 </div>
@@ -442,10 +441,6 @@
     <div class="header-right">
       <div class="avatar" id="headerAvatar">?</div>
       <span class="header-uname" id="headerNome">—</span>
-      <button class="btn-header" onclick="abrirAdmin()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-        Admin
-      </button>
       <button class="btn-header" onclick="sair()">Sair</button>
     </div>
   </div>
@@ -1047,7 +1042,7 @@
       <table class="admin-table">
         <thead>
           <tr>
-            <th>Empresa</th>
+            <th>Código de Identificação (ID)</th>
             <th>URL Base da API</th>
             <th>Login Endpoint</th>
             <th style="text-align:center">Relatórios</th>
@@ -1190,6 +1185,7 @@
   let _token = null, _nomeUsuario = '', _empresa = null, _adminAuthed = false;
   let _relatorio = null, _relatorioProducao = null, _relatorioCompras = null, _relatorioVendaDet = null;
   let _gruposVendas = [], _rowsProducao = [], _gruposCompras = [];
+  let _empresas = [];
   let _charts = { clientes: null, vendedor: null, produtos: null };
 
   const PALETTE = ['#0f3460','#e94560','#27ae60','#2980b9','#f39c12','#8e44ad','#16a085','#d35400','#c0392b','#7f8c8d'];
@@ -1268,33 +1264,38 @@
   // ── EMPRESAS (login select) ───────────────────────────────────────────────
   async function carregarEmpresas() {
     try {
-      const res   = await fetch('/api/empresas');
-      const lista = await res.json();
-      const sel   = document.getElementById('selEmpresa');
-      sel.innerHTML = '<option value="">— Selecione a empresa —</option>';
-      lista.forEach(e => {
+      const res = await fetch('/api/empresas');
+      _empresas = await res.json();
+      const dl  = document.getElementById('empresasList');
+      dl.innerHTML = '';
+      _empresas.forEach(e => {
         const opt = document.createElement('option');
-        opt.value       = JSON.stringify(e);
-        opt.textContent = e.nome;
-        sel.appendChild(opt);
+        opt.value = e.nome;
+        dl.appendChild(opt);
       });
-    } catch { /* servidor offline */ }
+    } catch { _empresas = []; }
   }
 
   // ── LOGIN ─────────────────────────────────────────────────────────────────
   async function fazerLogin() {
-    const selVal   = document.getElementById('selEmpresa').value;
+    const empresaVal = document.getElementById('selEmpresa').value.trim();
     const loginVal = document.getElementById('lLogin').value.trim();
     const senhaVal = document.getElementById('lSenha').value;
     const errEl    = document.getElementById('loginError');
     const btn      = document.getElementById('btnLogin');
 
     errEl.textContent = '';
-    if (!selVal)   { errEl.textContent = 'Selecione a empresa.'; return; }
-    if (!loginVal) { errEl.textContent = 'Informe o usuário.';   return; }
-    if (!senhaVal) { errEl.textContent = 'Informe a senha.';     return; }
+    if (!empresaVal) { errEl.textContent = 'Informe a empresa.'; return; }
+    if (!loginVal)   { errEl.textContent = 'Informe o usuário.'; return; }
+    if (!senhaVal)   { errEl.textContent = 'Informe a senha.';   return; }
 
-    _empresa     = JSON.parse(selVal);
+    // identificador pode ser CNPJ — compara ignorando máscara ("/", ".", "-") dos dois lados
+    const semMascara = s => s.replace(/[./-]/g, '').toLowerCase();
+    const alvo = semMascara(empresaVal);
+    const emp = _empresas.find(e => semMascara(e.nome) === alvo);
+    if (!emp) { errEl.textContent = 'Empresa não encontrada.'; return; }
+
+    _empresa     = emp;
     btn.disabled = true;
     btn.innerHTML = '<span class="loader"></span> Entrando…';
 
@@ -2760,6 +2761,11 @@
     ['dd_de','dt_de','compras_de','comprasd_de','prod_de','prodd_de','vdet_de'].forEach(id => document.getElementById(id).value = iso(sete));
     ['dd_ate','dt_ate','compras_ate','comprasd_ate','prod_ate','prodd_ate','vdet_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
 
+    // Código de Identificação pode ser um CNPJ — bloqueia caracteres de máscara ("/", ".", "-") na digitação
+    document.getElementById('selEmpresa').addEventListener('input', e => {
+      const limpo = e.target.value.replace(/[./-]/g, '');
+      if (limpo !== e.target.value) e.target.value = limpo;
+    });
     document.getElementById('lLogin').addEventListener('keydown',    e => { if (e.key === 'Enter') document.getElementById('lSenha').focus(); });
     document.getElementById('lSenha').addEventListener('keydown',    e => { if (e.key === 'Enter') fazerLogin(); });
     document.getElementById('adminUsuario').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('adminSenha').focus(); });
@@ -2773,6 +2779,9 @@
     document.getElementById('selRelVendaDet').addEventListener('change',     e => { _relatorioVendaDet = JSON.parse(e.target.value); });
 
     carregarEmpresas();
+
+    // Admin só é acessível via endpoint /admin (não há botão no login)
+    if (window.location.pathname.replace(/\/+$/, '') === '/admin') abrirAdmin();
   })();
 </script>
 

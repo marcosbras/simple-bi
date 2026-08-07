@@ -2367,3 +2367,11 @@ Confirmado: com o parâmetro statuspedido=F a API agora retorna 200 OK com dados
 
 A implementação em index.html:2493 já está correta e compatível com a API real — nenhuma mudança de código necessária agora.
 
+    <div class="login-field">
+      <label>Empresa</label>
+      <div class="input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+        <select id="selEmpresa"><option value="">— Selecione a empresa —</option></select>
+        <span class="select-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></span>
+      </div>
+    </div>

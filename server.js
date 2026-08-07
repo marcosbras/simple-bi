@@ -6,6 +6,9 @@ const app = express();
 app.use(express.json());
 app.use(express.static(__dirname)); // serve index.html
 
+// Acesso ao painel admin somente via /admin (o front detecta o path e abre o login do admin)
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+
 // ── ADMIN AUTH ────────────────────────────────────────────────────────────
 
 app.post('/api/admin/auth', (req, res) => {
