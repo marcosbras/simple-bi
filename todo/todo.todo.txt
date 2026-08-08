@@ -4,3 +4,21 @@ Fazer na API de dados no Delphi:
 Fazer na AWS
      Latência da API está alta talvez tenha que mudar a região para São Paulo
 
+Fazer na API de dados (Delphi/Firebird): PAGINAÇÃO do /vendas/detalhada (e demais relatórios grandes)
+     Motivo: consulta do mês estoura o teto de ~60s (Cloudflare) -> 504. Ex: 3 dias = ~49s.
+     Forma mais eficiente = paginação por CURSOR (keyset/seek), NÃO por OFFSET/SKIP.
+
+     [ ] Paginar pelo PEDIDO (cabeçalho tpedidovenda), não pelas linhas achatadas.
+     [ ] Cursor pelo controle (PK): WHERE datafec BETWEEN :de AND :ate AND controle > :cursor
+             ORDER BY controle ROWS :limit   (evita o custo do SKIP/offset das páginas do fim)
+     [ ] Buscar itens/receber da página em LOTE: WHERE controle_tpedidovenda IN (<ids da página>)
+             (evita N+1 round-trips no túnel lento)
+     [ ] Índice composto em tpedidovenda (datafec, controle) para range+seek+order num índice só.
+             Conferir índices dos joins: itens (controle_tpedidovenda), receber (codnfe).
+     [ ] Contrato da API:
+             request : ?dt_de=..&dt_ate=..&limit=100&cursor=<ultimo_controle>   (1a página sem cursor)
+             resposta: { "data": [...pedidos...], "next_cursor": <controle|null>, "has_more": true|false }
+             has_more = false quando vier menos que :limit.
+     [ ] (App/index.html, depois) Loop seguindo next_cursor até has_more=false, concatenar, barra de progresso.
+             Cada request fica abaixo do teto de ~60s. Peço pro Claude implementar quando a API estiver pronta.
+

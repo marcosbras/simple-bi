@@ -28,7 +28,7 @@
     .view { min-height: 100vh; }
 
     /* ══ LOGIN ══════════════════════════════════════════════════════════════ */
-    #viewLogin {
+    #viewLogin, #viewAdminLogin {
       background: linear-gradient(135deg, var(--dark) 0%, var(--mid) 50%, var(--blue) 100%);
       display: flex; align-items: center; justify-content: center; padding: 24px;
     }
@@ -1043,6 +1043,7 @@
         <thead>
           <tr>
             <th>Código de Identificação (ID)</th>
+            <th>UUID</th>
             <th>URL Base da API</th>
             <th>Login Endpoint</th>
             <th style="text-align:center">Relatórios</th>
@@ -1050,7 +1051,7 @@
           </tr>
         </thead>
         <tbody id="tbodyAdmin">
-          <tr><td colspan="5" class="admin-empty">Carregando…</td></tr>
+          <tr><td colspan="6" class="admin-empty">Carregando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -1060,27 +1061,36 @@
 <!-- ═══════════════════════════════════════
      MODAL: ADMIN AUTH
 ════════════════════════════════════════ -->
-<div id="modalAdminAuth" class="modal-overlay" style="display:none">
-  <div class="modal">
-    <div class="modal-header">
-      <h3>⚙ Acesso Restrito</h3>
-      <button class="btn-close" onclick="hideModal('modalAdminAuth')">×</button>
+<div id="viewAdminLogin" class="view" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24"><rect x="2" y="10" width="4" height="12" rx="1"/><rect x="9" y="6" width="4" height="16" rx="1"/><rect x="16" y="2" width="4" height="20" rx="1"/></svg>
+      </div>
+      <h1>Simple <span style="color:var(--accent)">BI</span></h1>
+      <p>⚙ Acesso Restrito — Administração</p>
     </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label>Usuário</label>
+
+    <div class="login-field">
+      <label>Usuário</label>
+      <div class="input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
         <input type="text" id="adminUsuario" placeholder="Digite o usuário" autocomplete="username" />
       </div>
-      <div class="form-group">
-        <label>Senha</label>
+    </div>
+
+    <div class="login-field">
+      <label>Senha</label>
+      <div class="input-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
         <input type="password" id="adminSenha" placeholder="••••••••" autocomplete="current-password" />
       </div>
-      <div id="adminAuthError" class="form-error"></div>
     </div>
-    <div class="modal-footer">
-      <div class="spacer"></div>
-      <button class="btn-cancel" onclick="hideModal('modalAdminAuth')">Cancelar</button>
-      <button class="btn-save" onclick="confirmarAdminAuth()">Entrar</button>
+
+    <div id="adminAuthError" class="login-error"></div>
+    <button class="btn-login" onclick="confirmarAdminAuth()">Entrar</button>
+    <div class="login-footer">
+      <button class="link-btn" onclick="showView('viewLogin')">← Voltar ao login</button>
     </div>
   </div>
 </div>
@@ -1208,7 +1218,7 @@
   }
 
   // ── NAVEGAÇÃO DE VIEWS ────────────────────────────────────────────────────
-  const DISPLAY_MAP = { viewLogin: 'flex', viewApp: 'flex', viewAdmin: 'block' };
+  const DISPLAY_MAP = { viewLogin: 'flex', viewAdminLogin: 'flex', viewApp: 'flex', viewAdmin: 'block' };
 
   function showView(id) {
     document.querySelectorAll('.view').forEach(v => v.style.display = 'none');
@@ -1301,7 +1311,7 @@
 
     try {
       const hash = await sha256(senhaVal);
-      const res  = await fetch(`${_empresa.api_base}${_empresa.login_endpoint}`, {
+      const res  = await fetch(`/api/erp/${_empresa.uuid}${_empresa.login_endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ login: loginVal, senha: hash })
@@ -1408,7 +1418,7 @@
     document.getElementById('adminUsuario').value = '';
     document.getElementById('adminSenha').value   = '';
     document.getElementById('adminAuthError').textContent = '';
-    showModal('modalAdminAuth');
+    showView('viewAdminLogin');
   }
 
   async function confirmarAdminAuth() {
@@ -1427,7 +1437,6 @@
       });
       if (!res.ok) { const d = await res.json(); errEl.textContent = d.erro || 'Acesso negado.'; return; }
       _adminAuthed = true;
-      hideModal('modalAdminAuth');
       await carregarAdminEmpresas();
       showView('viewAdmin');
     } catch { errEl.textContent = 'Erro de conexão.'; }
@@ -1474,7 +1483,7 @@
       const lista = await res.json();
       const tbody = document.getElementById('tbodyAdmin');
       if (!lista.length) {
-        tbody.innerHTML = '<tr><td colspan="5" class="admin-empty">Nenhuma empresa cadastrada.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="admin-empty">Nenhuma empresa cadastrada.</td></tr>';
         await carregarEmpresas(); return;
       }
       tbody.innerHTML = '';
@@ -1482,11 +1491,13 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><strong>${e.nome}</strong></td>
+          <td><code>${e.uuid}</code></td>
           <td><code>${e.api_base}</code></td>
           <td><code>${e.login_endpoint}</code></td>
           <td style="text-align:center"><span class="badge-count">${(e.relatorios||[]).length}</span></td>
           <td>
             <button class="btn-icon" onclick='abrirModalEmpresa(${JSON.stringify(e)})'>✎ Editar</button>
+            <button class="btn-icon" onclick='duplicarEmpresa(${JSON.stringify(e)})'>⧉ Duplicar</button>
             <button class="btn-icon btn-icon-danger" onclick="excluirEmpresa(${e.id})">🗑</button>
           </td>`;
         tbody.appendChild(tr);
@@ -1494,7 +1505,7 @@
       await carregarEmpresas();
     } catch {
       document.getElementById('tbodyAdmin').innerHTML =
-        '<tr><td colspan="5" class="admin-empty" style="color:var(--red)">Erro ao conectar com o servidor.</td></tr>';
+        '<tr><td colspan="6" class="admin-empty" style="color:var(--red)">Erro ao conectar com o servidor.</td></tr>';
     }
   }
 
@@ -1503,14 +1514,18 @@
     document.getElementById('empNome').value    = empresa?.nome ?? '';
     document.getElementById('empApiBase').value = empresa?.api_base ?? '';
     document.getElementById('empLoginEp').value = empresa?.login_endpoint ?? '/usuario/login';
-    document.getElementById('modalEmpTitle').textContent = empresa ? 'Editar Empresa' : 'Nova Empresa';
-    document.getElementById('btnExcluirEmp').style.display = empresa ? '' : 'none';
+    document.getElementById('modalEmpTitle').textContent = empresa?.id ? 'Editar Empresa' : 'Nova Empresa';
+    document.getElementById('btnExcluirEmp').style.display = empresa?.id ? '' : 'none';
     document.getElementById('modalEmpError').textContent = '';
     const container = document.getElementById('relRows');
     container.innerHTML = '';
     (empresa?.relatorios ?? []).forEach(r => addRelRow(r));
     syncRelRowsEmpty();
     showModal('modalEmpresa');
+  }
+
+  function duplicarEmpresa(empresa) {
+    abrirModalEmpresa({ ...empresa, id: null, nome: `${empresa.nome} (cópia)` });
   }
 
   function addRelRow(rel = null) {
@@ -1593,7 +1608,7 @@
   async function fetchVendas(dtDe, dtAte, relSelId) {
     const selVal = document.getElementById(relSelId).value;
     if (selVal) _relatorio = JSON.parse(selVal);
-    const url = `${_empresa.api_base}${_relatorio.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const url = `/api/erp/${_empresa.uuid}${_relatorio.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
     if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
     return res.json();
@@ -1897,7 +1912,7 @@
     const selVal = document.getElementById(relSelId).value;
     if (selVal) _relatorioCompras = JSON.parse(selVal);
     if (!_relatorioCompras) throw new Error('Nenhum relatório de compras configurado.');
-    const url = `${_empresa.api_base}${_relatorioCompras.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const url = `/api/erp/${_empresa.uuid}${_relatorioCompras.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
     if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
     return res.json();
@@ -2237,7 +2252,7 @@
     const selVal = document.getElementById(relSelId).value;
     if (selVal) _relatorioProducao = JSON.parse(selVal);
     if (!_relatorioProducao) throw new Error('Nenhum relatório de produção configurado.');
-    const url = `${_empresa.api_base}${_relatorioProducao.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const url = `/api/erp/${_empresa.uuid}${_relatorioProducao.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
     const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
     if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
     return res.json();
@@ -2491,7 +2506,7 @@
     try {
       const selVal = document.getElementById('selRelVendaDet').value;
       if (selVal) _relatorioVendaDet = JSON.parse(selVal);
-      const url = `${_empresa.api_base}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}&statuspedido=F`;
+      const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}&statuspedido=F`;
       setVdetStatus(`Buscando: ${url}`);
       const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
       if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);

@@ -143,6 +143,64 @@ hideModal(id)     // oculta modal overlay
 - Não há sessão server-side — o token JWT é mantido apenas no navegador
 - Banco SQLite com WAL mode; migrations feitas com `ALTER TABLE … ADD COLUMN` em try/catch
 
+## Infraestrutura de rede — fonte de dados (dbgateway)
+
+Nota de troubleshooting: erros HTTP 500/502/504 ao chamar a fonte de dados
+(ERP) via `dbgateway.dominio.com.br` **não** foram resolvidos alterando o
+túnel do Cloudflare — não é necessário mexer nele. A causa raiz era a
+ausência de um proxy reverso estável na ponta do servidor Windows que hospeda
+a fonte de dados. A solução foi instalar um **nginx** nesse servidor Windows
+atuando como proxy reverso local:
+
+```
+Cloudflare (CNAME dbgateway.dominio.com.br)
+        │
+        ▼
+domínio aponta para o servidor Windows da fonte de dados
+        │
+        ▼
+nginx (proxy reverso, na própria máquina)
+        │
+        ▼
+http://ip:porta  (serviço real da fonte de dados, local)
+```
+
+Ou seja: o CNAME DNS `dbgateway.dominio.com.br` no Cloudflare aponta para o
+domínio do servidor Windows da fonte de dados; esse domínio, por sua vez, é
+recebido pelo nginx local, que faz o proxy reverso para `http://ip:porta` na
+própria máquina. Se erros 500/502/504 voltarem a ocorrer, verificar primeiro
+a configuração/health do nginx nesse servidor antes de tocar no túnel
+Cloudflare.
+
+### Checklist de setup para novo domínio dbgateway (fonte de dados)
+
+1. **Incluir o domínio no Cloudflare** e apontar a **autoridade de DNS**
+   (nameservers) do domínio, no registrador, para os **nameservers
+   autoritativos do Cloudflare** informados na criação do site (ex.:
+   `xxx.ns.cloudflare.com` / `yyy.ns.cloudflare.com`). Sem isso, o Cloudflare
+   não fica autoritativo pro domínio e os registros (CNAME, modo SSL/TLS
+   etc.) configurados no painel não têm efeito nenhum.
+2. **Cloudflare SSL/TLS → modo de criptografia**: usar **Flexible** quando o
+   nginx/servidor de origem **não** tiver certificado próprio instalado (só
+   escuta HTTP/80). Nesse modo o Cloudflare fala HTTPS com o visitante mas
+   HTTP puro com a origem. Se a origem tiver certificado válido em 443, usar
+   Full/Full (strict) — mas se o modo estiver Full/Strict e a origem só
+   responder na porta 80, o resultado é erro 522 (Cloudflare tenta 443 na
+   origem e não encontra nada).
+3. **Liberar as portas lógicas 80 e 443** de entrada em todas as camadas de
+   firewall entre a internet e o serviço, não só numa:
+   - Firewall interno do **Windows** (Windows Defender Firewall — regras de
+     entrada para 80/443)
+   - Firewall interno do **Linux** (`ufw`/`iptables`/`firewalld`), se a fonte
+     de dados rodar em Linux
+   - **Security Groups da AWS** (se o servidor for EC2) — regra de entrada
+     (inbound) liberando 80/443 para os IPs do Cloudflare (ou `0.0.0.0/0` se
+     o acesso só é validado depois via Cloudflare/nginx)
+
+   Faltar liberar em qualquer uma dessas camadas (ex: porta aberta no
+   Windows Firewall mas Security Group da AWS bloqueando) produz o mesmo
+   sintoma de fora: Cloudflare não consegue conectar na origem → erro 522.
+
 ## O que NÃO fazer
 
 - Não criar arquivos JS/CSS separados — o projeto é intencionalmente single-file

@@ -1,5 +1,6 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const { randomUUID } = require('crypto');
 
 const db = new Database(process.env.DB_PATH || path.join(__dirname, 'bi.db'));
 
@@ -48,6 +49,13 @@ try {
   db.exec("ALTER TABLE relatorios ADD COLUMN campo_exibicao TEXT NOT NULL DEFAULT 'campo1'");
 } catch (_) { /* coluna já existe */ }
 
+// migração: adiciona coluna uuid em empresas — identificador opaco usado em
+// /api/erp/:uuid/* no lugar do id sequencial, para não expor/permitir
+// enumerar empresas pela URL do proxy.
+try {
+  db.exec('ALTER TABLE empresas ADD COLUMN uuid TEXT');
+} catch (_) { /* coluna já existe */ }
+
 // credenciais padrão: admin / admin  →  sha256("admin")
 const adminExists = db.prepare('SELECT COUNT(*) AS n FROM admin_config').get();
 if (adminExists.n === 0) {
@@ -74,6 +82,11 @@ if (empCount.n === 0) {
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 }
+
+// migração: preenche uuid para empresas que ainda não têm (coluna nova ou seed acima)
+const semUuid = db.prepare('SELECT id FROM empresas WHERE uuid IS NULL').all();
+const setUuid = db.prepare('UPDATE empresas SET uuid = ? WHERE id = ?');
+semUuid.forEach(e => setUuid.run(randomUUID(), e.id));
 
 // migração: seed relatório "Venda Detalhada" para cada empresa que ainda não o tenha
 try {
