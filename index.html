@@ -1189,7 +1189,7 @@
      MODAL: DETALHES DO PEDIDO (Venda Detalhada)
 ════════════════════════════════════════ -->
 <div id="modalVendaDetPedido" class="modal-overlay" style="display:none">
-  <div class="modal modal-lg" style="max-width:1000px">
+  <div class="modal modal-lg" style="max-width:1400px;width:95vw">
     <div class="modal-header">
       <h3 id="vdetModalTitle">Detalhes do Pedido</h3>
       <button class="btn-close" onclick="hideModal('modalVendaDetPedido')">×</button>
@@ -1201,7 +1201,7 @@
       <!-- Itens do pedido -->
       <div class="form-section">
         <div class="form-section-title"><span>Itens do Pedido</span></div>
-        <div class="table-scroll" style="max-height:340px;overflow:auto">
+        <div class="table-scroll" style="max-height:400px;overflow:auto">
           <table style="width:100%;border-collapse:collapse;font-size:.78rem">
             <thead>
               <tr style="background:var(--blue);color:#fff">
@@ -1218,6 +1218,7 @@
               </tr>
             </thead>
             <tbody id="vdetModalItens"></tbody>
+            <tfoot id="vdetModalItensTot"></tfoot>
           </table>
         </div>
       </div>
@@ -2622,9 +2623,9 @@
       totItens += g.itens.length;
 
       const cliente  = h.nomecliente ?? '—';
-      const codcli   = h.codcliente != null ? `#${h.codcliente}` : '';
+      const codcli   = h.codcliente != null ? `${h.codcliente}` : '';
       const vendedor = h.nomevendedor ?? '—';
-      const codvend  = h.codvendedor != null ? `#${h.codvendedor}` : '';
+      const codvend  = h.codvendedor != null ? `${h.codvendedor}` : '';
 
       const tr = document.createElement('tr');
       tr.innerHTML = `
@@ -2677,19 +2678,22 @@
       campo('Nº DAV', h.ndav),
       campo('Data', h.data),
       campo('Data Fec.', h.datafec),
-      campo('Cliente', `${h.nomecliente ?? '—'}${h.codcliente != null ? ` (#${h.codcliente})` : ''}`),
-      campo('Vendedor', `${h.nomevendedor ?? '—'}${h.codvendedor != null ? ` (#${h.codvendedor})` : ''}`),
+      campo('Cliente', `${h.nomecliente ?? '—'}${h.codcliente != null ? ` (${h.codcliente})` : ''}`),
+      campo('Vendedor', `${h.nomevendedor ?? '—'}${h.codvendedor != null ? ` (${h.codvendedor})` : ''}`),
       campo('Total Produtos (R$)', fmtNum(vdetTotalPedido(g))),
       campo('Status', statusBadge),
     ].join('');
 
     // Itens do pedido
+    let totItemVenda = 0, totItemCusto = 0;
     document.getElementById('vdetModalItens').innerHTML = g.itens.map(it => {
       const qtde     = toNum(it.qtdevendida);
       const vUnit    = toNum(it.valorunit);
       const total    = toNum(it.total);
       const custoUni = toNum(it.precocustoitem);
       const custoTot = vdetCustoItem(it);
+      totItemVenda += total;
+      totItemCusto += custoTot;
       const hasConv  = String(it.unconvertida ?? '').trim() !== '';
       return `<tr>
         <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${it.codprod ?? '—'}</td>
@@ -2704,6 +2708,14 @@
         <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${hasConv ? it.unconvertida : '—'}</td>
       </tr>`;
     }).join('');
+    document.getElementById('vdetModalItensTot').innerHTML = `
+      <tr style="background:#f0f4fb;font-weight:700">
+        <td colspan="5" style="padding:7px 10px;text-align:right">TOTAIS</td>
+        <td style="padding:7px 10px;text-align:right">${fmtNum(totItemVenda)}</td>
+        <td></td>
+        <td style="padding:7px 10px;text-align:right">${fmtNum(totItemCusto)}</td>
+        <td colspan="2"></td>
+      </tr>`;
 
     showModal('modalVendaDetPedido');
 
