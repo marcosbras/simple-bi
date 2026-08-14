@@ -940,7 +940,7 @@
         <div id="vendaDetStatus" style="margin:0 24px 10px;font-size:.82rem;min-height:20px;color:#555"></div>
 
         <div class="summary" id="vendaDetSummary" style="display:none">
-          <div class="card blue"><label>Total de Itens</label><div class="val" id="vdetCardItens">0</div></div>
+          <div class="card blue"><label>Pedidos / Itens</label><div class="val" id="vdetCardItens">0</div></div>
           <div class="card green"><label>Total Venda (R$)</label><div class="val" id="vdetCardVenda">0,00</div></div>
           <div class="card red"><label>Total Custo (R$)</label><div class="val" id="vdetCardCusto">0,00</div></div>
           <div class="card"><label>Margem Bruta (R$)</label><div class="val" id="vdetCardMargem">0,00</div></div>
@@ -962,24 +962,22 @@
             <table>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Data Fec.</th>
-                  <th>Vendedor</th>
-                  <th>Cliente</th>
+                  <th>ID Venda</th>
+                  <th>Cód. Pedido</th>
                   <th>Nº DAV</th>
-                  <th class="num">Total (R$)</th>
-                  <th>Status</th>
-                  <th style="text-align:center">Itens</th>
-                  <th style="text-align:center">Receber</th>
+                  <th>Data</th>
+                  <th>Data Fec.</th>
+                  <th>Cliente</th>
+                  <th>Vendedor</th>
+                  <th class="num">Total Produtos (R$)</th>
+                  <th style="text-align:center">Detalhes</th>
                 </tr>
               </thead>
               <tbody id="tbodyVendaDet"></tbody>
               <tfoot>
                 <tr id="tfootVendaDet">
-                  <td colspan="5"><strong>TOTAL GERAL</strong></td>
+                  <td colspan="7"><strong>TOTAL GERAL</strong></td>
                   <td class="num" id="ftVdetTotal"></td>
-                  <td></td>
-                  <td></td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -1183,6 +1181,56 @@
       <div class="spacer"></div>
       <button class="btn-cancel" onclick="hideModal('modalEmpresa')">Cancelar</button>
       <button class="btn-save" onclick="salvarEmpresa()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL: DETALHES DO PEDIDO (Venda Detalhada)
+════════════════════════════════════════ -->
+<div id="modalVendaDetPedido" class="modal-overlay" style="display:none">
+  <div class="modal modal-lg" style="max-width:1000px">
+    <div class="modal-header">
+      <h3 id="vdetModalTitle">Detalhes do Pedido</h3>
+      <button class="btn-close" onclick="hideModal('modalVendaDetPedido')">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- Cabeçalho replicado do pedido -->
+      <div class="summary" id="vdetModalHeader" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0"></div>
+
+      <!-- Itens do pedido -->
+      <div class="form-section">
+        <div class="form-section-title"><span>Itens do Pedido</span></div>
+        <div class="table-scroll" style="max-height:340px;overflow:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:.78rem">
+            <thead>
+              <tr style="background:var(--blue);color:#fff">
+                <th style="padding:7px 10px;text-align:left">Cód. Prod.</th>
+                <th style="padding:7px 10px;text-align:left">Descrição</th>
+                <th style="padding:7px 10px;text-align:right">Qtde</th>
+                <th style="padding:7px 10px;text-align:left">Und.</th>
+                <th style="padding:7px 10px;text-align:right">Vlr. Unit. (R$)</th>
+                <th style="padding:7px 10px;text-align:right">Total (R$)</th>
+                <th style="padding:7px 10px;text-align:right">Custo Unit. (R$)</th>
+                <th style="padding:7px 10px;text-align:right">Custo Total (R$)</th>
+                <th style="padding:7px 10px;text-align:right">Qtde Conv.</th>
+                <th style="padding:7px 10px;text-align:left">Und. Conv.</th>
+              </tr>
+            </thead>
+            <tbody id="vdetModalItens"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Informações financeiras (contas a receber do pedido) -->
+      <div class="form-section">
+        <div class="form-section-title"><span>Informações Financeiras (Contas a Receber)</span></div>
+        <div id="vdetModalFin"></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="spacer"></div>
+      <button class="btn-cancel" onclick="hideModal('modalVendaDetPedido')">Fechar</button>
     </div>
   </div>
 </div>
@@ -1400,6 +1448,7 @@
     document.getElementById('tbodyProd').innerHTML = '';
     document.getElementById('theadProd').innerHTML = '';
     document.getElementById('tbodyVendaDet').innerHTML = '';
+    _rowsVendaDet = []; _pedidosVendaDet = [];
     document.getElementById('vendaDetSummary').style.display = 'none';
     document.getElementById('vendaDetWrapper').style.display = 'none';
     destroyCharts();
@@ -2483,7 +2532,8 @@
   }
 
   // ── VENDA DETALHADA ───────────────────────────────────────────────────────
-  let _rowsVendaDet = [];
+  let _rowsVendaDet = [];      // linhas cruas (itens) do último /vendas/analitico
+  let _pedidosVendaDet = [];   // itens agrupados por pedido: [{ header, itens[] }]
 
   function setVdetStatus(msg, type = '') {
     const el = document.getElementById('vendaDetStatus');
@@ -2506,14 +2556,15 @@
     try {
       const selVal = document.getElementById('selRelVendaDet').value;
       if (selVal) _relatorioVendaDet = JSON.parse(selVal);
-      const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}&statuspedido=F`;
+      // /vendas/analitico retorna um array plano: cada elemento é um ITEM de pedido.
+      const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dateToApi(dtDeRaw)}&dt_ate=${dateToApi(dtAteRaw)}`;
       setVdetStatus(`Buscando: ${url}`);
       const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
       if (!res.ok) throw new Error(`HTTP ${res.status} — ${url}`);
       const rows = await res.json();
       if (rows.length > 0) console.log('[VendaDet] campos:', Object.keys(rows[0]), rows[0]);
       renderVendaDet(rows, dtDeRaw, dtAteRaw);
-      setVdetStatus(`Relatório gerado — ${rows.length} registro(s).`, 'ok');
+      setVdetStatus(`Relatório gerado — ${rows.length} item(ns).`, 'ok');
     } catch (err) {
       setVdetStatus(err.message, 'error');
     } finally {
@@ -2522,15 +2573,30 @@
     }
   }
 
+  // Chave do pedido (agrupamento): usa idvenda (controle do pedido); cai para codigopedidovenda.
+  const vdetChavePedido = r => String(r.idvenda ?? r.codigopedidovenda ?? '');
+
+  // Custo total de um item = qtdevendida × precocustoitem (o endpoint não devolve totalcusto pronto).
+  const vdetCustoItem = it => toNum(it.qtdevendida) * toNum(it.precocustoitem);
+
   function renderVendaDet(rows, dtDe, dtAte) {
-    _rowsVendaDet = rows;
+    _rowsVendaDet = Array.isArray(rows) ? rows : [];
     const tbody = document.getElementById('tbodyVendaDet');
     tbody.innerHTML = '';
 
     const periodo = `${dtDe.split('-').reverse().join('/')} — ${dtAte.split('-').reverse().join('/')}`;
     document.getElementById('vendaDetPeriodo').textContent = `Período: ${periodo}`;
 
-    if (!rows.length) {
+    // Agrupa os itens (cada linha do /vendas/analitico) por pedido.
+    const mapa = new Map();
+    _rowsVendaDet.forEach(r => {
+      const k = vdetChavePedido(r);
+      if (!mapa.has(k)) mapa.set(k, { header: r, itens: [] });
+      mapa.get(k).itens.push(r);
+    });
+    _pedidosVendaDet = [...mapa.values()];
+
+    if (!_pedidosVendaDet.length) {
       document.getElementById('tblVdetEmpty').style.display = '';
       document.getElementById('tfootVendaDet').style.display = 'none';
       document.getElementById('vendaDetSummary').style.display = 'none';
@@ -2540,218 +2606,192 @@
     document.getElementById('tblVdetEmpty').style.display = 'none';
     document.getElementById('tfootVendaDet').style.display = '';
 
-    // Log campos de itens[] e receber[] do primeiro pedido para diagnóstico
-    if (rows[0]?.itens?.length > 0)
-      console.log('[VendaDet] campos de itens[]:', Object.keys(rows[0].itens[0]), rows[0].itens[0]);
-    if (rows[0]?.itens?.length > 0)
-      console.log('[VendaDet] campos de itens[]:', Object.keys(rows[0].itens[0]), rows[0].itens[0]);
+    let totVenda = 0, totCusto = 0, totItens = 0;
 
-    let totTotal = 0, totCusto = 0, totItens = 0;
+    _pedidosVendaDet.forEach((g, i) => {
+      const h = g.header;
+      const pedTotal = toNum(h.totalprodutos);
+      totVenda += pedTotal;
+      g.itens.forEach(it => { totCusto += vdetCustoItem(it); });
+      totItens += g.itens.length;
 
-    rows.forEach((ped, i) => {
-      const itens   = ped.itens   || [];
-      const receber = ped.receber || [];
-      const pedTotal = toNum(ped.totalprodutos);
+      const cliente  = h.nomecliente ?? '—';
+      const codcli   = h.codcliente != null ? `#${h.codcliente}` : '';
+      const vendedor = h.nomevendedor ?? '—';
+      const codvend  = h.codvendedor != null ? `#${h.codvendedor}` : '';
 
-      // Custo: calcula a partir dos itens
-      let pedCusto = 0;
-      itens.forEach(it => {
-        const q = toNum(it.qtde ?? it.qtdevendida);
-        pedCusto += q * toNum(it.prcu1m ?? it.precocustoitem ?? it.custo ?? 0);
-      });
-
-      totTotal += pedTotal;
-      totCusto += pedCusto;
-      totItens += itens.length;
-
-      const statusRaw = (ped.cancelado === 'S' || ped.cancelado === 1) ? 'Cancelado' : (ped.statuspedido || ped.status || '');
-      const statusBadge = statusRaw === 'Cancelado'
-        ? '<span class="badge badge-red">Cancelado</span>'
-        : statusRaw === 'F'
-          ? '<span class="badge badge-green">Finalizado</span>'
-          : statusRaw
-            ? `<span class="badge badge-yellow">${statusRaw}</span>`
-            : '—';
-
-      // Linha do pedido (nível cabeçalho)
       const tr = document.createElement('tr');
       tr.innerHTML = `
-        <td><strong>${ped.controle ?? '—'}</strong></td>
-        <td>${ped.datafec ?? '—'}</td>
-        <td>${ped.vendedor ?? '—'}</td>
-        <td>${ped.cliente ?? '—'}</td>
-        <td>${ped.controlevarchar ?? '—'}</td>
+        <td><strong>${h.idvenda ?? '—'}</strong></td>
+        <td>${h.codigopedidovenda ?? '—'}</td>
+        <td>${h.ndav ?? '—'}</td>
+        <td>${h.data ?? '—'}</td>
+        <td>${h.datafec ?? '—'}</td>
+        <td>${cliente}${codcli ? ` <span style="color:var(--muted);font-size:.78em">${codcli}</span>` : ''}</td>
+        <td>${vendedor}${codvend ? ` <span style="color:var(--muted);font-size:.78em">${codvend}</span>` : ''}</td>
         <td class="num"><strong>${fmtNum(pedTotal)}</strong></td>
-        <td>${statusBadge}</td>
         <td style="text-align:center">
-          ${itens.length > 0
-            ? `<button class="btn-icon" id="btn-vdet-items-${i}" data-count="${itens.length}" onclick="toggleVdetItems(${i})">&#9654; ${itens.length}</button>`
-            : '—'}
-        </td>
-        <td style="text-align:center">
-          ${receber.length > 0
-            ? `<button class="btn-icon" id="btn-vdet-receber-${i}" data-count="${receber.length}" onclick="toggleVdetReceber(${i})">&#9654; ${receber.length}</button>`
-            : '—'}
+          <button class="btn-icon" onclick="abrirDetalhePedido(${i})" title="Detalhes do pedido">Detalhes</button>
         </td>`;
       tbody.appendChild(tr);
-
-      if (itens.length > 0) {
-        const trItems = document.createElement('tr');
-        trItems.id = `vdet-items-${i}`;
-        trItems.style.display = 'none';
-        trItems.innerHTML = `<td colspan="9" style="padding:0;background:#f0f4fb">
-          <table style="width:100%;border-collapse:collapse;font-size:.75rem">
-            <thead>
-              <tr style="background:#dce4f5">
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Cód. Prod.</th>
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Nome Produto</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Preço Unit. (R$)</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Qtde</th>
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Und.</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Total (R$)</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Custo Unit. (R$)</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Custo Total (R$)</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Qtde Conv.</th>
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Und. Conv.</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Margem Contrib. (R$)</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Margem (%)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${itens.map(it => {
-                const qtde     = toNum(it.qtde ?? it.qtdevendida);
-                const vUnit    = toNum(it.valorunit ?? it.preco ?? it.valorunitario);
-                const total    = toNum(it.total ?? it.valortotal ?? (qtde * vUnit));
-                const custoUni = toNum(it.prcu1m ?? it.precocustoitem ?? it.custo);
-                const custoTot = qtde * custoUni;
-                const margem   = total > 0 ? ((total - custoTot) / total) * 100 : 0;
-                const und      = it.un ?? it.und ?? it.unidade ?? '—';
-                const descr    = it.decprod ?? it.descricao ?? it.produto ?? it.nome ?? '—';
-                const codprod  = it.codproduto ?? it.codprod ?? it.cod ?? '—';
-                const hasConv  = (it.unconvertida ?? it.undconvertida ?? '').trim() !== '';
-                const undConv  = it.unconvertida ?? it.undconvertida ?? '';
-                const qtdeConv = toNum(it.qtdeconvertidavd ?? it.qtdeconvertida);
-                return `<tr>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${codprod}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${descr}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(vUnit)}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(qtde)}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${und}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(total)}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(custoUni)}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(custoTot)}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${hasConv ? fmtNum(qtdeConv) : '—'}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${hasConv ? undConv : '—'}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(total - custoTot)}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${badgeMargem(margem)}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </td>`;
-        tbody.appendChild(trItems);
-      }
-
-      if (receber.length > 0) {
-        const trRec = document.createElement('tr');
-        trRec.id = `vdet-receber-${i}`;
-        trRec.style.display = 'none';
-        trRec.innerHTML = `<td colspan="9" style="padding:0;background:#f5f0fb">
-          <table style="width:100%;border-collapse:collapse;font-size:.75rem">
-            <thead>
-              <tr style="background:#e8dff5">
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Descrição Lançamento</th>
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Dt. Vencto</th>
-                <th style="padding:6px 11px;text-align:center;color:#9c7a1f;font-weight:600">Quitada</th>
-                <th style="padding:6px 11px;text-align:center;color:#9c7a1f;font-weight:600">Cancelada</th>
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Dt. Pgto</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Dias Atraso</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Valor Pago (R$)</th>
-                <th style="padding:6px 11px;text-align:left;color:#9c7a1f;font-weight:600">Espécie</th>
-                <th style="padding:6px 11px;text-align:right;color:#9c7a1f;font-weight:600">Valor Original (R$)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${receber.map(rc => {
-                const quitada   = rc.quitada === 'S' || rc.quitada === 1;
-                const cancelada = rc.cancelada === 'S' || rc.cancelada === 1;
-                return `<tr>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${rc.descricaolancamento ?? '—'}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${rc.datavencimento ?? '—'}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:center"><input type="checkbox" disabled ${quitada ? 'checked' : ''}></td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:center"><input type="checkbox" disabled ${cancelada ? 'checked' : ''}></td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${rc.datarecebimento ?? '—'}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${rc.diasatraso ?? '—'}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(toNum(rc.valorpago))}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0">${rc.especie ?? '—'}</td>
-                  <td style="padding:5px 11px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(toNum(rc.valororiginal))}</td>
-                </tr>`;
-              }).join('')}
-            </tbody>
-          </table>
-        </td>`;
-        tbody.appendChild(trRec);
-      }
     });
 
-    const totMargem = totTotal > 0 ? ((totTotal - totCusto) / totTotal) * 100 : 0;
-    document.getElementById('ftVdetTotal').textContent = 'R$ ' + fmtNum(totTotal);
+    document.getElementById('ftVdetTotal').textContent = 'R$ ' + fmtNum(totVenda);
 
-    document.getElementById('vdetCardItens').textContent     = totItens;
-    document.getElementById('vdetCardVenda').textContent     = fmtNum(totTotal);
+    const totMargem = totVenda > 0 ? ((totVenda - totCusto) / totVenda) * 100 : 0;
+    document.getElementById('vdetCardItens').textContent     = `${_pedidosVendaDet.length} / ${totItens}`;
+    document.getElementById('vdetCardVenda').textContent     = fmtNum(totVenda);
     document.getElementById('vdetCardCusto').textContent     = fmtNum(totCusto);
-    document.getElementById('vdetCardMargem').textContent    = fmtNum(totTotal - totCusto);
+    document.getElementById('vdetCardMargem').textContent    = fmtNum(totVenda - totCusto);
     document.getElementById('vdetCardMargemPct').textContent = fmtPct(totMargem);
 
     document.getElementById('vendaDetSummary').style.display = '';
     document.getElementById('vendaDetWrapper').style.display = '';
   }
 
-  function toggleVdetItems(i) {
-    const tr  = document.getElementById(`vdet-items-${i}`);
-    const btn = document.getElementById(`btn-vdet-items-${i}`);
-    const open = tr.style.display === 'none';
-    tr.style.display = open ? '' : 'none';
-    btn.innerHTML = (open ? '&#9660; ' : '&#9654; ') + btn.dataset.count;
+  // ── MODAL: DETALHES DO PEDIDO ─────────────────────────────────────────────
+  async function abrirDetalhePedido(i) {
+    const g = _pedidosVendaDet[i];
+    if (!g) return;
+    const h = g.header;
+
+    const statusRaw = (h.statuspedido || '').toString();
+    const statusBadge = statusRaw === 'F'
+      ? '<span class="badge badge-green">Finalizado</span>'
+      : statusRaw ? `<span class="badge badge-yellow">${statusRaw}</span>` : '—';
+
+    document.getElementById('vdetModalTitle').textContent = `Detalhes do Pedido — ID Venda ${h.idvenda ?? ''}`;
+
+    // Cabeçalho replicado (para a informação não se perder no modal)
+    const campo = (label, valor) =>
+      `<div class="card"><label>${label}</label><div class="val" style="font-size:.9rem">${valor ?? '—'}</div></div>`;
+    document.getElementById('vdetModalHeader').innerHTML = [
+      campo('ID Venda', h.idvenda),
+      campo('Cód. Pedido', h.codigopedidovenda),
+      campo('Nº DAV', h.ndav),
+      campo('Data', h.data),
+      campo('Data Fec.', h.datafec),
+      campo('Cliente', `${h.nomecliente ?? '—'}${h.codcliente != null ? ` (#${h.codcliente})` : ''}`),
+      campo('Vendedor', `${h.nomevendedor ?? '—'}${h.codvendedor != null ? ` (#${h.codvendedor})` : ''}`),
+      campo('Total Produtos (R$)', fmtNum(toNum(h.totalprodutos))),
+      campo('Status', statusBadge),
+    ].join('');
+
+    // Itens do pedido
+    document.getElementById('vdetModalItens').innerHTML = g.itens.map(it => {
+      const qtde     = toNum(it.qtdevendida);
+      const vUnit    = toNum(it.valorunit);
+      const total    = toNum(it.total);
+      const custoUni = toNum(it.precocustoitem);
+      const custoTot = vdetCustoItem(it);
+      const hasConv  = String(it.unconvertida ?? '').trim() !== '';
+      return `<tr>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${it.codprod ?? '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${it.descproditemvenda ?? '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(qtde)}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${it.und ?? '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(vUnit)}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(total)}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(custoUni)}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(custoTot)}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${hasConv ? fmtNum(toNum(it.qtdeconvertidavd)) : '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${hasConv ? it.unconvertida : '—'}</td>
+      </tr>`;
+    }).join('');
+
+    showModal('modalVendaDetPedido');
+
+    // Informações financeiras: /vendas/receber?codpedido=<idvenda>
+    const finEl = document.getElementById('vdetModalFin');
+    finEl.innerHTML = '<div style="padding:14px;color:#888;font-size:.85rem">Carregando informações financeiras…</div>';
+    try {
+      const url = `/api/erp/${_empresa.uuid}/vendas/receber?codpedido=${encodeURIComponent(h.idvenda)}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const receber = await res.json();
+      renderVdetModalFin(Array.isArray(receber) ? receber : []);
+    } catch (err) {
+      finEl.innerHTML = `<div style="padding:14px;color:var(--red);font-size:.85rem">Erro ao carregar financeiro: ${err.message}</div>`;
+    }
   }
 
-  function toggleVdetReceber(i) {
-    const tr  = document.getElementById(`vdet-receber-${i}`);
-    const btn = document.getElementById(`btn-vdet-receber-${i}`);
-    const open = tr.style.display === 'none';
-    tr.style.display = open ? '' : 'none';
-    btn.innerHTML = (open ? '&#9660; ' : '&#9654; ') + btn.dataset.count;
+  function renderVdetModalFin(receber) {
+    const finEl = document.getElementById('vdetModalFin');
+    if (!receber.length) {
+      finEl.innerHTML = '<div style="padding:14px;color:#aaa;font-size:.85rem">Nenhum lançamento financeiro vinculado a este pedido.</div>';
+      return;
+    }
+    const eSim = v => String(v ?? '').toUpperCase().startsWith('S'); // 'S' ou 'SIM'
+    let totOrig = 0, totPago = 0;
+    const linhas = receber.map(rc => {
+      totOrig += toNum(rc.valororiginal);
+      totPago += toNum(rc.valorpago);
+      return `<tr>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${rc.descricaolancamento ?? '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${rc.nparcela ?? '—'}${rc.qtdeparcela != null ? '/' + rc.qtdeparcela : ''}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${rc.datavencimento ?? '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${rc.datarecebimento ?? '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:center"><input type="checkbox" disabled ${eSim(rc.quitada) ? 'checked' : ''}></td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:center"><input type="checkbox" disabled ${eSim(rc.cancelada) ? 'checked' : ''}></td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0">${rc.especie ?? '—'}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(toNum(rc.valororiginal))}</td>
+        <td style="padding:5px 10px;border-bottom:1px solid #e2e8f0;text-align:right">${fmtNum(toNum(rc.valorpago))}</td>
+      </tr>`;
+    }).join('');
+    finEl.innerHTML = `
+      <div class="table-scroll" style="max-height:280px;overflow:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:.78rem">
+          <thead>
+            <tr style="background:var(--blue);color:#fff">
+              <th style="padding:7px 10px;text-align:left">Descrição</th>
+              <th style="padding:7px 10px;text-align:left">Parcela</th>
+              <th style="padding:7px 10px;text-align:left">Dt. Vencto</th>
+              <th style="padding:7px 10px;text-align:left">Dt. Pgto</th>
+              <th style="padding:7px 10px;text-align:center">Quitada</th>
+              <th style="padding:7px 10px;text-align:center">Cancelada</th>
+              <th style="padding:7px 10px;text-align:left">Espécie</th>
+              <th style="padding:7px 10px;text-align:right">Vlr. Original (R$)</th>
+              <th style="padding:7px 10px;text-align:right">Vlr. Pago (R$)</th>
+            </tr>
+          </thead>
+          <tbody>${linhas}</tbody>
+          <tfoot>
+            <tr style="background:#f0f4fb;font-weight:700">
+              <td colspan="7" style="padding:7px 10px;text-align:right">TOTAIS</td>
+              <td style="padding:7px 10px;text-align:right">${fmtNum(totOrig)}</td>
+              <td style="padding:7px 10px;text-align:right">${fmtNum(totPago)}</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>`;
   }
 
   function exportarCSVVendaDet() {
-    if (!_rowsVendaDet.length) return;
+    if (!_pedidosVendaDet.length) return;
     const periodo = document.getElementById('vendaDetPeriodo').textContent
       .replace('Período: ', '').replace(/\//g, '-');
-    const header = ['#','Data Fec.','Vendedor','Cliente','Nº DAV','Status',
-                    'Cod.Prod.','Nome Produto','Preco Unit.(R$)','Qtde','Und.',
-                    'Total(R$)','Custo Unit.(R$)','Custo Total(R$)',
-                    'Qtde Conv.','Und. Conv.','Margem Contrib.(R$)','Margem(%)'];
+    const header = ['ID Venda','Cod.Pedido','Nº DAV','Data','Data Fec.',
+                    'Cod.Cliente','Cliente','Cod.Vendedor','Vendedor','Total Produtos(R$)',
+                    'Cod.Prod.','Descrição Item','Qtde','Und.','Vlr Unit.(R$)',
+                    'Total(R$)','Custo Unit.(R$)','Custo Total(R$)','Qtde Conv.','Und. Conv.'];
     const data = [];
-    _rowsVendaDet.forEach(ped => {
-      const itens      = ped.itens || [];
-      const statusRaw  = ped.cancelado ? 'Cancelado' : (ped.statuspedido || ped.status || '');
-      itens.forEach(it => {
-        const qtde     = toNum(it.qtde ?? it.qtdevendida);
-        const vUnit    = toNum(it.valorunit ?? it.preco ?? it.valorunitario);
-        const total    = toNum(it.total ?? it.valortotal ?? (qtde * vUnit));
-        const custoUni = toNum(it.prcu1m ?? it.precocustoitem ?? it.custo);
-        const custoTot = qtde * custoUni;
-        const margem   = total > 0 ? ((total - custoTot) / total * 100) : 0;
-        const hasConv  = (it.unconvertida ?? it.undconvertida ?? '').trim() !== '';
+    _pedidosVendaDet.forEach(g => {
+      const h = g.header;
+      g.itens.forEach(it => {
+        const qtde     = toNum(it.qtdevendida);
+        const vUnit    = toNum(it.valorunit);
+        const total    = toNum(it.total);
+        const custoUni = toNum(it.precocustoitem);
+        const custoTot = vdetCustoItem(it);
+        const hasConv  = String(it.unconvertida ?? '').trim() !== '';
         data.push([
-          ped.controle ?? '', ped.datafec ?? '', ped.vendedor ?? '', ped.cliente ?? '',
-          ped.controlevarchar ?? '', statusRaw,
-          it.codproduto ?? it.codprod ?? it.cod ?? '', it.decprod ?? it.descricao ?? it.produto ?? '',
-          vUnit.toFixed(2), qtde.toFixed(2), it.un ?? it.und ?? it.unidade ?? '',
+          h.idvenda ?? '', h.codigopedidovenda ?? '', h.ndav ?? '', h.data ?? '', h.datafec ?? '',
+          h.codcliente ?? '', h.nomecliente ?? '', h.codvendedor ?? '', h.nomevendedor ?? '', toNum(h.totalprodutos).toFixed(2),
+          it.codprod ?? '', it.descproditemvenda ?? '',
+          qtde.toFixed(2), it.und ?? '', vUnit.toFixed(2),
           total.toFixed(2), custoUni.toFixed(2), custoTot.toFixed(2),
-          hasConv ? toNum(it.qtdeconvertidavd ?? it.qtdeconvertida).toFixed(2) : '',
-          hasConv ? (it.unconvertida ?? it.undconvertida ?? '') : '',
-          (total - custoTot).toFixed(2), margem.toFixed(2)
+          hasConv ? toNum(it.qtdeconvertidavd).toFixed(2) : '',
+          hasConv ? it.unconvertida : ''
         ]);
       });
     });

@@ -99,7 +99,7 @@ try {
       "SELECT COUNT(*) AS n FROM relatorios WHERE empresa_id = ? AND tipo = 'vendadet'"
     ).get(e.id);
     if (existe.n === 0) {
-      insStmt.run(e.id, 'Venda Detalhada', '/venda/detalhada', 'vendadet');
+      insStmt.run(e.id, 'Venda Detalhada', '/vendas/analitico', 'vendadet');
     }
   });
 } catch (_) {}
