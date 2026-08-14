@@ -2579,6 +2579,12 @@
   // Custo total de um item = qtdevendida × precocustoitem (o endpoint não devolve totalcusto pronto).
   const vdetCustoItem = it => toNum(it.qtdevendida) * toNum(it.precocustoitem);
 
+  // Total do pedido = soma de `total` dos itens do grupo.
+  // NÃO usar `h.totalprodutos` isolado: esse campo vem por LINHA do /vendas/analitico
+  // (≈ total do próprio item, não um total de cabeçalho repetido) — usar só a 1ª linha
+  // subestima pedidos com 2+ itens (confirmado comparando com o Vendas Sintético).
+  const vdetTotalPedido = g => g.itens.reduce((s, it) => s + toNum(it.total), 0);
+
   function renderVendaDet(rows, dtDe, dtAte) {
     _rowsVendaDet = Array.isArray(rows) ? rows : [];
     const tbody = document.getElementById('tbodyVendaDet');
@@ -2610,7 +2616,7 @@
 
     _pedidosVendaDet.forEach((g, i) => {
       const h = g.header;
-      const pedTotal = toNum(h.totalprodutos);
+      const pedTotal = vdetTotalPedido(g);
       totVenda += pedTotal;
       g.itens.forEach(it => { totCusto += vdetCustoItem(it); });
       totItens += g.itens.length;
@@ -2673,7 +2679,7 @@
       campo('Data Fec.', h.datafec),
       campo('Cliente', `${h.nomecliente ?? '—'}${h.codcliente != null ? ` (#${h.codcliente})` : ''}`),
       campo('Vendedor', `${h.nomevendedor ?? '—'}${h.codvendedor != null ? ` (#${h.codvendedor})` : ''}`),
-      campo('Total Produtos (R$)', fmtNum(toNum(h.totalprodutos))),
+      campo('Total Produtos (R$)', fmtNum(vdetTotalPedido(g))),
       campo('Status', statusBadge),
     ].join('');
 
@@ -2777,6 +2783,7 @@
     const data = [];
     _pedidosVendaDet.forEach(g => {
       const h = g.header;
+      const pedTotal = vdetTotalPedido(g);
       g.itens.forEach(it => {
         const qtde     = toNum(it.qtdevendida);
         const vUnit    = toNum(it.valorunit);
@@ -2786,7 +2793,7 @@
         const hasConv  = String(it.unconvertida ?? '').trim() !== '';
         data.push([
           h.idvenda ?? '', h.codigopedidovenda ?? '', h.ndav ?? '', h.data ?? '', h.datafec ?? '',
-          h.codcliente ?? '', h.nomecliente ?? '', h.codvendedor ?? '', h.nomevendedor ?? '', toNum(h.totalprodutos).toFixed(2),
+          h.codcliente ?? '', h.nomecliente ?? '', h.codvendedor ?? '', h.nomevendedor ?? '', pedTotal.toFixed(2),
           it.codprod ?? '', it.descproditemvenda ?? '',
           qtde.toFixed(2), it.und ?? '', vUnit.toFixed(2),
           total.toFixed(2), custoUni.toFixed(2), custoTot.toFixed(2),
