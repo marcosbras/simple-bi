@@ -394,8 +394,7 @@
       <label>Código de Identificação (ID)</label>
       <div class="input-wrap">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
-        <input type="text" id="selEmpresa" list="empresasList" placeholder="Digite o código de identificação" autocomplete="off" />
-        <datalist id="empresasList"></datalist>
+        <input type="text" id="selEmpresa" placeholder="Digite o código de identificação" autocomplete="off" />
       </div>
     </div>
 
@@ -1320,18 +1319,11 @@
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
 
-  // ── EMPRESAS (login select) ───────────────────────────────────────────────
+  // ── EMPRESAS (login) ─────────────────────────────────────────────────────
   async function carregarEmpresas() {
     try {
       const res = await fetch('/api/empresas');
       _empresas = await res.json();
-      const dl  = document.getElementById('empresasList');
-      dl.innerHTML = '';
-      _empresas.forEach(e => {
-        const opt = document.createElement('option');
-        opt.value = e.nome;
-        dl.appendChild(opt);
-      });
     } catch { _empresas = []; }
   }
 
