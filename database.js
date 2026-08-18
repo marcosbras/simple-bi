@@ -68,9 +68,12 @@ if (adminExists.n === 0) {
 // seed: empresa SGB (exemplo inicial)
 const empCount = db.prepare('SELECT COUNT(*) AS n FROM empresas').get();
 if (empCount.n === 0) {
+  
+  
+  //IGA Gestão Inteligente
   const r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('SGB', 'http://dbcayemecolchoes.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
+  ).run('Cayeme Colchões #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
@@ -81,6 +84,24 @@ if (empCount.n === 0) {
 
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
+
+  //Central do Aplicativo
+  const r = db.prepare(
+    'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
+  ).run('Cayeme Colchões #2', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
+
+  db.prepare(
+    'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Vendas Sintético', '/vendas/analitico');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Produção', '/produzido', 'producao');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
+
+
+
 }
 
 // migração: preenche uuid para empresas que ainda não têm (coluna nova ou seed acima)
