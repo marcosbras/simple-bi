@@ -73,7 +73,7 @@ if (empCount.n === 0) {
   //IGA Gestão Inteligente
   var  r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('Cayeme Colchões #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
+  ).run('CayemeColchões#01', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
@@ -90,7 +90,7 @@ if (empCount.n === 0) {
   
  var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('Porto Cais #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
+  ).run('PortoCais#01', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
@@ -106,7 +106,7 @@ if (empCount.n === 0) {
 
  var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('Claudio Pescados #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
+  ).run('ClaudioPescados#01', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
@@ -125,7 +125,7 @@ if (empCount.n === 0) {
   //Central do Aplicativo
   var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('Cayeme Colchões #2', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
+  ).run('CayemeColchões#02', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
@@ -140,7 +140,7 @@ if (empCount.n === 0) {
 
   var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('Itacar #', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
+  ).run('Itacar#01', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
