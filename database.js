@@ -85,6 +85,43 @@ if (empCount.n === 0) {
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 
+  
+
+  
+ const r = db.prepare(
+    'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
+  ).run('Porto Cais #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
+
+  db.prepare(
+    'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Vendas Sintético', '/vendas/analitico');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Produção', '/produzido', 'producao');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
+
+
+
+ const r = db.prepare(
+    'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
+  ).run('Claudio Pescados #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
+
+  db.prepare(
+    'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Vendas Sintético', '/vendas/analitico');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Produção', '/produzido', 'producao');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
+
+
+  
+  
+  
   //Central do Aplicativo
   const r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
@@ -99,6 +136,22 @@ if (empCount.n === 0) {
 
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
+
+
+  const r = db.prepare(
+    'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
+  ).run('Itacar #1', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
+
+  db.prepare(
+    'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Vendas Sintético', '/vendas/analitico');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Produção', '/produzido', 'producao');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
+
 
 
 
