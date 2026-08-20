@@ -71,7 +71,7 @@ if (empCount.n === 0) {
   
   
   //IGA Gestão Inteligente
-  const r = db.prepare(
+  var  r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
   ).run('Cayeme Colchões #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
 
@@ -88,7 +88,7 @@ if (empCount.n === 0) {
   
 
   
- const r = db.prepare(
+ var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
   ).run('Porto Cais #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
 
@@ -104,7 +104,7 @@ if (empCount.n === 0) {
 
 
 
- const r = db.prepare(
+ var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
   ).run('Claudio Pescados #1', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
 
@@ -123,7 +123,7 @@ if (empCount.n === 0) {
   
   
   //Central do Aplicativo
-  const r = db.prepare(
+  var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
   ).run('Cayeme Colchões #2', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
 
@@ -138,9 +138,9 @@ if (empCount.n === 0) {
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 
 
-  const r = db.prepare(
+  var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
-  ).run('Itacar #1', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
+  ).run('Itacar #', 'https://dbgateway.centraldoaplicativo.com.br/sgbrbi', '/usuario/login');
 
   db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint) VALUES (?, ?, ?)'
