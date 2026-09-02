@@ -507,6 +507,12 @@
         </button>
         <div id="grpFinanceiro">
 
+          <!-- Análise Financeira -->
+          <button class="nav-item" id="navFinanceiro" onclick="navTo('financeiro')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Análise Financeira
+          </button>
+
           <!-- Receber -->
           <button class="nav-item" id="navReceber" onclick="navTo('receber')">
             <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><polyline points="12 14 12 18"/><polyline points="9 16 12 18 15 16"/></svg>
@@ -986,25 +992,136 @@
         </div>
       </div><!-- /secVendaDet -->
 
+      <!-- ── SEÇÃO: ANÁLISE FINANCEIRA ─────────────────────────────── -->
+      <div id="secFinanceiro" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Análise Financeira — Vendido x Recebido x Pago</div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="fin_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="fin_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnFinanceiro" onclick="gerarAnaliseFinanceira()">
+            Gerar Análise
+          </button>
+        </div>
+        <div id="dashFinanceiroStatus" class="dash-status"></div>
+
+        <div id="dashFinanceiroKpis" class="dash-kpis" style="display:none">
+          <div class="kpi-card sky"><label>Total Vendido (R$)</label><div class="kpi-val" id="kpiFinVendido">0,00</div></div>
+          <div class="kpi-card green"><label>Total Recebido (R$)</label><div class="kpi-val" id="kpiFinRecebido">0,00</div></div>
+          <div class="kpi-card red"><label>Total Pago (R$)</label><div class="kpi-val" id="kpiFinPago">0,00</div></div>
+          <div class="kpi-card"><label>Saldo Recebido − Pago (R$)</label><div class="kpi-val" id="kpiFinSaldo">0,00</div></div>
+        </div>
+
+        <div id="dashFinanceiroGrid" class="dash-grid" style="display:none">
+          <div class="chart-card chart-card-full">
+            <div class="chart-title">Comparativo Mensal — Vendido x Recebido x Pago (R$)</div>
+            <div class="chart-wrap-tall"><canvas id="chartFinMensal"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Recebido x Pago no Período</div>
+            <div class="chart-wrap"><canvas id="chartFinRecebidoPago"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Cobertura do Pago sobre o Recebido</div>
+            <div class="chart-wrap"><canvas id="chartFinCobertura"></canvas></div>
+          </div>
+        </div>
+      </div><!-- /secFinanceiro -->
+
       <!-- ── SEÇÃO: FINANCEIRO / RECEBER ────────────────────────────── -->
       <div id="secReceber" style="display:none">
         <div class="panel">
           <div class="panel-title">Financeiro — Contas a Receber</div>
+          <div class="field" id="fieldRelReceberDash" style="display:none">
+            <label>Relatório</label>
+            <select id="selRelReceberDash"></select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="recd_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="recd_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnReceberDash" onclick="gerarDashboardReceber()">
+            Gerar Dashboard
+          </button>
         </div>
-        <div style="margin:24px;padding:40px;background:#fff;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.08);text-align:center;color:var(--muted);font-size:.9rem">
-          Em desenvolvimento
+        <div id="dashReceberStatus" class="dash-status"></div>
+
+        <div id="dashReceberKpis" class="dash-kpis" style="display:none">
+          <div class="kpi-card sky"><label>Contas Recebidas</label><div class="kpi-val" id="kpiReceberQtde">0</div></div>
+          <div class="kpi-card green"><label>Total Recebido (R$)</label><div class="kpi-val" id="kpiReceberTotal">0,00</div></div>
+          <div class="kpi-card"><label>Clientes Únicos</label><div class="kpi-val" id="kpiReceberClientes">0</div></div>
+          <div class="kpi-card"><label>Ticket Médio (R$)</label><div class="kpi-val" id="kpiReceberTicket">0,00</div></div>
         </div>
-      </div>
+
+        <div id="dashReceberGrid" class="dash-grid" style="display:none">
+          <div class="chart-card">
+            <div class="chart-title">Top 10 Clientes por Valor Recebido (R$)</div>
+            <div class="chart-wrap-tall"><canvas id="chartReceberClientes"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Participação por Espécie/Forma de Recebimento</div>
+            <div class="chart-wrap-tall"><canvas id="chartReceberEspecie"></canvas></div>
+          </div>
+          <div class="chart-card chart-card-full">
+            <div class="chart-title">Evolução Mensal do Recebido (R$)</div>
+            <div class="chart-wrap"><canvas id="chartReceberMes"></canvas></div>
+          </div>
+        </div>
+      </div><!-- /secReceber -->
 
       <!-- ── SEÇÃO: FINANCEIRO / PAGAR ──────────────────────────────── -->
       <div id="secPagar" style="display:none">
         <div class="panel">
           <div class="panel-title">Financeiro — Contas a Pagar</div>
+          <div class="field" id="fieldRelPagarDash" style="display:none">
+            <label>Relatório</label>
+            <select id="selRelPagarDash"></select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="pagd_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="pagd_ate" />
+          </div>
+          <button class="btn btn-primary" id="btnPagarDash" onclick="gerarDashboardPagar()">
+            Gerar Dashboard
+          </button>
         </div>
-        <div style="margin:24px;padding:40px;background:#fff;border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.08);text-align:center;color:var(--muted);font-size:.9rem">
-          Em desenvolvimento
+        <div id="dashPagarStatus" class="dash-status"></div>
+
+        <div id="dashPagarKpis" class="dash-kpis" style="display:none">
+          <div class="kpi-card sky"><label>Contas Pagas</label><div class="kpi-val" id="kpiPagarQtde">0</div></div>
+          <div class="kpi-card red"><label>Total Pago (R$)</label><div class="kpi-val" id="kpiPagarTotal">0,00</div></div>
+          <div class="kpi-card"><label>Fornecedores Únicos</label><div class="kpi-val" id="kpiPagarForn">0</div></div>
+          <div class="kpi-card"><label>Ticket Médio (R$)</label><div class="kpi-val" id="kpiPagarTicket">0,00</div></div>
         </div>
-      </div>
+
+        <div id="dashPagarGrid" class="dash-grid" style="display:none">
+          <div class="chart-card">
+            <div class="chart-title">Top 10 Fornecedores por Valor Pago (R$)</div>
+            <div class="chart-wrap-tall"><canvas id="chartPagarFornecedores"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Participação por Espécie/Forma de Pagamento</div>
+            <div class="chart-wrap-tall"><canvas id="chartPagarEspecie"></canvas></div>
+          </div>
+          <div class="chart-card chart-card-full">
+            <div class="chart-title">Evolução Mensal do Pago (R$)</div>
+            <div class="chart-wrap"><canvas id="chartPagarMes"></canvas></div>
+          </div>
+        </div>
+      </div><!-- /secPagar -->
 
     </main>
   </div>
@@ -1242,7 +1359,9 @@
   // ── ESTADO ────────────────────────────────────────────────────────────────
   let _token = null, _nomeUsuario = '', _empresa = null, _adminAuthed = false;
   let _relatorio = null, _relatorioProducao = null, _relatorioCompras = null, _relatorioVendaDet = null;
+  let _relatorioReceber = null, _relatorioPagar = null;
   let _gruposVendas = [], _rowsProducao = [], _gruposCompras = [];
+  let _rowsReceber = [], _rowsPagar = [];
   let _empresas = [];
   let _charts = { clientes: null, vendedor: null, produtos: null };
 
@@ -1254,6 +1373,16 @@
   const fmtPct   = v => toNum(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
   const dateToApi = v => v.replace(/-/g, '.');
   const truncate  = (s, n = 28) => s && s.length > n ? s.substring(0, n) + '…' : (s || '');
+  const isSim     = v => String(v ?? '').trim().toUpperCase().startsWith('S'); // 'SIM' ou 'S'
+  const mesLabel  = v => { // 'YYYY-MM-DD' ou 'DD.MM.YYYY' → 'MM/YYYY'
+    const s = String(v ?? '').trim();
+    if (!s) return null;
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (m) return `${m[2]}/${m[1]}`;
+    m = s.match(/^(\d{2})\.(\d{2})\.(\d{4})/);
+    if (m) return `${m[2]}/${m[3]}`;
+    return null;
+  };
 
   async function sha256(text) {
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
@@ -1302,6 +1431,7 @@
       receber:     'secReceber',
       pagar:       'secPagar',
       vendadet:    'secVendaDet',
+      financeiro:  'secFinanceiro',
     };
     Object.entries(map).forEach(([s, id]) => {
       document.getElementById(id).style.display = s === section ? '' : 'none';
@@ -1313,6 +1443,7 @@
     document.getElementById('navComprasDet').classList.toggle('active', section === 'comprasdet');
     document.getElementById('navProdDash').classList.toggle('active',   section === 'producaodash');
     document.getElementById('navProdDet').classList.toggle('active',    section === 'producaodet');
+    document.getElementById('navFinanceiro').classList.toggle('active', section === 'financeiro');
     document.getElementById('navReceber').classList.toggle('active',    section === 'receber');
     document.getElementById('navPagar').classList.toggle('active',      section === 'pagar');
     document.getElementById('sidebar').classList.remove('open');
@@ -1375,6 +1506,8 @@
       const relsCompras = rels.filter(r => r.tipo === 'compras');
       const relsProd    = rels.filter(r => r.tipo === 'producao');
       const relsVendaDet= rels.filter(r => r.tipo === 'vendadet');
+      const relsReceber = rels.filter(r => r.tipo === 'receber');
+      const relsPagar   = rels.filter(r => r.tipo === 'pagar');
 
       const populaSel = (selIds, lista) => selIds.forEach(selId => {
         const s = document.getElementById(selId);
@@ -1408,6 +1541,14 @@
       document.getElementById('fieldRelVendaDet').style.display = relsVendaDet.length > 1 ? '' : 'none';
       _relatorioVendaDet = relsVendaDet[0] || null;
 
+      populaSel(['selRelReceberDash'], relsReceber);
+      document.getElementById('fieldRelReceberDash').style.display = relsReceber.length > 1 ? '' : 'none';
+      _relatorioReceber = relsReceber[0] || null;
+
+      populaSel(['selRelPagarDash'], relsPagar);
+      document.getElementById('fieldRelPagarDash').style.display = relsPagar.length > 1 ? '' : 'none';
+      _relatorioPagar = relsPagar[0] || null;
+
       showView('viewApp');
       navTo('dashboard');
     } catch (err) {
@@ -1421,6 +1562,7 @@
   function sair() {
     _token = null; _nomeUsuario = ''; _empresa = null;
     _relatorio = null; _relatorioCompras = null; _relatorioProducao = null; _relatorioVendaDet = null;
+    _relatorioReceber = null; _relatorioPagar = null; _rowsReceber = []; _rowsPagar = [];
     document.getElementById('lSenha').value = '';
     document.getElementById('loginError').textContent = '';
     document.getElementById('summary').style.display = 'none';
@@ -1444,8 +1586,17 @@
     _rowsVendaDet = []; _pedidosVendaDet = [];
     document.getElementById('vendaDetSummary').style.display = 'none';
     document.getElementById('vendaDetWrapper').style.display = 'none';
+    document.getElementById('dashReceberKpis').style.display = 'none';
+    document.getElementById('dashReceberGrid').style.display = 'none';
+    document.getElementById('dashPagarKpis').style.display = 'none';
+    document.getElementById('dashPagarGrid').style.display = 'none';
+    document.getElementById('dashFinanceiroKpis').style.display = 'none';
+    document.getElementById('dashFinanceiroGrid').style.display = 'none';
     destroyCharts();
     destroyChartsProd();
+    destroyChartsReceber();
+    destroyChartsPagar();
+    destroyChartsFin();
     showView('viewLogin');
   }
 
@@ -1584,6 +1735,8 @@
         <option value="vendadet">Venda Detalhada</option>
         <option value="compras">Compras</option>
         <option value="producao">Produção</option>
+        <option value="receber">Contas a Receber</option>
+        <option value="pagar">Contas a Pagar</option>
       </select>
       <select class="rel-campo-exibicao" title="Campo de exibição (Produção)" style="border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:.82rem;outline:none;background:#fafbfc;color:var(--text);display:none">${campoOpts}</select>
       <button class="btn-icon btn-icon-danger" onclick="this.parentElement.remove();syncRelRowsEmpty()">×</button>`;
@@ -2809,6 +2962,386 @@
     downloadCSV(`${_empresa?.nome ?? 'BI'}_VendaDetalhada_${periodo}.csv`, [header, ...data]);
   }
 
+  // ── FINANCEIRO: FETCH COMUM ──────────────────────────────────────────────
+  // quitada=SIM: a API já filtra só contas efetivamente recebidas/pagas e passa
+  // a considerar o período pela data de baixa (datarecebimento/datapagamento),
+  // não pela data de vencimento.
+  async function fetchReceber(dtDe, dtAte, relSelId) {
+    const selVal = document.getElementById(relSelId).value;
+    if (selVal) _relatorioReceber = JSON.parse(selVal);
+    if (!_relatorioReceber) throw new Error('Nenhum relatório de Contas a Receber configurado.');
+    const url = `/api/erp/${_empresa.uuid}${_relatorioReceber.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+    if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
+    return res.json();
+  }
+
+  async function fetchPagar(dtDe, dtAte, relSelId) {
+    const selVal = document.getElementById(relSelId).value;
+    if (selVal) _relatorioPagar = JSON.parse(selVal);
+    if (!_relatorioPagar) throw new Error('Nenhum relatório de Contas a Pagar configurado.');
+    const url = `/api/erp/${_empresa.uuid}${_relatorioPagar.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+    if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
+    return res.json();
+  }
+
+  // A API já retorna só quitada=SIM — aqui é só uma rede de segurança contra
+  // um lançamento cancelado que por algum motivo ainda viesse com quitada=SIM.
+  const apenasNaoCanceladas = rows => (Array.isArray(rows) ? rows : []).filter(r => !isSim(r.cancelada));
+
+  // ── FINANCEIRO: CONTAS A RECEBER ─────────────────────────────────────────
+  let _chartsReceber = { clientes: null, especie: null, mes: null };
+  function destroyChartsReceber() {
+    Object.keys(_chartsReceber).forEach(k => { if (_chartsReceber[k]) { _chartsReceber[k].destroy(); _chartsReceber[k] = null; } });
+  }
+
+  function setDashReceberStatus(msg, type = '') {
+    const el = document.getElementById('dashReceberStatus');
+    el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
+  }
+
+  async function gerarDashboardReceber() {
+    const dtDeRaw  = document.getElementById('recd_de').value;
+    const dtAteRaw = document.getElementById('recd_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setDashReceberStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setDashReceberStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+
+    const btn = document.getElementById('btnReceberDash');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('dashReceberKpis').style.display = 'none';
+    document.getElementById('dashReceberGrid').style.display = 'none';
+
+    try {
+      setDashReceberStatus('Buscando dados…');
+      const todas = await fetchReceber(dateToApi(dtDeRaw), dateToApi(dtAteRaw), 'selRelReceberDash');
+      _rowsReceber = apenasNaoCanceladas(todas);
+      renderDashboardReceber(_rowsReceber);
+      setDashReceberStatus(`Dashboard atualizado — ${_rowsReceber.length} conta(s) recebida(s) no período.`, 'ok');
+    } catch (err) {
+      setDashReceberStatus(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Gerar Dashboard';
+    }
+  }
+
+  function renderDashboardReceber(rows) {
+    const clientesUnicos = new Set(rows.map(r => r.codcliente)).size;
+    const total  = rows.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
+    const ticket = rows.length > 0 ? total / rows.length : 0;
+
+    document.getElementById('kpiReceberQtde').textContent     = rows.length;
+    document.getElementById('kpiReceberTotal').textContent    = fmtNum(total);
+    document.getElementById('kpiReceberClientes').textContent = clientesUnicos;
+    document.getElementById('kpiReceberTicket').textContent   = fmtNum(ticket);
+    document.getElementById('dashReceberKpis').style.display  = 'flex';
+
+    const byCliente = {}, byEspecie = {}, byMes = {};
+    rows.forEach(r => {
+      const valor = toNum(r.valorpago || r.valororiginal);
+      const cliente = r.cliente || `Cliente ${r.codcliente ?? '—'}`;
+      byCliente[cliente] = (byCliente[cliente] || 0) + valor;
+      const especie = r.especie || 'Não informada';
+      byEspecie[especie] = (byEspecie[especie] || 0) + valor;
+      const mes = mesLabel(r.datarecebimento) || mesLabel(r.datavencimento);
+      if (mes) byMes[mes] = (byMes[mes] || 0) + valor;
+    });
+
+    const top10Cliente = Object.entries(byCliente).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const especies      = Object.entries(byEspecie).sort((a, b) => b[1] - a[1]);
+    const meses          = Object.entries(byMes).sort((a, b) => a[0].split('/').reverse().join('').localeCompare(b[0].split('/').reverse().join('')));
+
+    destroyChartsReceber();
+
+    _chartsReceber.clientes = new Chart(document.getElementById('chartReceberClientes'), {
+      type: 'bar',
+      data: {
+        labels: top10Cliente.map(([k]) => truncate(k)),
+        datasets: [{ data: top10Cliente.map(([, v]) => v),
+          backgroundColor: top10Cliente.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor:     top10Cliente.map((_, i) => PALETTE[i % PALETTE.length]),
+          borderWidth: 1, borderRadius: 4 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } },
+        scales: { x: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+                  y: { ticks: { font: { size: 10 } } } } }
+    });
+
+    _chartsReceber.especie = new Chart(document.getElementById('chartReceberEspecie'), {
+      type: 'doughnut',
+      data: {
+        labels: especies.map(([k]) => k),
+        datasets: [{ data: especies.map(([, v]) => v),
+          backgroundColor: especies.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor: '#fff', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 10 } },
+                   tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } } }
+    });
+
+    _chartsReceber.mes = new Chart(document.getElementById('chartReceberMes'), {
+      type: 'bar',
+      data: {
+        labels: meses.map(([k]) => k),
+        datasets: [{ data: meses.map(([, v]) => v), label: 'Recebido',
+          backgroundColor: PALETTE[2] + 'BB', borderColor: PALETTE[2],
+          borderWidth: 1, borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } },
+        scales: { y: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+                  x: { ticks: { font: { size: 10 } } } } }
+    });
+
+    document.getElementById('dashReceberGrid').style.display = 'grid';
+  }
+
+  // ── FINANCEIRO: CONTAS A PAGAR ───────────────────────────────────────────
+  let _chartsPagar = { fornecedores: null, especie: null, mes: null };
+  function destroyChartsPagar() {
+    Object.keys(_chartsPagar).forEach(k => { if (_chartsPagar[k]) { _chartsPagar[k].destroy(); _chartsPagar[k] = null; } });
+  }
+
+  function setDashPagarStatus(msg, type = '') {
+    const el = document.getElementById('dashPagarStatus');
+    el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
+  }
+
+  async function gerarDashboardPagar() {
+    const dtDeRaw  = document.getElementById('pagd_de').value;
+    const dtAteRaw = document.getElementById('pagd_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setDashPagarStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setDashPagarStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+
+    const btn = document.getElementById('btnPagarDash');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('dashPagarKpis').style.display = 'none';
+    document.getElementById('dashPagarGrid').style.display = 'none';
+
+    try {
+      setDashPagarStatus('Buscando dados…');
+      const todas = await fetchPagar(dateToApi(dtDeRaw), dateToApi(dtAteRaw), 'selRelPagarDash');
+      _rowsPagar = apenasNaoCanceladas(todas);
+      renderDashboardPagar(_rowsPagar);
+      setDashPagarStatus(`Dashboard atualizado — ${_rowsPagar.length} conta(s) paga(s) no período.`, 'ok');
+    } catch (err) {
+      setDashPagarStatus(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Gerar Dashboard';
+    }
+  }
+
+  function renderDashboardPagar(rows) {
+    const fornUnicos = new Set(rows.map(r => r.codfornecedor)).size;
+    const total  = rows.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
+    const ticket = rows.length > 0 ? total / rows.length : 0;
+
+    document.getElementById('kpiPagarQtde').textContent  = rows.length;
+    document.getElementById('kpiPagarTotal').textContent = fmtNum(total);
+    document.getElementById('kpiPagarForn').textContent  = fornUnicos;
+    document.getElementById('kpiPagarTicket').textContent = fmtNum(ticket);
+    document.getElementById('dashPagarKpis').style.display = 'flex';
+
+    const byForn = {}, byEspecie = {}, byMes = {};
+    rows.forEach(r => {
+      const valor = toNum(r.valorpago || r.valororiginal);
+      const forn = r.fornecedor || `Fornecedor ${r.codfornecedor ?? '—'}`;
+      byForn[forn] = (byForn[forn] || 0) + valor;
+      const especie = r.especie || 'Não informada';
+      byEspecie[especie] = (byEspecie[especie] || 0) + valor;
+      const mes = mesLabel(r.datapagamento) || mesLabel(r.datavencimento);
+      if (mes) byMes[mes] = (byMes[mes] || 0) + valor;
+    });
+
+    const top10Forn = Object.entries(byForn).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const especies    = Object.entries(byEspecie).sort((a, b) => b[1] - a[1]);
+    const meses        = Object.entries(byMes).sort((a, b) => a[0].split('/').reverse().join('').localeCompare(b[0].split('/').reverse().join('')));
+
+    destroyChartsPagar();
+
+    _chartsPagar.fornecedores = new Chart(document.getElementById('chartPagarFornecedores'), {
+      type: 'bar',
+      data: {
+        labels: top10Forn.map(([k]) => truncate(k)),
+        datasets: [{ data: top10Forn.map(([, v]) => v),
+          backgroundColor: top10Forn.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor:     top10Forn.map((_, i) => PALETTE[i % PALETTE.length]),
+          borderWidth: 1, borderRadius: 4 }]
+      },
+      options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } },
+        scales: { x: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+                  y: { ticks: { font: { size: 10 } } } } }
+    });
+
+    _chartsPagar.especie = new Chart(document.getElementById('chartPagarEspecie'), {
+      type: 'doughnut',
+      data: {
+        labels: especies.map(([k]) => k),
+        datasets: [{ data: especies.map(([, v]) => v),
+          backgroundColor: especies.map((_, i) => PALETTE[i % PALETTE.length] + 'CC'),
+          borderColor: '#fff', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 10 } },
+                   tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } } }
+    });
+
+    _chartsPagar.mes = new Chart(document.getElementById('chartPagarMes'), {
+      type: 'bar',
+      data: {
+        labels: meses.map(([k]) => k),
+        datasets: [{ data: meses.map(([, v]) => v), label: 'Pago',
+          backgroundColor: PALETTE[1] + 'BB', borderColor: PALETTE[1],
+          borderWidth: 1, borderRadius: 4 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } },
+        scales: { y: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+                  x: { ticks: { font: { size: 10 } } } } }
+    });
+
+    document.getElementById('dashPagarGrid').style.display = 'grid';
+  }
+
+  // ── ANÁLISE FINANCEIRA (Vendido x Recebido x Pago) ───────────────────────
+  let _chartsFin = { mensal: null, recebidoPago: null, cobertura: null };
+  function destroyChartsFin() {
+    Object.keys(_chartsFin).forEach(k => { if (_chartsFin[k]) { _chartsFin[k].destroy(); _chartsFin[k] = null; } });
+  }
+
+  function setDashFinanceiroStatus(msg, type = '') {
+    const el = document.getElementById('dashFinanceiroStatus');
+    el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
+  }
+
+  async function gerarAnaliseFinanceira() {
+    const dtDeRaw  = document.getElementById('fin_de').value;
+    const dtAteRaw = document.getElementById('fin_ate').value;
+    if (!dtDeRaw || !dtAteRaw) { setDashFinanceiroStatus('Selecione o período.', 'error'); return; }
+    if (dtDeRaw > dtAteRaw)    { setDashFinanceiroStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
+    if (!_relatorioVendaDet)   { setDashFinanceiroStatus('Nenhum relatório de Vendas (analítico) configurado.', 'error'); return; }
+    if (!_relatorioReceber)    { setDashFinanceiroStatus('Nenhum relatório de Contas a Receber configurado.', 'error'); return; }
+    if (!_relatorioPagar)      { setDashFinanceiroStatus('Nenhum relatório de Contas a Pagar configurado.', 'error'); return; }
+
+    const btn = document.getElementById('btnFinanceiro');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Aguarde…';
+    document.getElementById('dashFinanceiroKpis').style.display = 'none';
+    document.getElementById('dashFinanceiroGrid').style.display = 'none';
+
+    try {
+      setDashFinanceiroStatus('Buscando vendas, recebimentos e pagamentos…');
+      const dtDe = dateToApi(dtDeRaw), dtAte = dateToApi(dtAteRaw);
+      const [rowsVendas, rowsReceberTodas, rowsPagarTodas] = await Promise.all([
+        (async () => {
+          const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+          const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+          if (!res.ok) throw new Error(`Erro ao buscar vendas (HTTP ${res.status})`);
+          return res.json();
+        })(),
+        fetch(`/api/erp/${_empresa.uuid}${_relatorioReceber.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`,
+          { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar recebimentos (HTTP ${r.status})`); return r.json(); }),
+        fetch(`/api/erp/${_empresa.uuid}${_relatorioPagar.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`,
+          { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar pagamentos (HTTP ${r.status})`); return r.json(); }),
+      ]);
+
+      const rowsReceber = apenasNaoCanceladas(rowsReceberTodas);
+      const rowsPagar    = apenasNaoCanceladas(rowsPagarTodas);
+      renderAnaliseFinanceira(rowsVendas, rowsReceber, rowsPagar);
+      setDashFinanceiroStatus(
+        `Análise atualizada — ${rowsVendas.length} item(ns) de venda, ${rowsReceber.length} recebimento(s), ${rowsPagar.length} pagamento(s).`, 'ok');
+    } catch (err) {
+      setDashFinanceiroStatus(err.message, 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'Gerar Análise';
+    }
+  }
+
+  function renderAnaliseFinanceira(rowsVendas, rowsReceber, rowsPagar) {
+    const totVendido  = (Array.isArray(rowsVendas) ? rowsVendas : []).reduce((s, r) => s + toNum(r.total), 0);
+    const totRecebido = rowsReceber.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
+    const totPago      = rowsPagar.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
+    const saldo         = totRecebido - totPago;
+
+    document.getElementById('kpiFinVendido').textContent  = fmtNum(totVendido);
+    document.getElementById('kpiFinRecebido').textContent = fmtNum(totRecebido);
+    document.getElementById('kpiFinPago').textContent     = fmtNum(totPago);
+    document.getElementById('kpiFinSaldo').textContent    = fmtNum(saldo);
+    document.getElementById('dashFinanceiroKpis').style.display = 'flex';
+
+    // Agrupamento mensal — vendas por data de fechamento do pedido, financeiro pela data de baixa.
+    const byMesVendido = {}, byMesRecebido = {}, byMesPago = {};
+    (Array.isArray(rowsVendas) ? rowsVendas : []).forEach(r => {
+      const mes = mesLabel(r.datafec) || mesLabel(r.data);
+      if (mes) byMesVendido[mes] = (byMesVendido[mes] || 0) + toNum(r.total);
+    });
+    rowsReceber.forEach(r => {
+      const mes = mesLabel(r.datarecebimento) || mesLabel(r.datavencimento);
+      if (mes) byMesRecebido[mes] = (byMesRecebido[mes] || 0) + toNum(r.valorpago || r.valororiginal);
+    });
+    rowsPagar.forEach(r => {
+      const mes = mesLabel(r.datapagamento) || mesLabel(r.datavencimento);
+      if (mes) byMesPago[mes] = (byMesPago[mes] || 0) + toNum(r.valorpago || r.valororiginal);
+    });
+
+    const chaveOrdenavel = m => m.split('/').reverse().join('');
+    const todosMeses = [...new Set([...Object.keys(byMesVendido), ...Object.keys(byMesRecebido), ...Object.keys(byMesPago)])]
+      .sort((a, b) => chaveOrdenavel(a).localeCompare(chaveOrdenavel(b)));
+
+    destroyChartsFin();
+
+    _chartsFin.mensal = new Chart(document.getElementById('chartFinMensal'), {
+      type: 'bar',
+      data: {
+        labels: todosMeses,
+        datasets: [
+          { label: 'Vendido',  data: todosMeses.map(m => byMesVendido[m]  || 0), backgroundColor: PALETTE[0] + 'CC', borderColor: PALETTE[0], borderWidth: 1, borderRadius: 4 },
+          { label: 'Recebido', data: todosMeses.map(m => byMesRecebido[m] || 0), backgroundColor: PALETTE[2] + 'CC', borderColor: PALETTE[2], borderWidth: 1, borderRadius: 4 },
+          { label: 'Pago',     data: todosMeses.map(m => byMesPago[m]     || 0), backgroundColor: PALETTE[1] + 'CC', borderColor: PALETTE[1], borderWidth: 1, borderRadius: 4 },
+        ]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { font: { size: 11 }, boxWidth: 12 } },
+                   tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: R$ ${fmtNum(ctx.raw)}` } } },
+        scales: { y: { ticks: { callback: v => 'R$ ' + fmtNum(v), font: { size: 10 } }, grid: { color: '#f0f2f5' } },
+                  x: { ticks: { font: { size: 10 } } } } }
+    });
+
+    _chartsFin.recebidoPago = new Chart(document.getElementById('chartFinRecebidoPago'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Recebido', 'Pago'],
+        datasets: [{ data: [totRecebido, totPago],
+          backgroundColor: [PALETTE[2] + 'CC', PALETTE[1] + 'CC'],
+          borderColor: '#fff', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 10 } },
+                   tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } } }
+    });
+
+    const coberturaPct = totRecebido > 0 ? Math.min(100, (totPago / totRecebido) * 100) : 0;
+    _chartsFin.cobertura = new Chart(document.getElementById('chartFinCobertura'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Pago', 'Saldo Livre'],
+        datasets: [{ data: [Math.max(0, totPago), Math.max(0, totRecebido - totPago)],
+          backgroundColor: [PALETTE[1] + 'CC', PALETTE[6] + 'CC'],
+          borderColor: '#fff', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 10 } },
+                   tooltip: { callbacks: { label: ctx => ` ${ctx.label}: R$ ${fmtNum(ctx.raw)} (${fmtPct(coberturaPct)} do recebido pago)` } } } }
+    });
+
+    document.getElementById('dashFinanceiroGrid').style.display = 'grid';
+  }
+
   // ── PDF ───────────────────────────────────────────────────────────────────
   function gerarPDF() {
     const original = document.title;
@@ -2824,8 +3357,8 @@
     const hoje = new Date(), sete = new Date(hoje);
     sete.setDate(sete.getDate() - 7);
     const iso = d => d.toISOString().slice(0, 10);
-    ['dd_de','dt_de','compras_de','comprasd_de','prod_de','prodd_de','vdet_de'].forEach(id => document.getElementById(id).value = iso(sete));
-    ['dd_ate','dt_ate','compras_ate','comprasd_ate','prod_ate','prodd_ate','vdet_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
+    ['dd_de','dt_de','compras_de','comprasd_de','prod_de','prodd_de','vdet_de','recd_de','pagd_de','fin_de'].forEach(id => document.getElementById(id).value = iso(sete));
+    ['dd_ate','dt_ate','compras_ate','comprasd_ate','prod_ate','prodd_ate','vdet_ate','recd_ate','pagd_ate','fin_ate'].forEach(id => document.getElementById(id).value = iso(hoje));
 
     // Código de Identificação pode ser um CNPJ — bloqueia caracteres de máscara ("/", ".", "-") na digitação
     document.getElementById('selEmpresa').addEventListener('input', e => {
@@ -2843,6 +3376,8 @@
     document.getElementById('selRelProducaoDash').addEventListener('change', e => { _relatorioProducao = JSON.parse(e.target.value); });
     document.getElementById('selRelProducaoDet').addEventListener('change',  e => { _relatorioProducao = JSON.parse(e.target.value); });
     document.getElementById('selRelVendaDet').addEventListener('change',     e => { _relatorioVendaDet = JSON.parse(e.target.value); });
+    document.getElementById('selRelReceberDash').addEventListener('change', e => { _relatorioReceber = JSON.parse(e.target.value); });
+    document.getElementById('selRelPagarDash').addEventListener('change',   e => { _relatorioPagar   = JSON.parse(e.target.value); });
 
     carregarEmpresas();
 
