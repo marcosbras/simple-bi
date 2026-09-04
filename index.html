@@ -996,6 +996,10 @@
       <div id="secFinanceiro" style="display:none">
         <div class="panel">
           <div class="panel-title">Análise Financeira — Vendido x Recebido x Pago</div>
+          <div class="field" id="fieldRelVendaAvistaFin" style="display:none">
+            <label>Relatório (Venda à Vista)</label>
+            <select id="selRelVendaAvistaFin"></select>
+          </div>
           <div class="field">
             <label>Data inicial</label>
             <input type="date" id="fin_de" />
@@ -1013,6 +1017,7 @@
         <div id="dashFinanceiroKpis" class="dash-kpis" style="display:none">
           <div class="kpi-card sky"><label>Total Vendido (R$)</label><div class="kpi-val" id="kpiFinVendido">0,00</div></div>
           <div class="kpi-card green"><label>Total Recebido (R$)</label><div class="kpi-val" id="kpiFinRecebido">0,00</div></div>
+          <div class="kpi-card"><label>Recebido à Vista (R$)</label><div class="kpi-val" id="kpiFinAVista">0,00</div></div>
           <div class="kpi-card red"><label>Total Pago (R$)</label><div class="kpi-val" id="kpiFinPago">0,00</div></div>
           <div class="kpi-card"><label>Saldo Recebido − Pago (R$)</label><div class="kpi-val" id="kpiFinSaldo">0,00</div></div>
         </div>
@@ -1029,6 +1034,10 @@
           <div class="chart-card">
             <div class="chart-title">Cobertura do Pago sobre o Recebido</div>
             <div class="chart-wrap"><canvas id="chartFinCobertura"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Composição do Recebido — À Prazo x À Vista</div>
+            <div class="chart-wrap"><canvas id="chartFinComposicaoRecebido"></canvas></div>
           </div>
         </div>
       </div><!-- /secFinanceiro -->
@@ -1359,7 +1368,7 @@
   // ── ESTADO ────────────────────────────────────────────────────────────────
   let _token = null, _nomeUsuario = '', _empresa = null, _adminAuthed = false;
   let _relatorio = null, _relatorioProducao = null, _relatorioCompras = null, _relatorioVendaDet = null;
-  let _relatorioReceber = null, _relatorioPagar = null;
+  let _relatorioReceber = null, _relatorioPagar = null, _relatorioVendaAvista = null;
   let _gruposVendas = [], _rowsProducao = [], _gruposCompras = [];
   let _rowsReceber = [], _rowsPagar = [];
   let _empresas = [];
@@ -1508,6 +1517,7 @@
       const relsVendaDet= rels.filter(r => r.tipo === 'vendadet');
       const relsReceber = rels.filter(r => r.tipo === 'receber');
       const relsPagar   = rels.filter(r => r.tipo === 'pagar');
+      const relsVendaAvista = rels.filter(r => r.tipo === 'vendaavista');
 
       const populaSel = (selIds, lista) => selIds.forEach(selId => {
         const s = document.getElementById(selId);
@@ -1549,6 +1559,10 @@
       document.getElementById('fieldRelPagarDash').style.display = relsPagar.length > 1 ? '' : 'none';
       _relatorioPagar = relsPagar[0] || null;
 
+      populaSel(['selRelVendaAvistaFin'], relsVendaAvista);
+      document.getElementById('fieldRelVendaAvistaFin').style.display = relsVendaAvista.length > 1 ? '' : 'none';
+      _relatorioVendaAvista = relsVendaAvista[0] || null;
+
       showView('viewApp');
       navTo('dashboard');
     } catch (err) {
@@ -1562,7 +1576,7 @@
   function sair() {
     _token = null; _nomeUsuario = ''; _empresa = null;
     _relatorio = null; _relatorioCompras = null; _relatorioProducao = null; _relatorioVendaDet = null;
-    _relatorioReceber = null; _relatorioPagar = null; _rowsReceber = []; _rowsPagar = [];
+    _relatorioReceber = null; _relatorioPagar = null; _relatorioVendaAvista = null; _rowsReceber = []; _rowsPagar = [];
     document.getElementById('lSenha').value = '';
     document.getElementById('loginError').textContent = '';
     document.getElementById('summary').style.display = 'none';
@@ -1737,6 +1751,7 @@
         <option value="producao">Produção</option>
         <option value="receber">Contas a Receber</option>
         <option value="pagar">Contas a Pagar</option>
+        <option value="vendaavista">Venda à Vista</option>
       </select>
       <select class="rel-campo-exibicao" title="Campo de exibição (Produção)" style="border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:.82rem;outline:none;background:#fafbfc;color:var(--text);display:none">${campoOpts}</select>
       <button class="btn-icon btn-icon-danger" onclick="this.parentElement.remove();syncRelRowsEmpty()">×</button>`;
@@ -3209,7 +3224,7 @@
   }
 
   // ── ANÁLISE FINANCEIRA (Vendido x Recebido x Pago) ───────────────────────
-  let _chartsFin = { mensal: null, recebidoPago: null, cobertura: null };
+  let _chartsFin = { mensal: null, recebidoPago: null, cobertura: null, composicaoRecebido: null };
   function destroyChartsFin() {
     Object.keys(_chartsFin).forEach(k => { if (_chartsFin[k]) { _chartsFin[k].destroy(); _chartsFin[k] = null; } });
   }
@@ -3237,7 +3252,13 @@
     try {
       setDashFinanceiroStatus('Buscando vendas, recebimentos e pagamentos…');
       const dtDe = dateToApi(dtDeRaw), dtAte = dateToApi(dtAteRaw);
-      const [rowsVendas, rowsReceberTodas, rowsPagarTodas] = await Promise.all([
+      // Venda à Vista é opcional: só existe depois que o endpoint /vendas/analitico/avista
+      // for publicado no ERP e configurado no admin — sem ele, a análise segue funcionando
+      // normalmente, só sem o detalhamento do que foi recebido à vista.
+      const selValAvista = document.getElementById('selRelVendaAvistaFin').value;
+      if (selValAvista) _relatorioVendaAvista = JSON.parse(selValAvista);
+
+      const [rowsVendas, rowsReceberTodas, rowsPagarTodas, rowsAvista] = await Promise.all([
         (async () => {
           const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
           const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
@@ -3248,13 +3269,21 @@
           { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar recebimentos (HTTP ${r.status})`); return r.json(); }),
         fetch(`/api/erp/${_empresa.uuid}${_relatorioPagar.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`,
           { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar pagamentos (HTTP ${r.status})`); return r.json(); }),
+        _relatorioVendaAvista
+          ? fetch(`/api/erp/${_empresa.uuid}${_relatorioVendaAvista.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`,
+              { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar venda à vista (HTTP ${r.status})`); return r.json(); })
+          : Promise.resolve([]),
       ]);
 
       const rowsReceber = apenasNaoCanceladas(rowsReceberTodas);
       const rowsPagar    = apenasNaoCanceladas(rowsPagarTodas);
-      renderAnaliseFinanceira(rowsVendas, rowsReceber, rowsPagar);
+      const rowsAvistaOk = Array.isArray(rowsAvista) ? rowsAvista : [];
+      renderAnaliseFinanceira(rowsVendas, rowsReceber, rowsPagar, rowsAvistaOk);
+      const msgAvista = _relatorioVendaAvista
+        ? `, ${rowsAvistaOk.length} pedido(s) à vista`
+        : ' (relatório de Venda à Vista não configurado — recebido à vista não incluído)';
       setDashFinanceiroStatus(
-        `Análise atualizada — ${rowsVendas.length} item(ns) de venda, ${rowsReceber.length} recebimento(s), ${rowsPagar.length} pagamento(s).`, 'ok');
+        `Análise atualizada — ${rowsVendas.length} item(ns) de venda, ${rowsReceber.length} recebimento(s), ${rowsPagar.length} pagamento(s)${msgAvista}.`, 'ok');
     } catch (err) {
       setDashFinanceiroStatus(err.message, 'error');
     } finally {
@@ -3262,19 +3291,27 @@
     }
   }
 
-  function renderAnaliseFinanceira(rowsVendas, rowsReceber, rowsPagar) {
-    const totVendido  = (Array.isArray(rowsVendas) ? rowsVendas : []).reduce((s, r) => s + toNum(r.total), 0);
-    const totRecebido = rowsReceber.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
-    const totPago      = rowsPagar.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
-    const saldo         = totRecebido - totPago;
+  function renderAnaliseFinanceira(rowsVendas, rowsReceber, rowsPagar, rowsAvista) {
+    const totVendido    = (Array.isArray(rowsVendas) ? rowsVendas : []).reduce((s, r) => s + toNum(r.total), 0);
+    // "Recebido" contábil (contas a receber, vendas a prazo já quitadas) — não inclui
+    // vendas à vista, que nunca passam por TRECEBER (são liquidadas direto no caixa).
+    const totRecebidoPrazo = rowsReceber.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
+    // vlravista = min(vlrpagar, vlrrecebido) por pedido, vindo de /vendas/analitico/avista —
+    // é o que cobre a lacuna acima.
+    const totAVista      = (Array.isArray(rowsAvista) ? rowsAvista : []).reduce((s, r) => s + toNum(r.vlravista), 0);
+    const totRecebido    = totRecebidoPrazo + totAVista;
+    const totPago         = rowsPagar.reduce((s, r) => s + toNum(r.valorpago || r.valororiginal), 0);
+    const saldo            = totRecebido - totPago;
 
     document.getElementById('kpiFinVendido').textContent  = fmtNum(totVendido);
     document.getElementById('kpiFinRecebido').textContent = fmtNum(totRecebido);
+    document.getElementById('kpiFinAVista').textContent   = fmtNum(totAVista);
     document.getElementById('kpiFinPago').textContent     = fmtNum(totPago);
     document.getElementById('kpiFinSaldo').textContent    = fmtNum(saldo);
     document.getElementById('dashFinanceiroKpis').style.display = 'flex';
 
     // Agrupamento mensal — vendas por data de fechamento do pedido, financeiro pela data de baixa.
+    // "Recebido" no gráfico soma a prazo (TRECEBER) + à vista, pra bater com o KPI consolidado.
     const byMesVendido = {}, byMesRecebido = {}, byMesPago = {};
     (Array.isArray(rowsVendas) ? rowsVendas : []).forEach(r => {
       const mes = mesLabel(r.datafec) || mesLabel(r.data);
@@ -3283,6 +3320,10 @@
     rowsReceber.forEach(r => {
       const mes = mesLabel(r.datarecebimento) || mesLabel(r.datavencimento);
       if (mes) byMesRecebido[mes] = (byMesRecebido[mes] || 0) + toNum(r.valorpago || r.valororiginal);
+    });
+    (Array.isArray(rowsAvista) ? rowsAvista : []).forEach(r => {
+      const mes = mesLabel(r.datafec);
+      if (mes) byMesRecebido[mes] = (byMesRecebido[mes] || 0) + toNum(r.vlravista);
     });
     rowsPagar.forEach(r => {
       const mes = mesLabel(r.datapagamento) || mesLabel(r.datavencimento);
@@ -3339,6 +3380,19 @@
                    tooltip: { callbacks: { label: ctx => ` ${ctx.label}: R$ ${fmtNum(ctx.raw)} (${fmtPct(coberturaPct)} do recebido pago)` } } } }
     });
 
+    _chartsFin.composicaoRecebido = new Chart(document.getElementById('chartFinComposicaoRecebido'), {
+      type: 'doughnut',
+      data: {
+        labels: ['À Prazo (Contas a Receber)', 'À Vista'],
+        datasets: [{ data: [totRecebidoPrazo, totAVista],
+          backgroundColor: [PALETTE[3] + 'CC', PALETTE[4] + 'CC'],
+          borderColor: '#fff', borderWidth: 2 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { font: { size: 10 }, boxWidth: 12, padding: 10 } },
+                   tooltip: { callbacks: { label: ctx => ' R$ ' + fmtNum(ctx.raw) } } } }
+    });
+
     document.getElementById('dashFinanceiroGrid').style.display = 'grid';
   }
 
@@ -3378,6 +3432,7 @@
     document.getElementById('selRelVendaDet').addEventListener('change',     e => { _relatorioVendaDet = JSON.parse(e.target.value); });
     document.getElementById('selRelReceberDash').addEventListener('change', e => { _relatorioReceber = JSON.parse(e.target.value); });
     document.getElementById('selRelPagarDash').addEventListener('change',   e => { _relatorioPagar   = JSON.parse(e.target.value); });
+    document.getElementById('selRelVendaAvistaFin').addEventListener('change', e => { _relatorioVendaAvista = JSON.parse(e.target.value); });
 
     carregarEmpresas();
 

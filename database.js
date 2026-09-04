@@ -85,9 +85,13 @@ if (empCount.n === 0) {
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 
-  
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Receber', '/contas/areceber', 'receber');
 
-  
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Pagar', '/contas/apagar', 'pagar');
+
+
  var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
   ).run('PortoCais#01', 'https://dbgateway.igagestaointeligente.com.br/sgbrbi', '/usuario/login');
@@ -102,6 +106,11 @@ if (empCount.n === 0) {
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Receber', '/contas/areceber', 'receber');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Pagar', '/contas/apagar', 'pagar');
 
 
  var r = db.prepare(
@@ -118,10 +127,13 @@ if (empCount.n === 0) {
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Receber', '/contas/areceber', 'receber');
 
-  
-  
-  
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Pagar', '/contas/apagar', 'pagar');
+
+
   //Central do Aplicativo
   var r = db.prepare(
     'INSERT INTO empresas (nome, api_base, login_endpoint) VALUES (?, ?, ?)'
@@ -136,6 +148,12 @@ if (empCount.n === 0) {
 
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Receber', '/contas/areceber', 'receber');
+
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Pagar', '/contas/apagar', 'pagar');
 
 
   var r = db.prepare(
@@ -152,8 +170,11 @@ if (empCount.n === 0) {
   db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   ).run(r.lastInsertRowid, 'Compras', '/compras', 'compras');
 
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Receber', '/contas/areceber', 'receber');
 
-
+  db.prepare('INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
+  ).run(r.lastInsertRowid, 'Contas a Pagar', '/contas/apagar', 'pagar');
 
 }
 
@@ -162,19 +183,31 @@ const semUuid = db.prepare('SELECT id FROM empresas WHERE uuid IS NULL').all();
 const setUuid = db.prepare('UPDATE empresas SET uuid = ? WHERE id = ?');
 semUuid.forEach(e => setUuid.run(randomUUID(), e.id));
 
-// migração: seed relatório "Venda Detalhada" para cada empresa que ainda não o tenha
+// migração: seed de relatórios novos (Venda Detalhada, Contas a Receber, Contas a
+// Pagar, Venda à Vista) para cada empresa já cadastrada que ainda não os tenha —
+// roda a cada start do servidor, então uma empresa criada antes desses tipos
+// existirem passa a ter as linhas automaticamente no próximo rebuild/restart,
+// sem precisar configurar manualmente pelo admin.
 try {
+  const relatoriosPadrao = [
+    { tipo: 'vendadet',    nome: 'Venda Detalhada',  endpoint: '/vendas/analitico' },
+    { tipo: 'receber',     nome: 'Contas a Receber',  endpoint: '/contas/areceber' },
+    { tipo: 'pagar',       nome: 'Contas a Pagar',    endpoint: '/contas/apagar' },
+    { tipo: 'vendaavista', nome: 'Venda à Vista',     endpoint: '/vendas/analitico/avista' },
+  ];
   const empresas = db.prepare('SELECT id FROM empresas WHERE ativo = 1').all();
   const insStmt  = db.prepare(
     'INSERT INTO relatorios (empresa_id, nome, endpoint, tipo) VALUES (?, ?, ?, ?)'
   );
+  const existeStmt = db.prepare(
+    'SELECT COUNT(*) AS n FROM relatorios WHERE empresa_id = ? AND tipo = ?'
+  );
   empresas.forEach(e => {
-    const existe = db.prepare(
-      "SELECT COUNT(*) AS n FROM relatorios WHERE empresa_id = ? AND tipo = 'vendadet'"
-    ).get(e.id);
-    if (existe.n === 0) {
-      insStmt.run(e.id, 'Venda Detalhada', '/vendas/analitico', 'vendadet');
-    }
+    relatoriosPadrao.forEach(rp => {
+      if (existeStmt.get(e.id, rp.tipo).n === 0) {
+        insStmt.run(e.id, rp.nome, rp.endpoint, rp.tipo);
+      }
+    });
   });
 } catch (_) {}
 
