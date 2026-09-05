@@ -996,6 +996,10 @@
       <div id="secFinanceiro" style="display:none">
         <div class="panel">
           <div class="panel-title">Análise Financeira — Vendido x Recebido x Pago</div>
+          <div class="field" id="fieldRelFinanceiro" style="display:none">
+            <label>Relatório (Financeiro Consolidado)</label>
+            <select id="selRelFinanceiro"></select>
+          </div>
           <div class="field" id="fieldRelVendaAvistaFin" style="display:none">
             <label>Relatório (Venda à Vista)</label>
             <select id="selRelVendaAvistaFin"></select>
@@ -1368,7 +1372,7 @@
   // ── ESTADO ────────────────────────────────────────────────────────────────
   let _token = null, _nomeUsuario = '', _empresa = null, _adminAuthed = false;
   let _relatorio = null, _relatorioProducao = null, _relatorioCompras = null, _relatorioVendaDet = null;
-  let _relatorioReceber = null, _relatorioPagar = null, _relatorioVendaAvista = null;
+  let _relatorioReceber = null, _relatorioPagar = null, _relatorioVendaAvista = null, _relatorioFinanceiro = null;
   let _gruposVendas = [], _rowsProducao = [], _gruposCompras = [];
   let _rowsReceber = [], _rowsPagar = [];
   let _empresas = [];
@@ -1518,6 +1522,7 @@
       const relsReceber = rels.filter(r => r.tipo === 'receber');
       const relsPagar   = rels.filter(r => r.tipo === 'pagar');
       const relsVendaAvista = rels.filter(r => r.tipo === 'vendaavista');
+      const relsFinanceiro = rels.filter(r => r.tipo === 'financeiro');
 
       const populaSel = (selIds, lista) => selIds.forEach(selId => {
         const s = document.getElementById(selId);
@@ -1563,6 +1568,10 @@
       document.getElementById('fieldRelVendaAvistaFin').style.display = relsVendaAvista.length > 1 ? '' : 'none';
       _relatorioVendaAvista = relsVendaAvista[0] || null;
 
+      populaSel(['selRelFinanceiro'], relsFinanceiro);
+      document.getElementById('fieldRelFinanceiro').style.display = relsFinanceiro.length > 1 ? '' : 'none';
+      _relatorioFinanceiro = relsFinanceiro[0] || null;
+
       showView('viewApp');
       navTo('dashboard');
     } catch (err) {
@@ -1576,7 +1585,7 @@
   function sair() {
     _token = null; _nomeUsuario = ''; _empresa = null;
     _relatorio = null; _relatorioCompras = null; _relatorioProducao = null; _relatorioVendaDet = null;
-    _relatorioReceber = null; _relatorioPagar = null; _relatorioVendaAvista = null; _rowsReceber = []; _rowsPagar = [];
+    _relatorioReceber = null; _relatorioPagar = null; _relatorioVendaAvista = null; _relatorioFinanceiro = null; _rowsReceber = []; _rowsPagar = [];
     document.getElementById('lSenha').value = '';
     document.getElementById('loginError').textContent = '';
     document.getElementById('summary').style.display = 'none';
@@ -1752,6 +1761,7 @@
         <option value="receber">Contas a Receber</option>
         <option value="pagar">Contas a Pagar</option>
         <option value="vendaavista">Venda à Vista</option>
+        <option value="financeiro">Financeiro Consolidado</option>
       </select>
       <select class="rel-campo-exibicao" title="Campo de exibição (Produção)" style="border:1.5px solid var(--border);border-radius:7px;padding:7px 10px;font-size:.82rem;outline:none;background:#fafbfc;color:var(--text);display:none">${campoOpts}</select>
       <button class="btn-icon btn-icon-danger" onclick="this.parentElement.remove();syncRelRowsEmpty()">×</button>`;
@@ -3234,14 +3244,64 @@
     el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
   }
 
+  // Busca via UM único endpoint (/sgbrbi/financeiro/consolidado) — o backend já roda
+  // vendas+receber+pagar+avista numa única conexão e devolve tudo junto, evitando 4
+  // requisições HTTP separadas (cada uma pagando de novo o round-trip pelo Cloudflare
+  // e a reconexão ao ERP — foi isso que estava estourando o timeout de 504 antes).
+  async function buscarFinanceiroConsolidado(dtDe, dtAte) {
+    const url = `/api/erp/${_empresa.uuid}${_relatorioFinanceiro.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+    if (!res.ok) throw new Error(`Erro ao buscar financeiro consolidado (HTTP ${res.status})`);
+    const dados = await res.json();
+    return {
+      rowsVendas: Array.isArray(dados.vendas) ? dados.vendas : [],
+      rowsReceberTodas: Array.isArray(dados.receber) ? dados.receber : [],
+      rowsPagarTodas: Array.isArray(dados.pagar) ? dados.pagar : [],
+      rowsAvista: Array.isArray(dados.avista) ? dados.avista : [],
+    };
+  }
+
+  // Fallback: método antigo, 4 requisições separadas (vendas, receber, pagar, avista) —
+  // usado só enquanto o endpoint consolidado ainda não estiver configurado/publicado.
+  async function buscarFinanceiroSeparado(dtDe, dtAte) {
+    const selValAvista = document.getElementById('selRelVendaAvistaFin').value;
+    if (selValAvista) _relatorioVendaAvista = JSON.parse(selValAvista);
+
+    const [rowsVendas, rowsReceberTodas, rowsPagarTodas, rowsAvista] = await Promise.all([
+      (async () => {
+        const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+        if (!res.ok) throw new Error(`Erro ao buscar vendas (HTTP ${res.status})`);
+        return res.json();
+      })(),
+      fetch(`/api/erp/${_empresa.uuid}${_relatorioReceber.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`,
+        { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar recebimentos (HTTP ${r.status})`); return r.json(); }),
+      fetch(`/api/erp/${_empresa.uuid}${_relatorioPagar.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`,
+        { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar pagamentos (HTTP ${r.status})`); return r.json(); }),
+      _relatorioVendaAvista
+        ? fetch(`/api/erp/${_empresa.uuid}${_relatorioVendaAvista.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`,
+            { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar venda à vista (HTTP ${r.status})`); return r.json(); })
+        : Promise.resolve([]),
+    ]);
+
+    return { rowsVendas, rowsReceberTodas, rowsPagarTodas, rowsAvista };
+  }
+
   async function gerarAnaliseFinanceira() {
     const dtDeRaw  = document.getElementById('fin_de').value;
     const dtAteRaw = document.getElementById('fin_ate').value;
     if (!dtDeRaw || !dtAteRaw) { setDashFinanceiroStatus('Selecione o período.', 'error'); return; }
     if (dtDeRaw > dtAteRaw)    { setDashFinanceiroStatus('Data inicial deve ser ≤ data final.', 'error'); return; }
-    if (!_relatorioVendaDet)   { setDashFinanceiroStatus('Nenhum relatório de Vendas (analítico) configurado.', 'error'); return; }
-    if (!_relatorioReceber)    { setDashFinanceiroStatus('Nenhum relatório de Contas a Receber configurado.', 'error'); return; }
-    if (!_relatorioPagar)      { setDashFinanceiroStatus('Nenhum relatório de Contas a Pagar configurado.', 'error'); return; }
+
+    const selValFin = document.getElementById('selRelFinanceiro').value;
+    if (selValFin) _relatorioFinanceiro = JSON.parse(selValFin);
+    const usaConsolidado = !!_relatorioFinanceiro;
+
+    if (!usaConsolidado) {
+      if (!_relatorioVendaDet) { setDashFinanceiroStatus('Nenhum relatório de Vendas (analítico) ou de Financeiro Consolidado configurado.', 'error'); return; }
+      if (!_relatorioReceber)  { setDashFinanceiroStatus('Nenhum relatório de Contas a Receber ou de Financeiro Consolidado configurado.', 'error'); return; }
+      if (!_relatorioPagar)    { setDashFinanceiroStatus('Nenhum relatório de Contas a Pagar ou de Financeiro Consolidado configurado.', 'error'); return; }
+    }
 
     const btn = document.getElementById('btnFinanceiro');
     btn.disabled = true;
@@ -3250,40 +3310,24 @@
     document.getElementById('dashFinanceiroGrid').style.display = 'none';
 
     try {
-      setDashFinanceiroStatus('Buscando vendas, recebimentos e pagamentos…');
+      setDashFinanceiroStatus(usaConsolidado
+        ? 'Buscando financeiro consolidado…'
+        : 'Buscando vendas, recebimentos e pagamentos (4 requisições separadas)…');
       const dtDe = dateToApi(dtDeRaw), dtAte = dateToApi(dtAteRaw);
-      // Venda à Vista é opcional: só existe depois que o endpoint /vendas/analitico/avista
-      // for publicado no ERP e configurado no admin — sem ele, a análise segue funcionando
-      // normalmente, só sem o detalhamento do que foi recebido à vista.
-      const selValAvista = document.getElementById('selRelVendaAvistaFin').value;
-      if (selValAvista) _relatorioVendaAvista = JSON.parse(selValAvista);
 
-      const [rowsVendas, rowsReceberTodas, rowsPagarTodas, rowsAvista] = await Promise.all([
-        (async () => {
-          const url = `/api/erp/${_empresa.uuid}${_relatorioVendaDet.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`;
-          const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
-          if (!res.ok) throw new Error(`Erro ao buscar vendas (HTTP ${res.status})`);
-          return res.json();
-        })(),
-        fetch(`/api/erp/${_empresa.uuid}${_relatorioReceber.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`,
-          { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar recebimentos (HTTP ${r.status})`); return r.json(); }),
-        fetch(`/api/erp/${_empresa.uuid}${_relatorioPagar.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}&quitada=SIM`,
-          { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar pagamentos (HTTP ${r.status})`); return r.json(); }),
-        _relatorioVendaAvista
-          ? fetch(`/api/erp/${_empresa.uuid}${_relatorioVendaAvista.endpoint}?dt_de=${dtDe}&dt_ate=${dtAte}`,
-              { headers: { Authorization: `Bearer ${_token}` } }).then(r => { if (!r.ok) throw new Error(`Erro ao buscar venda à vista (HTTP ${r.status})`); return r.json(); })
-          : Promise.resolve([]),
-      ]);
+      const { rowsVendas, rowsReceberTodas, rowsPagarTodas, rowsAvista } = usaConsolidado
+        ? await buscarFinanceiroConsolidado(dtDe, dtAte)
+        : await buscarFinanceiroSeparado(dtDe, dtAte);
 
       const rowsReceber = apenasNaoCanceladas(rowsReceberTodas);
       const rowsPagar    = apenasNaoCanceladas(rowsPagarTodas);
       const rowsAvistaOk = Array.isArray(rowsAvista) ? rowsAvista : [];
       renderAnaliseFinanceira(rowsVendas, rowsReceber, rowsPagar, rowsAvistaOk);
-      const msgAvista = _relatorioVendaAvista
-        ? `, ${rowsAvistaOk.length} pedido(s) à vista`
-        : ' (relatório de Venda à Vista não configurado — recebido à vista não incluído)';
+      const origem = usaConsolidado
+        ? ' via endpoint consolidado'
+        : (_relatorioVendaAvista ? '' : ' (relatório de Venda à Vista não configurado — recebido à vista não incluído)');
       setDashFinanceiroStatus(
-        `Análise atualizada — ${rowsVendas.length} item(ns) de venda, ${rowsReceber.length} recebimento(s), ${rowsPagar.length} pagamento(s)${msgAvista}.`, 'ok');
+        `Análise atualizada${origem} — ${rowsVendas.length} item(ns) de venda, ${rowsReceber.length} recebimento(s), ${rowsPagar.length} pagamento(s), ${rowsAvistaOk.length} pedido(s) à vista.`, 'ok');
     } catch (err) {
       setDashFinanceiroStatus(err.message, 'error');
     } finally {
@@ -3433,6 +3477,7 @@
     document.getElementById('selRelReceberDash').addEventListener('change', e => { _relatorioReceber = JSON.parse(e.target.value); });
     document.getElementById('selRelPagarDash').addEventListener('change',   e => { _relatorioPagar   = JSON.parse(e.target.value); });
     document.getElementById('selRelVendaAvistaFin').addEventListener('change', e => { _relatorioVendaAvista = JSON.parse(e.target.value); });
+    document.getElementById('selRelFinanceiro').addEventListener('change', e => { _relatorioFinanceiro = JSON.parse(e.target.value); });
 
     carregarEmpresas();
 

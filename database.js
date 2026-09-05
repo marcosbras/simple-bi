@@ -184,16 +184,17 @@ const setUuid = db.prepare('UPDATE empresas SET uuid = ? WHERE id = ?');
 semUuid.forEach(e => setUuid.run(randomUUID(), e.id));
 
 // migração: seed de relatórios novos (Venda Detalhada, Contas a Receber, Contas a
-// Pagar, Venda à Vista) para cada empresa já cadastrada que ainda não os tenha —
-// roda a cada start do servidor, então uma empresa criada antes desses tipos
-// existirem passa a ter as linhas automaticamente no próximo rebuild/restart,
-// sem precisar configurar manualmente pelo admin.
+// Pagar, Venda à Vista, Financeiro Consolidado) para cada empresa já cadastrada
+// que ainda não os tenha — roda a cada start do servidor, então uma empresa
+// criada antes desses tipos existirem passa a ter as linhas automaticamente no
+// próximo rebuild/restart, sem precisar configurar manualmente pelo admin.
 try {
   const relatoriosPadrao = [
-    { tipo: 'vendadet',    nome: 'Venda Detalhada',  endpoint: '/vendas/analitico' },
-    { tipo: 'receber',     nome: 'Contas a Receber',  endpoint: '/contas/areceber' },
-    { tipo: 'pagar',       nome: 'Contas a Pagar',    endpoint: '/contas/apagar' },
-    { tipo: 'vendaavista', nome: 'Venda à Vista',     endpoint: '/vendas/analitico/avista' },
+    { tipo: 'vendadet',    nome: 'Venda Detalhada',        endpoint: '/vendas/analitico' },
+    { tipo: 'receber',     nome: 'Contas a Receber',        endpoint: '/contas/areceber' },
+    { tipo: 'pagar',       nome: 'Contas a Pagar',          endpoint: '/contas/apagar' },
+    { tipo: 'vendaavista', nome: 'Venda à Vista',           endpoint: '/vendas/analitico/avista' },
+    { tipo: 'financeiro',  nome: 'Financeiro Consolidado',  endpoint: '/financeiro/consolidado' },
   ];
   const empresas = db.prepare('SELECT id FROM empresas WHERE ativo = 1').all();
   const insStmt  = db.prepare(
