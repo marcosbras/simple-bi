@@ -89,6 +89,37 @@ app.delete('/api/empresas/:id', (req, res) => {
   res.json({ ok: true });
 });
 
+// ── CONFIGURAÇÕES DE LANÇAMENTO (usuário do app, não o admin) ──────────────
+// Códigos/nomes padrão (funcionário, fornecedor, plano de contas, centro de
+// custo, espécie) usados no lançamento avulso de Contas a Pagar — ver
+// salvarLancamentoPagar()/POST /sgbrbi/contas/apagar no front. Essas tabelas
+// do ERP não têm endpoint próprio pra buscar/pesquisar registros, então quem
+// efetivamente lança a conta configura aqui o valor a usar. Endpoint separado
+// do CRUD de empresas do admin (que não mexe mais nesses campos) porque quem
+// grava aqui é o usuário logado no app, não o admin.
+const CAMPOS_LANCAMENTO_PAGAR = [
+  'padrao_codfuncionario', 'padrao_funcionario',
+  'padrao_codfornecedor',  'padrao_fornecedor',
+  'padrao_codplanoconta',  'padrao_planoconta',
+  'padrao_codcentrocusto', 'padrao_centrocusto',
+  'padrao_codespecie',     'padrao_especie',
+];
+
+app.put('/api/empresas/:id/lancamento-pagar-padrao', (req, res) => {
+  const id = Number(req.params.id);
+  const valores = CAMPOS_LANCAMENTO_PAGAR.map(c => (req.body[c] ?? '').toString().trim());
+
+  const info = db.prepare(
+    `UPDATE empresas SET ${CAMPOS_LANCAMENTO_PAGAR.map(c => `${c} = ?`).join(', ')} WHERE id = ? AND ativo = 1`
+  ).run(...valores, id);
+  if (info.changes === 0) return res.status(404).json({ erro: 'Empresa não encontrada.' });
+
+  const empresa = db.prepare(
+    `SELECT id, ${CAMPOS_LANCAMENTO_PAGAR.join(', ')} FROM empresas WHERE id = ?`
+  ).get(id);
+  res.json(empresa);
+});
+
 // ── PROXY PARA A FONTE DE DADOS (ERP) ────────────────────────────────────
 // O navegador nunca chama a API do ERP diretamente — sempre esta própria
 // origem. O api_base real fica só no banco, do lado do servidor.

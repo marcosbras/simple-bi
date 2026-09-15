@@ -56,6 +56,26 @@ try {
   db.exec('ALTER TABLE empresas ADD COLUMN uuid TEXT');
 } catch (_) { /* coluna já existe */ }
 
+// migração: códigos padrão para lançamento avulso de Contas a Pagar
+// (POST /sgbrbi/contas/apagar). TFUNCIONARIO/TFORNECEDOR/TPLANOCONTA/
+// TCENTROCUSTO/TESPECIE não têm endpoint próprio no ERP — sem eles não dá pra
+// oferecer um seletor pra essas referências, então o admin configura, uma vez
+// por empresa, qual código/nome usar como padrão em todo lançamento avulso.
+// Guardado como TEXT (inclusive os códigos) pra não perder zero à esquerda em
+// telas/relatórios; convertido pra número só na hora de montar o body do POST.
+const colunasLancamentoPagar = [
+  'padrao_codfuncionario', 'padrao_funcionario',
+  'padrao_codfornecedor',  'padrao_fornecedor',
+  'padrao_codplanoconta',  'padrao_planoconta',
+  'padrao_codcentrocusto', 'padrao_centrocusto',
+  'padrao_codespecie',     'padrao_especie',
+];
+colunasLancamentoPagar.forEach(col => {
+  try {
+    db.exec(`ALTER TABLE empresas ADD COLUMN ${col} TEXT`);
+  } catch (_) { /* coluna já existe */ }
+});
+
 // credenciais padrão: admin / admin  →  sha256("admin")
 const adminExists = db.prepare('SELECT COUNT(*) AS n FROM admin_config').get();
 if (adminExists.n === 0) {

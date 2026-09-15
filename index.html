@@ -527,6 +527,21 @@
 
         </div>
 
+        <!-- Configurações (raiz colapsável) -->
+        <button class="nav-group-hdr" id="hdrConfiguracoes" onclick="toggleGroup('grpConfiguracoes','hdrConfiguracoes')">
+          <span>Configurações</span>
+          <svg class="chv" viewBox="0 0 24 24" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div id="grpConfiguracoes">
+
+          <!-- Lançamento Avulso -->
+          <button class="nav-item" id="navConfigLancPagar" onclick="navTo('configlancpagar')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            Lançamento Avulso
+          </button>
+
+        </div>
+
       </nav>
     </aside>
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
@@ -1110,6 +1125,9 @@
           <button class="btn btn-primary" id="btnPagarDash" onclick="gerarDashboardPagar()">
             Gerar Dashboard
           </button>
+          <button class="btn btn-primary" id="btnAbrirLancarPagar" onclick="abrirModalLancarPagar()" style="background:var(--green)">
+            + Lançar Conta a Pagar
+          </button>
         </div>
         <div id="dashPagarStatus" class="dash-status"></div>
 
@@ -1135,6 +1153,82 @@
           </div>
         </div>
       </div><!-- /secPagar -->
+
+      <!-- ── SEÇÃO: CONFIGURAÇÕES / LANÇAMENTO AVULSO ─────────────────── -->
+      <div id="secConfigLancPagar" style="display:none">
+        <div class="panel" style="display:block">
+          <div class="panel-title" style="margin-bottom:6px">Configurações — Lançamento Avulso de Conta a Pagar</div>
+          <div style="font-size:.82rem;color:var(--muted);line-height:1.6;max-width:760px">
+            Usados só ao lançar uma conta a pagar avulsa (Financeiro → Pagar → "+ Lançar Conta a Pagar").
+            Funcionário, Fornecedor, Plano de Contas, Centro de Custo e Espécie são obrigatórios no ERP —
+            busque e selecione abaixo (o código vem junto automaticamente); se a busca não carregar
+            (endpoint ainda não publicado), preencha o código e o nome manualmente, igual estão cadastrados no SGBR.
+            Vale só para <strong id="cfgLancPagarEmpresaNome">—</strong>.
+          </div>
+        </div>
+
+        <div style="margin:0 24px 24px;background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 6px rgba(0,0,0,.08)">
+          <div class="form-row">
+            <div class="form-group" style="flex:4">
+              <label>Buscar Funcionário</label>
+              <select id="cfgPickerFuncionario" onchange="aplicarPickerLancPagar('Funcionario')"><option value="">— busca indisponível —</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1"><label>Cód. Funcionário</label><input type="text" id="cfgPadraoCodFuncionario" placeholder="1" /></div>
+            <div class="form-group" style="flex:3"><label>Nome do Funcionário</label><input type="text" id="cfgPadraoFuncionario" placeholder="FUNCIONARIO PADRÃO" /></div>
+          </div>
+
+          <div class="form-row" style="margin-top:10px">
+            <div class="form-group" style="flex:4">
+              <label>Buscar Fornecedor</label>
+              <select id="cfgPickerFornecedor" onchange="aplicarPickerLancPagar('Fornecedor')"><option value="">— busca indisponível —</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1"><label>Cód. Fornecedor</label><input type="text" id="cfgPadraoCodFornecedor" placeholder="1" /></div>
+            <div class="form-group" style="flex:3"><label>Nome do Fornecedor</label><input type="text" id="cfgPadraoFornecedor" placeholder="FORNECEDOR PADRÃO" /></div>
+          </div>
+
+          <div class="form-row" style="margin-top:10px">
+            <div class="form-group" style="flex:4">
+              <label>Buscar Plano de Contas</label>
+              <select id="cfgPickerPlanoConta" onchange="aplicarPickerLancPagar('PlanoConta')"><option value="">— busca indisponível —</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1"><label>Cód. Plano de Contas</label><input type="text" id="cfgPadraoCodPlanoConta" placeholder="8" /></div>
+            <div class="form-group" style="flex:3"><label>Nome do Plano de Contas</label><input type="text" id="cfgPadraoPlanoConta" placeholder="PAGAMENTOS DIVERSOS" /></div>
+          </div>
+
+          <div class="form-row" style="margin-top:10px">
+            <div class="form-group" style="flex:4">
+              <label>Buscar Centro de Custo</label>
+              <select id="cfgPickerCentroCusto" onchange="aplicarPickerLancPagar('CentroCusto')"><option value="">— busca indisponível —</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1"><label>Cód. Centro de Custo</label><input type="text" id="cfgPadraoCodCentroCusto" placeholder="1" /></div>
+            <div class="form-group" style="flex:3"><label>Nome do Centro de Custo</label><input type="text" id="cfgPadraoCentroCusto" placeholder="CENTRO DE CUSTO PADRÃO" /></div>
+          </div>
+
+          <div class="form-row" style="margin-top:10px">
+            <div class="form-group" style="flex:4">
+              <label>Buscar Espécie</label>
+              <select id="cfgPickerEspecie" onchange="aplicarPickerLancPagar('Especie')"><option value="">— busca indisponível —</option></select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="flex:1"><label>Cód. Espécie</label><input type="text" id="cfgPadraoCodEspecie" placeholder="" /></div>
+            <div class="form-group" style="flex:3"><label>Nome da Espécie</label><input type="text" id="cfgPadraoEspecie" placeholder="Ex: DINHEIRO" /></div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:14px;margin-top:8px">
+            <button class="btn btn-primary" id="btnSalvarConfigLancPagar" onclick="salvarConfigLancPagar()">Salvar</button>
+            <span id="configLancPagarStatus" style="font-size:.82rem"></span>
+          </div>
+        </div>
+      </div><!-- /secConfigLancPagar -->
 
     </main>
   </div>
@@ -1315,6 +1409,42 @@
 </div>
 
 <!-- ═══════════════════════════════════════
+     MODAL: LANÇAMENTO AVULSO DE CONTA A PAGAR
+════════════════════════════════════════ -->
+<div id="modalLancarPagar" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Lançar Conta a Pagar</h3>
+      <button class="btn-close" onclick="hideModal('modalLancarPagar')">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Descrição do Lançamento *</label>
+          <input type="text" id="lpDescricao" placeholder="Ex: Aluguel do galpão — setembro" />
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Valor Original (R$) *</label>
+          <input type="number" id="lpValor" step="0.01" min="0.01" placeholder="0,00" />
+        </div>
+        <div class="form-group">
+          <label>Data de Vencimento *</label>
+          <input type="date" id="lpVencimento" />
+        </div>
+      </div>
+      <div id="modalLancarPagarError" class="form-error"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="spacer"></div>
+      <button class="btn-cancel" onclick="hideModal('modalLancarPagar')">Cancelar</button>
+      <button class="btn-save" id="btnSalvarLancarPagar" onclick="salvarLancamentoPagar()">Lançar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
      MODAL: DETALHES DO PEDIDO (Venda Detalhada)
 ════════════════════════════════════════ -->
 <div id="modalVendaDetPedido" class="modal-overlay" style="display:none">
@@ -1445,6 +1575,7 @@
       pagar:       'secPagar',
       vendadet:    'secVendaDet',
       financeiro:  'secFinanceiro',
+      configlancpagar: 'secConfigLancPagar',
     };
     Object.entries(map).forEach(([s, id]) => {
       document.getElementById(id).style.display = s === section ? '' : 'none';
@@ -1459,6 +1590,8 @@
     document.getElementById('navFinanceiro').classList.toggle('active', section === 'financeiro');
     document.getElementById('navReceber').classList.toggle('active',    section === 'receber');
     document.getElementById('navPagar').classList.toggle('active',      section === 'pagar');
+    document.getElementById('navConfigLancPagar').classList.toggle('active', section === 'configlancpagar');
+    if (section === 'configlancpagar') carregarConfigLancPagar();
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
@@ -3231,6 +3364,203 @@
     });
 
     document.getElementById('dashPagarGrid').style.display = 'grid';
+  }
+
+  // ── LANÇAMENTO AVULSO DE CONTA A PAGAR ───────────────────────────────────
+  // POST /sgbrbi/contas/apagar. O único dado que o usuário digita é descrição,
+  // valor original e vencimento — funcionário/fornecedor/plano de contas/centro
+  // de custo/espécie são obrigatórios no ERP mas não têm endpoint de consulta,
+  // então vêm dos códigos padrão configurados por empresa no admin (aba
+  // "Lançamento Avulso" do modal Editar Empresa).
+  function abrirModalLancarPagar() {
+    document.getElementById('lpDescricao').value = '';
+    document.getElementById('lpValor').value = '';
+    document.getElementById('lpVencimento').value = '';
+    document.getElementById('modalLancarPagarError').textContent = '';
+    showModal('modalLancarPagar');
+  }
+
+  async function salvarLancamentoPagar() {
+    const descricao     = document.getElementById('lpDescricao').value.trim();
+    const valor          = toNum(document.getElementById('lpValor').value);
+    const vencimentoRaw = document.getElementById('lpVencimento').value;
+    const errEl          = document.getElementById('modalLancarPagarError');
+    errEl.textContent = '';
+
+    if (!descricao)      { errEl.textContent = 'Informe a descrição do lançamento.'; return; }
+    if (!(valor > 0))    { errEl.textContent = 'Informe um valor original válido.'; return; }
+    if (!vencimentoRaw)  { errEl.textContent = 'Informe a data de vencimento.'; return; }
+
+    const codfuncionario = Number(_empresa?.padrao_codfuncionario) || 0;
+    const codfornecedor  = Number(_empresa?.padrao_codfornecedor) || 0;
+    const codplanoconta  = Number(_empresa?.padrao_codplanoconta) || 0;
+    const codcentrocusto = Number(_empresa?.padrao_codcentrocusto) || 0;
+    const codespecie     = Number(_empresa?.padrao_codespecie) || 0;
+
+    if (!codfuncionario || !codfornecedor || !codplanoconta || !codcentrocusto || !codespecie) {
+      errEl.textContent = 'Configure os códigos padrão de lançamento (Funcionário, Fornecedor, Plano de Contas, Centro de Custo, Espécie) no admin, na aba "Lançamento Avulso" da empresa, antes de lançar.';
+      return;
+    }
+
+    const btn = document.getElementById('btnSalvarLancarPagar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Lançando…';
+
+    try {
+      const body = {
+        descricaolancamento: descricao,
+        valororiginal: valor,
+        datavencimento: dateToApi(vencimentoRaw),
+        documento: '',
+        qtdeparcela: 1,
+        nparcela: 1,
+        codfuncionario,  funcionario:  _empresa.padrao_funcionario  || '',
+        codfornecedor,   fornecedor:   _empresa.padrao_fornecedor   || '',
+        codplanoconta,   planoconta:   _empresa.padrao_planoconta   || '',
+        codcentrocusto,  centrocusto:  _empresa.padrao_centrocusto  || '',
+        codespecie,      especie:      _empresa.padrao_especie      || '',
+        origem: 'PAGAR',
+        cancelada: 'NAO',
+        quitada: 'NAO',
+      };
+      const url = `/api/erp/${_empresa.uuid}/contas/apagar`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_token}` },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) {
+        const msg = await res.text();
+        throw new Error(`Erro ao lançar (HTTP ${res.status}): ${msg}`);
+      }
+      hideModal('modalLancarPagar');
+      setDashPagarStatus('Conta a pagar lançada com sucesso!', 'ok');
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Lançar';
+    }
+  }
+
+  // ── CONFIGURAÇÕES: LANÇAMENTO AVULSO (tela do app, não o admin) ──────────
+  // Quem lança a conta a pagar é o usuário logado no app — então é ele quem
+  // mantém esses códigos padrão em dia, não o admin (que só cuida de
+  // api_base/login/relatórios). Grava por empresa no bi.db, via endpoint
+  // dedicado (PUT /api/empresas/:id/lancamento-pagar-padrao).
+  const CAMPOS_LANCAMENTO_PAGAR = [
+    ['padrao_codfuncionario', 'cfgPadraoCodFuncionario'],
+    ['padrao_funcionario',    'cfgPadraoFuncionario'],
+    ['padrao_codfornecedor',  'cfgPadraoCodFornecedor'],
+    ['padrao_fornecedor',     'cfgPadraoFornecedor'],
+    ['padrao_codplanoconta',  'cfgPadraoCodPlanoConta'],
+    ['padrao_planoconta',     'cfgPadraoPlanoConta'],
+    ['padrao_codcentrocusto', 'cfgPadraoCodCentroCusto'],
+    ['padrao_centrocusto',    'cfgPadraoCentroCusto'],
+    ['padrao_codespecie',     'cfgPadraoCodEspecie'],
+    ['padrao_especie',        'cfgPadraoEspecie'],
+  ];
+
+  // Pickers (código + nome) buscados via /sgbrbi/funcionarios, /fornecedores,
+  // /planocontas, /centrocustos, /especies — ver endpoint na aba: só existem
+  // pra facilitar a busca; o que de fato é salvo continua sendo os inputs de
+  // texto (CAMPOS_LANCAMENTO_PAGAR) logo abaixo de cada select.
+  const PICKERS_LANCAMENTO_PAGAR = [
+    { tipo: 'Funcionario', endpoint: '/funcionarios',  selectId: 'cfgPickerFuncionario', codInputId: 'cfgPadraoCodFuncionario', nomeInputId: 'cfgPadraoFuncionario',
+      getCodigo: r => r.controle, getNome: r => r.funcionario },
+    { tipo: 'Fornecedor',  endpoint: '/fornecedores',  selectId: 'cfgPickerFornecedor',  codInputId: 'cfgPadraoCodFornecedor',  nomeInputId: 'cfgPadraoFornecedor',
+      getCodigo: r => r.controle, getNome: r => (r.nomefantasia && r.nomefantasia.trim()) ? `${r.razaosocial} (${r.nomefantasia})` : r.razaosocial },
+    { tipo: 'PlanoConta',  endpoint: '/planocontas',   selectId: 'cfgPickerPlanoConta',  codInputId: 'cfgPadraoCodPlanoConta',  nomeInputId: 'cfgPadraoPlanoConta',
+      getCodigo: r => r.controle, getNome: r => r.planoconta },
+    { tipo: 'CentroCusto', endpoint: '/centrocustos',  selectId: 'cfgPickerCentroCusto', codInputId: 'cfgPadraoCodCentroCusto', nomeInputId: 'cfgPadraoCentroCusto',
+      getCodigo: r => r.controle, getNome: r => r.centrocusto },
+    { tipo: 'Especie',     endpoint: '/especies',      selectId: 'cfgPickerEspecie',     codInputId: 'cfgPadraoCodEspecie',     nomeInputId: 'cfgPadraoEspecie',
+      getCodigo: r => r.controle, getNome: r => r.especie },
+  ];
+
+  // Busca cada catálogo independentemente — se um endpoint ainda não estiver
+  // publicado no ERP (comum logo após o deploy, um de cada vez), só aquele
+  // seletor específico fica desabilitado; os outros 4 continuam funcionando,
+  // e o campo de texto abaixo dele sempre aceita preenchimento manual.
+  async function carregarPickersLancPagar() {
+    const atual = {};
+    PICKERS_LANCAMENTO_PAGAR.forEach(p => { atual[p.tipo] = document.getElementById(p.codInputId).value.trim(); });
+
+    await Promise.all(PICKERS_LANCAMENTO_PAGAR.map(async p => {
+      const sel = document.getElementById(p.selectId);
+      try {
+        const url = `/api/erp/${_empresa.uuid}${p.endpoint}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const rows = await res.json();
+        if (!Array.isArray(rows)) throw new Error('formato inesperado');
+        sel.innerHTML = '<option value="">— selecione —</option>' + rows.map(r => {
+          const cod = p.getCodigo(r), nome = p.getNome(r) ?? '';
+          return `<option value="${cod}" data-nome="${nome.replace(/"/g, '&quot;')}">${cod} — ${nome}</option>`;
+        }).join('');
+        sel.disabled = false;
+        if (atual[p.tipo]) sel.value = atual[p.tipo];
+      } catch (err) {
+        sel.innerHTML = '<option value="">— busca indisponível (preencha abaixo) —</option>';
+        sel.disabled = true;
+      }
+    }));
+  }
+
+  function aplicarPickerLancPagar(tipo) {
+    const p = PICKERS_LANCAMENTO_PAGAR.find(x => x.tipo === tipo);
+    const sel = document.getElementById(p.selectId);
+    const opt = sel.selectedOptions[0];
+    if (!opt || !opt.value) return;
+    document.getElementById(p.codInputId).value  = opt.value;
+    document.getElementById(p.nomeInputId).value = opt.dataset.nome || '';
+  }
+
+  function carregarConfigLancPagar() {
+    document.getElementById('cfgLancPagarEmpresaNome').textContent = _empresa?.nome ?? '—';
+    const statusEl = document.getElementById('configLancPagarStatus');
+    statusEl.textContent = ''; statusEl.style.color = '';
+    CAMPOS_LANCAMENTO_PAGAR.forEach(([col, inputId]) => {
+      document.getElementById(inputId).value = _empresa?.[col] ?? '';
+    });
+    carregarPickersLancPagar();
+  }
+
+  async function salvarConfigLancPagar() {
+    const statusEl = document.getElementById('configLancPagarStatus');
+    statusEl.textContent = ''; statusEl.style.color = '';
+
+    const payload = {};
+    CAMPOS_LANCAMENTO_PAGAR.forEach(([col, inputId]) => {
+      payload[col] = document.getElementById(inputId).value.trim();
+    });
+
+    const btn = document.getElementById('btnSalvarConfigLancPagar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Salvando…';
+
+    try {
+      const res = await fetch(`/api/empresas/${_empresa.id}/lancamento-pagar-padrao`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.erro || 'Erro ao salvar.'); }
+      const atualizado = await res.json();
+      // Atualiza _empresa (e a lista _empresas) na hora — sem isso, o lançamento
+      // avulso só veria os novos códigos depois de um novo login.
+      Object.assign(_empresa, atualizado);
+      const idx = _empresas.findIndex(e => e.id === _empresa.id);
+      if (idx >= 0) Object.assign(_empresas[idx], atualizado);
+      statusEl.textContent = 'Salvo com sucesso!';
+      statusEl.style.color = 'var(--green)';
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.style.color = 'var(--red)';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Salvar';
+    }
   }
 
   // ── ANÁLISE FINANCEIRA (Vendido x Recebido x Pago) ───────────────────────
