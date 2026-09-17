@@ -1,3 +1,141 @@
+Como instalar claude na minha máquina
+irm https://claude.ai/install.ps1 | iex
+
+$env:Path += ";C:\Users\Israel\.local\bin"
+
+claude --help
+
+
+https://www.google.com/search?q=como+instalar+claude+no+cmd&oq=como+instalar+claude+no+cmd&gs_lcrp=EgZjaHJvbWUyBggAEEUYOTIHCAEQABiABDIHCAIQABiABDIHCAMQABiABDIHCAQQABiABDIHCAUQABiABDIHCAYQABiABDIHCAcQABiABDIHCAgQABiABDIHCAkQABiABNIBCTU0Mjc0ajBqN6gCALACAA&sourceid=chrome&source=chrome.ob&ie=UTF-8
+
+
+Marcos, o Claude Code foi instalado corretamente! O erro acontece porque o Windows não está encontrando o comando `claude`.
+
+Na primeira imagem, a instalação informa:
+
+```
+Claude Code successfully installed!
+Location: C:\Users\Israel\.local\bin\claude.exe
+```
+
+E também avisa que essa pasta não está no PATH do Windows.
+
+## 1. Solução rápida — adicionar o PATH pelo PowerShell
+
+Copie e cole este comando no PowerShell:
+
+PowerShell
+
+```
+$env:Path += ";C:\Users\Israel\.local\bin"
+```
+
+Depois execute:
+
+PowerShell
+
+```
+claude --help
+```
+
+Se funcionar, o problema era apenas o PATH da sessão atual.
+
+## 2. Solução permanente — adicionar ao PATH do Windows
+
+Para não precisar repetir o comando acima toda vez:
+
+### Passo 1 — Abrir as variáveis de ambiente
+
+1. Pressione `Win + R`.
+
+2. Digite:
+
+   sysdm.cpl
+
+3. Clique na aba Avançado.
+
+4. Clique em Variáveis de Ambiente.
+
+### Passo 2 — Editar o Path do usuário
+
+Na seção Variáveis de usuário para Israel:
+
+1. Selecione `Path`.
+
+2. Clique em Editar.
+
+3. Clique em Novo.
+
+4. Adicione exatamente:
+
+   C:\Users\Israel.local\bin
+
+5. Clique em OK em todas as janelas.
+
+### Passo 3 — Reiniciar o terminal
+
+Feche o PowerShell atual e abra um novo PowerShell.
+
+Execute:
+
+PowerShell
+
+```
+claude --help
+```
+
+## 3. Se ainda não funcionar
+
+Vamos verificar se o arquivo realmente existe:
+
+PowerShell
+
+```
+Test-Path "C:\Users\Israel\.local\bin\claude.exe"
+```
+
+Se retornar:
+
+```
+True
+```
+
+Execute diretamente:
+
+PowerShell
+
+```
+& "C:\Users\Israel\.local\bin\claude.exe" --help
+```
+
+Se abrir a ajuda, o Claude está instalado e funcionando. Falta apenas configurar o PATH.
+
+Atenção: a instalação foi feita no usuário `Israel`. Se você estiver usando outro usuário do Windows, como `Marcos`, o caminho pode ser diferente.
+
+### Minha recomendação
+
+Tente primeiro o Passo 1. É o mais rápido:
+
+PowerShell
+
+```
+$env:Path += ";C:\Users\Israel\.local\bin"
+claude --help
+```
+
+Se funcionar, faça o Passo 2 para deixar permanente.
+
+
+
+https://www-cdn.anthropic.com/e50be2e51e7695dc4b1366a37a245a597377d3b5/Anthropic-Detecting-and-countering-091026.pdf
+https://cloud.google.com/blog/topics/threat-intelligence/from-prompting-to-autonomy-the-evolution-of-adversarial-ai
+https://cloud.google.com/blog/topics/threat-intelligence/distillation-experimentation-integration-ai-adversarial-use
+https://docs.github.com/en/copilot/tutorials/customization-library/custom-agents/your-first-custom-agent
+https://www.theguardian.com/science/2026/sep/08/openai-claims-to-have-solved-maths-problem-that-stumped-humans-for-decades
+https://docs.litellm.ai/docs/proxy/reliability
+
+
+
 Criar arquivos .md e skill
 
 Vou fazer o teste de acesso à API, enviando a senha em SHA-256.
