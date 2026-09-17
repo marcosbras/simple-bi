@@ -294,8 +294,11 @@
     .form-row { display: flex; gap: 14px; flex-wrap: wrap; }
     .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 180px; }
     .form-group label { font-size: .72rem; font-weight: 700; color: #555; text-transform: uppercase; letter-spacing: .4px; }
-    .form-group input { border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: .875rem; color: var(--text); outline: none; transition: border .15s; background: #fafbfc; }
-    .form-group input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(15,52,96,.1); background: #fff; }
+    .form-group input, .form-group select, .form-group textarea { border: 1.5px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: .875rem; color: var(--text); outline: none; transition: border .15s; background: #fafbfc; font-family: inherit; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(15,52,96,.1); background: #fff; }
+    .form-group input:disabled, .form-group select:disabled, .form-group textarea:disabled { background: #f0f2f5; color: var(--muted); }
+    .form-check { display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: .82rem; color: var(--text); font-weight: 600; }
+    .form-check input { width: auto !important; }
     .form-section { border-top: 1px solid var(--border); padding-top: 14px; }
     .form-section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .6px; color: var(--muted); }
     .btn-add-rel { background: var(--blue); color: #fff; border: none; border-radius: 6px; padding: 5px 12px; font-size: .75rem; font-weight: 600; cursor: pointer; }
@@ -519,10 +522,28 @@
             Receber
           </button>
 
+          <!-- Cadastro Receber (CRUD) -->
+          <button class="nav-item nav-child" id="navCadastroReceber" onclick="navTo('cadastroreceber')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+            Cadastro Receber
+          </button>
+
           <!-- Pagar -->
           <button class="nav-item" id="navPagar" onclick="navTo('pagar')">
             <svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/><polyline points="12 18 12 14"/><polyline points="9 16 12 14 15 16"/></svg>
             Pagar
+          </button>
+
+          <!-- Cadastro Pagar (CRUD) -->
+          <button class="nav-item nav-child" id="navCadastroPagar" onclick="navTo('cadastropagar')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="16" y2="17"/></svg>
+            Cadastro Pagar
+          </button>
+
+          <!-- Lançamento Avulso (ação rápida, 3 campos) -->
+          <button class="nav-item" id="navLancamentoAvulso" onclick="navTo('lancamentoavulso')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Lançamento Avulso
           </button>
 
         </div>
@@ -534,10 +555,10 @@
         </button>
         <div id="grpConfiguracoes">
 
-          <!-- Lançamento Avulso -->
+          <!-- Padrões de Lançamento (códigos padrão usados no Lançamento Avulso) -->
           <button class="nav-item" id="navConfigLancPagar" onclick="navTo('configlancpagar')">
             <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            Lançamento Avulso
+            Padrões de Lançamento
           </button>
 
         </div>
@@ -1125,9 +1146,6 @@
           <button class="btn btn-primary" id="btnPagarDash" onclick="gerarDashboardPagar()">
             Gerar Dashboard
           </button>
-          <button class="btn btn-primary" id="btnAbrirLancarPagar" onclick="abrirModalLancarPagar()" style="background:var(--green)">
-            + Lançar Conta a Pagar
-          </button>
         </div>
         <div id="dashPagarStatus" class="dash-status"></div>
 
@@ -1229,6 +1247,142 @@
           </div>
         </div>
       </div><!-- /secConfigLancPagar -->
+
+      <!-- ── SEÇÃO: LANÇAMENTO AVULSO DE CONTA A PAGAR (ação rápida) ──── -->
+      <div id="secLancamentoAvulso" style="display:none">
+        <div class="panel" style="display:block">
+          <div class="panel-title" style="margin-bottom:6px">Lançamento Avulso de Conta a Pagar</div>
+          <div style="font-size:.82rem;color:var(--muted);line-height:1.6;max-width:760px">
+            Lançamento rápido, só com o essencial — descrição, valor e vencimento. Funcionário, fornecedor,
+            plano de contas, centro de custo e espécie usam os padrões configurados em
+            "Configurações → Padrões de Lançamento". Pra um lançamento com todos os campos, use
+            "Cadastro Pagar → Adicionar".
+          </div>
+        </div>
+
+        <div style="margin:0 24px 24px;background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 6px rgba(0,0,0,.08);max-width:640px">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Descrição do Lançamento *</label>
+              <input type="text" id="lpDescricao" placeholder="Ex: Aluguel do galpão — setembro" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Valor Original (R$) *</label>
+              <input type="number" id="lpValor" step="0.01" min="0.01" placeholder="0,00" />
+            </div>
+            <div class="form-group">
+              <label>Data de Vencimento *</label>
+              <input type="date" id="lpVencimento" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;margin-top:8px">
+            <button class="btn btn-save" id="btnSalvarLancarPagar" onclick="salvarLancamentoPagar()">Lançar</button>
+            <span id="modalLancarPagarError" class="form-error" style="min-height:auto"></span>
+          </div>
+        </div>
+      </div><!-- /secLancamentoAvulso -->
+
+      <!-- ── SEÇÃO: CADASTRO / CRUD DE CONTAS A PAGAR ─────────────────── -->
+      <div id="secCadastroPagar" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Cadastro de Contas a Pagar</div>
+          <div class="field">
+            <label>Status</label>
+            <select id="crudPagarStatus">
+              <option value="">Todas (por vencimento)</option>
+              <option value="NAO">Pendentes</option>
+              <option value="SIM">Pagas</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="crudPagar_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="crudPagar_ate" />
+          </div>
+          <button class="btn btn-primary" onclick="gerarCadastroPagar(1)">Filtrar</button>
+          <button class="btn btn-save" onclick="abrirModalCadastroPagar('criar')">+ Adicionar</button>
+        </div>
+        <div id="crudPagarStatusMsg" class="dash-status"></div>
+
+        <div class="report-wrapper" id="crudPagarWrapper" style="display:none">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Controle</th><th>Documento</th><th>Descrição</th><th>Fornecedor</th>
+                  <th>Vencimento</th><th>Pagamento</th>
+                  <th class="num">Vlr. Original</th><th class="num">Vlr. Pago</th>
+                  <th>Paga</th><th>Cancelada</th><th style="text-align:center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyCrudPagar"></tbody>
+            </table>
+            <div id="crudPagarEmpty" style="display:none;text-align:center;padding:36px;color:#aaa;font-size:.88rem">Nenhum registro encontrado para o filtro.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;flex-wrap:wrap;gap:10px;border-top:1px solid var(--border)">
+            <span id="crudPagarInfo" style="font-size:.8rem;color:var(--muted)"></span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn-icon" id="btnCrudPagarPrev" onclick="mudarPaginaCrudPagar(-1)">‹ Anterior</button>
+              <button class="btn-icon" id="btnCrudPagarNext" onclick="mudarPaginaCrudPagar(1)">Próxima ›</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /secCadastroPagar -->
+
+      <!-- ── SEÇÃO: CADASTRO / CRUD DE CONTAS A RECEBER ────────────────── -->
+      <div id="secCadastroReceber" style="display:none">
+        <div class="panel">
+          <div class="panel-title">Cadastro de Contas a Receber</div>
+          <div class="field">
+            <label>Status</label>
+            <select id="crudReceberStatus">
+              <option value="">Todas (por vencimento)</option>
+              <option value="NAO">Pendentes</option>
+              <option value="SIM">Recebidas</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Data inicial</label>
+            <input type="date" id="crudReceber_de" />
+          </div>
+          <div class="field">
+            <label>Data final</label>
+            <input type="date" id="crudReceber_ate" />
+          </div>
+          <button class="btn btn-primary" onclick="gerarCadastroReceber(1)">Filtrar</button>
+          <button class="btn btn-save" onclick="abrirModalCadastroReceber('criar')">+ Adicionar</button>
+        </div>
+        <div id="crudReceberStatusMsg" class="dash-status"></div>
+
+        <div class="report-wrapper" id="crudReceberWrapper" style="display:none">
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Controle</th><th>Documento</th><th>Descrição</th><th>Cliente</th>
+                  <th>Vencimento</th><th>Recebimento</th>
+                  <th class="num">Vlr. Original</th><th class="num">Vlr. Pago</th>
+                  <th>Recebida</th><th>Cancelada</th><th style="text-align:center">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="tbodyCrudReceber"></tbody>
+            </table>
+            <div id="crudReceberEmpty" style="display:none;text-align:center;padding:36px;color:#aaa;font-size:.88rem">Nenhum registro encontrado para o filtro.</div>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 18px;flex-wrap:wrap;gap:10px;border-top:1px solid var(--border)">
+            <span id="crudReceberInfo" style="font-size:.8rem;color:var(--muted)"></span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <button class="btn-icon" id="btnCrudReceberPrev" onclick="mudarPaginaCrudReceber(-1)">‹ Anterior</button>
+              <button class="btn-icon" id="btnCrudReceberNext" onclick="mudarPaginaCrudReceber(1)">Próxima ›</button>
+            </div>
+          </div>
+        </div>
+      </div><!-- /secCadastroReceber -->
 
     </main>
   </div>
@@ -1409,37 +1563,149 @@
 </div>
 
 <!-- ═══════════════════════════════════════
-     MODAL: LANÇAMENTO AVULSO DE CONTA A PAGAR
+     MODAL: CADASTRO DE CONTA A PAGAR (criar/editar/consultar)
 ════════════════════════════════════════ -->
-<div id="modalLancarPagar" class="modal-overlay" style="display:none">
-  <div class="modal">
+<div id="modalCadastroPagar" class="modal-overlay" style="display:none">
+  <div class="modal modal-lg" style="max-width:820px">
     <div class="modal-header">
-      <h3>Lançar Conta a Pagar</h3>
-      <button class="btn-close" onclick="hideModal('modalLancarPagar')">×</button>
+      <h3 id="cpTitle">Nova Conta a Pagar</h3>
+      <button class="btn-close" onclick="hideModal('modalCadastroPagar')">×</button>
     </div>
     <div class="modal-body">
+      <input type="hidden" id="cpControle" />
       <div class="form-row">
-        <div class="form-group">
-          <label>Descrição do Lançamento *</label>
-          <input type="text" id="lpDescricao" placeholder="Ex: Aluguel do galpão — setembro" />
-        </div>
+        <div class="form-group" style="flex:2"><label>Documento</label><input type="text" id="cpDocumento" /></div>
+        <div class="form-group" style="flex:1"><label>Nº Parcela</label><input type="number" id="cpNparcela" min="1" /></div>
+        <div class="form-group" style="flex:1"><label>Qtde Parcelas</label><input type="number" id="cpQtdeparcela" min="1" /></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label>Valor Original (R$) *</label>
-          <input type="number" id="lpValor" step="0.01" min="0.01" placeholder="0,00" />
+        <div class="form-group"><label>Descrição do Lançamento *</label><input type="text" id="cpDescricao" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Data de Vencimento *</label><input type="date" id="cpVencimento" /></div>
+        <div class="form-group"><label>Data de Pagamento</label><input type="date" id="cpPagamento" /></div>
+        <div class="form-group"><label>Código de Barras / PIX</label><input type="text" id="cpCodbarra" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2"><label>Funcionário</label><select id="cpPickerFuncionario"></select></div>
+        <div class="form-group" style="flex:2"><label>Fornecedor *</label><select id="cpPickerFornecedor"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Plano de Contas *</label><select id="cpPickerPlanoConta"></select></div>
+        <div class="form-group"><label>Centro de Custo *</label><select id="cpPickerCentroCusto"></select></div>
+        <div class="form-group"><label>Espécie *</label><select id="cpPickerEspecie"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Observações</label><input type="text" id="cpObs" /></div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span>Valores (R$)</span></div>
+        <div class="form-row">
+          <div class="form-group"><label>Valor Original *</label><input type="number" step="0.01" id="cpValorOriginal" /></div>
+          <div class="form-group"><label>% Desconto</label><input type="number" step="0.01" id="cpPercDesconto" /></div>
+          <div class="form-group"><label>Valor Desconto</label><input type="number" step="0.01" id="cpValorDesconto" /></div>
         </div>
-        <div class="form-group">
-          <label>Data de Vencimento *</label>
-          <input type="date" id="lpVencimento" />
+        <div class="form-row">
+          <div class="form-group"><label>% Acréscimo</label><input type="number" step="0.01" id="cpPercAcrescimo" /></div>
+          <div class="form-group"><label>Valor Acréscimo</label><input type="number" step="0.01" id="cpValorAcrescimo" /></div>
+          <div class="form-group"><label>% Multa</label><input type="number" step="0.01" id="cpPercMulta" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Valor Multa</label><input type="number" step="0.01" id="cpValorMulta" /></div>
+          <div class="form-group"><label>% Juro ao Mês</label><input type="number" step="0.01" id="cpPercJurosMes" /></div>
+          <div class="form-group"><label>Juro ao Mês</label><input type="number" step="0.01" id="cpValorJuroMes" /></div>
+        </div>
+        <div class="form-row" id="cpLinhaValorPago" style="display:none">
+          <div class="form-group"><label>Valor Pago</label><input type="number" step="0.01" id="cpValorPago" /></div>
         </div>
       </div>
-      <div id="modalLancarPagarError" class="form-error"></div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="cpQuitada" onchange="toggleValorPagoPagar()" /> Paga</label></div>
+        <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="cpCancelada" /> Cancelada</label></div>
+      </div>
+      <div id="modalCadastroPagarError" class="form-error"></div>
     </div>
     <div class="modal-footer">
+      <button class="btn-danger" id="btnExcluirCadastroPagar" onclick="excluirCadastroPagar()" style="display:none">🗑 Excluir</button>
       <div class="spacer"></div>
-      <button class="btn-cancel" onclick="hideModal('modalLancarPagar')">Cancelar</button>
-      <button class="btn-save" id="btnSalvarLancarPagar" onclick="salvarLancamentoPagar()">Lançar</button>
+      <button class="btn-cancel" onclick="hideModal('modalCadastroPagar')">Fechar</button>
+      <button class="btn-save" id="btnSalvarCadastroPagar" onclick="salvarCadastroPagar()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL: CADASTRO DE CONTA A RECEBER (criar/editar/consultar)
+════════════════════════════════════════ -->
+<div id="modalCadastroReceber" class="modal-overlay" style="display:none">
+  <div class="modal modal-lg" style="max-width:820px">
+    <div class="modal-header">
+      <h3 id="crTitle">Nova Conta a Receber</h3>
+      <button class="btn-close" onclick="hideModal('modalCadastroReceber')">×</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="crControle" />
+      <div class="form-row">
+        <div class="form-group" style="flex:2"><label>Documento</label><input type="text" id="crDocumento" /></div>
+        <div class="form-group" style="flex:1"><label>Nº Parcela</label><input type="number" id="crNparcela" min="1" /></div>
+        <div class="form-group" style="flex:1"><label>Qtde Parcelas</label><input type="number" id="crQtdeparcela" min="1" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Descrição do Lançamento *</label><input type="text" id="crDescricao" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Data de Vencimento *</label><input type="date" id="crVencimento" /></div>
+        <div class="form-group"><label>Data de Recebimento</label><input type="date" id="crRecebimento" /></div>
+        <div class="form-group"><label>Código de Barras / PIX</label><input type="text" id="crCodbarra" /></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group" style="flex:2"><label>Cliente *</label><select id="crPickerCliente"></select></div>
+        <div class="form-group" style="flex:2"><label>Vendedor</label><select id="crPickerVendedor"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Plano de Contas *</label><select id="crPickerPlanoConta"></select></div>
+        <div class="form-group"><label>Centro de Custo *</label><select id="crPickerCentroCusto"></select></div>
+        <div class="form-group"><label>Espécie *</label><select id="crPickerEspecie"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Observações</label><input type="text" id="crObs" /></div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-title"><span>Valores (R$)</span></div>
+        <div class="form-row">
+          <div class="form-group"><label>Valor Original *</label><input type="number" step="0.01" id="crValorOriginal" /></div>
+          <div class="form-group"><label>% Desconto</label><input type="number" step="0.01" id="crPercDesconto" /></div>
+          <div class="form-group"><label>Valor Desconto</label><input type="number" step="0.01" id="crValorDesconto" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>% Acréscimo</label><input type="number" step="0.01" id="crPercAcrescimo" /></div>
+          <div class="form-group"><label>Valor Acréscimo</label><input type="number" step="0.01" id="crValorAcrescimo" /></div>
+          <div class="form-group"><label>% Multa</label><input type="number" step="0.01" id="crPercMulta" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Valor Multa</label><input type="number" step="0.01" id="crValorMulta" /></div>
+          <div class="form-group"><label>% Juro ao Mês</label><input type="number" step="0.01" id="crPercJurosMes" /></div>
+          <div class="form-group"><label>Juro ao Mês</label><input type="number" step="0.01" id="crValorJuroMes" /></div>
+        </div>
+        <div class="form-row" id="crLinhaValorPago" style="display:none">
+          <div class="form-group"><label>Valor Recebido</label><input type="number" step="0.01" id="crValorPago" /></div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="crQuitada" onchange="toggleValorPagoReceber()" /> Recebida</label></div>
+        <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="crCancelada" /> Cancelada</label></div>
+      </div>
+      <div id="modalCadastroReceberError" class="form-error"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-danger" id="btnExcluirCadastroReceber" onclick="excluirCadastroReceber()" style="display:none">🗑 Excluir</button>
+      <div class="spacer"></div>
+      <button class="btn-cancel" onclick="hideModal('modalCadastroReceber')">Fechar</button>
+      <button class="btn-save" id="btnSalvarCadastroReceber" onclick="salvarCadastroReceber()">Salvar</button>
     </div>
   </div>
 </div>
@@ -1576,6 +1842,9 @@
       vendadet:    'secVendaDet',
       financeiro:  'secFinanceiro',
       configlancpagar: 'secConfigLancPagar',
+      lancamentoavulso: 'secLancamentoAvulso',
+      cadastropagar: 'secCadastroPagar',
+      cadastroreceber: 'secCadastroReceber',
     };
     Object.entries(map).forEach(([s, id]) => {
       document.getElementById(id).style.display = s === section ? '' : 'none';
@@ -1590,8 +1859,14 @@
     document.getElementById('navFinanceiro').classList.toggle('active', section === 'financeiro');
     document.getElementById('navReceber').classList.toggle('active',    section === 'receber');
     document.getElementById('navPagar').classList.toggle('active',      section === 'pagar');
+    document.getElementById('navCadastroReceber').classList.toggle('active', section === 'cadastroreceber');
+    document.getElementById('navCadastroPagar').classList.toggle('active',   section === 'cadastropagar');
+    document.getElementById('navLancamentoAvulso').classList.toggle('active', section === 'lancamentoavulso');
     document.getElementById('navConfigLancPagar').classList.toggle('active', section === 'configlancpagar');
     if (section === 'configlancpagar') carregarConfigLancPagar();
+    if (section === 'lancamentoavulso') limparLancamentoPagar();
+    if (section === 'cadastropagar' && !_crudPagarCarregado) gerarCadastroPagar();
+    if (section === 'cadastroreceber' && !_crudReceberCarregado) gerarCadastroReceber();
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
@@ -3369,15 +3644,14 @@
   // ── LANÇAMENTO AVULSO DE CONTA A PAGAR ───────────────────────────────────
   // POST /sgbrbi/contas/apagar. O único dado que o usuário digita é descrição,
   // valor original e vencimento — funcionário/fornecedor/plano de contas/centro
-  // de custo/espécie são obrigatórios no ERP mas não têm endpoint de consulta,
-  // então vêm dos códigos padrão configurados por empresa no admin (aba
-  // "Lançamento Avulso" do modal Editar Empresa).
-  function abrirModalLancarPagar() {
+  // de custo/espécie usam os códigos padrão configurados em "Configurações →
+  // Padrões de Lançamento". Seção própria no menu (não é mais modal).
+  function limparLancamentoPagar() {
     document.getElementById('lpDescricao').value = '';
     document.getElementById('lpValor').value = '';
     document.getElementById('lpVencimento').value = '';
     document.getElementById('modalLancarPagarError').textContent = '';
-    showModal('modalLancarPagar');
+    document.getElementById('modalLancarPagarError').style.color = '';
   }
 
   async function salvarLancamentoPagar() {
@@ -3433,10 +3707,15 @@
         const msg = await res.text();
         throw new Error(`Erro ao lançar (HTTP ${res.status}): ${msg}`);
       }
-      hideModal('modalLancarPagar');
-      setDashPagarStatus('Conta a pagar lançada com sucesso!', 'ok');
+      limparLancamentoPagar();
+      errEl.textContent = 'Conta a pagar lançada com sucesso!';
+      errEl.style.color = 'var(--green)';
+      // Se o Cadastro Pagar já foi aberto nesta sessão, atualiza a listagem
+      // (volta pra 1ª página, já que o novo lançamento normalmente é o mais recente).
+      if (_crudPagarCarregado) gerarCadastroPagar(1);
     } catch (err) {
       errEl.textContent = err.message;
+      errEl.style.color = 'var(--red)';
     } finally {
       btn.disabled = false;
       btn.textContent = 'Lançar';
@@ -3560,6 +3839,550 @@
     } finally {
       btn.disabled = false;
       btn.textContent = 'Salvar';
+    }
+  }
+
+  // ── CRUD: CADASTRO DE CONTAS A PAGAR / A RECEBER ─────────────────────────
+  // Listagem paginada (FIRST/SKIP no Firebird, via /sgbrbi/contas/apagar-paginado
+  // e /sgbrbi/contas/areceber-paginado) + modal completo pra criar/editar/consultar,
+  // reaproveitando o mesmo POST/PUT/DELETE que o lançamento avulso já usa.
+  let _crudPagarCarregado = false, _crudPagarPagina = 1, _crudPagarTotalPaginas = 1, _crudPagarDados = [];
+  let _crudReceberCarregado = false, _crudReceberPagina = 1, _crudReceberTotalPaginas = 1, _crudReceberDados = [];
+  const TAMANHO_PAGINA_CRUD = 20;
+
+  // Helper genérico de picker — usado pelos dois modais novos. Não mexe no
+  // PICKERS_LANCAMENTO_PAGAR/carregarPickersLancPagar da tela de Configurações
+  // (já testado, evita regressão): esse aqui é aditivo e recebe a lista de
+  // pickers de cada modal.
+  async function carregarPickerGenerico(pickers) {
+    await Promise.all(pickers.map(async p => {
+      const sel = document.getElementById(p.selectId);
+      try {
+        const url = `/api/erp/${_empresa.uuid}${p.endpoint}`;
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const rows = await res.json();
+        if (!Array.isArray(rows)) throw new Error('formato inesperado');
+        sel.innerHTML = '<option value="">— selecione —</option>' + rows.map(r => {
+          const cod = p.getCodigo(r), nome = p.getNome(r) ?? '';
+          return `<option value="${cod}" data-nome="${nome.replace(/"/g, '&quot;')}">${cod} — ${nome}</option>`;
+        }).join('');
+        sel.disabled = false;
+      } catch (err) {
+        sel.innerHTML = '<option value="">— busca indisponível —</option>';
+        sel.disabled = true;
+      }
+    }));
+  }
+
+  function valorSelecionado(selectId) {
+    const opt = document.getElementById(selectId).selectedOptions[0];
+    return (opt && opt.value) ? { codigo: Number(opt.value), nome: opt.dataset.nome || '' } : { codigo: 0, nome: '' };
+  }
+
+  function selecionarPickerPorCodigo(selectId, codigo) {
+    const sel = document.getElementById(selectId);
+    if (codigo) sel.value = String(codigo);
+  }
+
+  // ═══ CONTAS A PAGAR ═══
+  const PICKERS_CADASTRO_PAGAR = [
+    { endpoint: '/funcionarios', selectId: 'cpPickerFuncionario', getCodigo: r => r.controle, getNome: r => r.funcionario },
+    { endpoint: '/fornecedores', selectId: 'cpPickerFornecedor',  getCodigo: r => r.controle, getNome: r => (r.nomefantasia && r.nomefantasia.trim()) ? `${r.razaosocial} (${r.nomefantasia})` : r.razaosocial },
+    { endpoint: '/planocontas',  selectId: 'cpPickerPlanoConta',  getCodigo: r => r.controle, getNome: r => r.planoconta },
+    { endpoint: '/centrocustos', selectId: 'cpPickerCentroCusto', getCodigo: r => r.controle, getNome: r => r.centrocusto },
+    { endpoint: '/especies',     selectId: 'cpPickerEspecie',     getCodigo: r => r.controle, getNome: r => r.especie },
+  ];
+
+  function setCrudPagarStatus(msg, type = '') {
+    const el = document.getElementById('crudPagarStatusMsg');
+    el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
+  }
+
+  async function gerarCadastroPagar(pagina) {
+    if (pagina) _crudPagarPagina = pagina;
+    _crudPagarCarregado = true;
+    setCrudPagarStatus('Carregando…');
+    document.getElementById('crudPagarWrapper').style.display = 'none';
+
+    const dtDe  = document.getElementById('crudPagar_de').value;
+    const dtAte = document.getElementById('crudPagar_ate').value;
+    const status = document.getElementById('crudPagarStatus').value;
+    const params = new URLSearchParams({ pagina: _crudPagarPagina, tamanhopagina: TAMANHO_PAGINA_CRUD });
+    if (dtDe)  params.set('dt_de', dateToApi(dtDe));
+    if (dtAte) params.set('dt_ate', dateToApi(dtAte));
+    if (status) params.set('quitada', status);
+
+    try {
+      const url = `/api/erp/${_empresa.uuid}/contas/apagar-paginado?${params.toString()}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
+      const data = await res.json();
+      _crudPagarDados = data.dados || [];
+      _crudPagarTotalPaginas = data.totalpaginas || 1;
+      _crudPagarPagina = data.pagina || 1;
+      renderTbodyCrudPagar();
+      setCrudPagarStatus('');
+      document.getElementById('crudPagarWrapper').style.display = 'block';
+      document.getElementById('crudPagarInfo').textContent =
+        `Página ${_crudPagarPagina} de ${_crudPagarTotalPaginas} — ${data.total ?? 0} registro(s)`;
+      document.getElementById('btnCrudPagarPrev').disabled = _crudPagarPagina <= 1;
+      document.getElementById('btnCrudPagarNext').disabled = _crudPagarPagina >= _crudPagarTotalPaginas;
+    } catch (err) {
+      setCrudPagarStatus(err.message, 'error');
+    }
+  }
+
+  function mudarPaginaCrudPagar(delta) {
+    const alvo = _crudPagarPagina + delta;
+    if (alvo < 1 || alvo > _crudPagarTotalPaginas) return;
+    gerarCadastroPagar(alvo);
+  }
+
+  function renderTbodyCrudPagar() {
+    const tbody = document.getElementById('tbodyCrudPagar');
+    const empty = document.getElementById('crudPagarEmpty');
+    if (!_crudPagarDados.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = _crudPagarDados.map(r => `
+      <tr>
+        <td>${r.controle}</td>
+        <td>${truncate(r.documento || '', 14)}</td>
+        <td>${truncate(r.descricaolancamento || '', 30)}</td>
+        <td>${truncate(r.fornecedor || '', 24)}</td>
+        <td>${r.datavencimento || ''}</td>
+        <td>${r.datapagamento || ''}</td>
+        <td class="num">${fmtNum(r.valororiginal)}</td>
+        <td class="num">${fmtNum(r.valorpago)}</td>
+        <td>${r.quitada === 'SIM' ? '<span class="badge badge-green">Sim</span>' : '<span class="badge badge-yellow">Não</span>'}</td>
+        <td>${r.cancelada === 'SIM' ? '<span class="badge badge-red">Sim</span>' : '—'}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn-icon" title="Consultar" onclick="abrirModalCadastroPagar('consultar', ${r.controle})">👁</button>
+          <button class="btn-icon" title="Editar" onclick="abrirModalCadastroPagar('editar', ${r.controle})">✎</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function toggleValorPagoPagar() {
+    document.getElementById('cpLinhaValorPago').style.display =
+      document.getElementById('cpQuitada').checked ? 'flex' : 'none';
+  }
+
+  function setModoCamposCadastroPagar(somenteLeitura) {
+    document.querySelectorAll('#modalCadastroPagar input, #modalCadastroPagar select')
+      .forEach(el => { if (el.id !== 'cpControle') el.disabled = somenteLeitura; });
+    document.getElementById('btnSalvarCadastroPagar').style.display = somenteLeitura ? 'none' : '';
+    document.getElementById('btnExcluirCadastroPagar').style.display = somenteLeitura ? 'none' : '';
+  }
+
+  async function abrirModalCadastroPagar(modo, controle) {
+    document.getElementById('modalCadastroPagarError').textContent = '';
+    ['cpDocumento','cpNparcela','cpQtdeparcela','cpDescricao','cpVencimento','cpPagamento','cpCodbarra','cpObs',
+     'cpValorOriginal','cpPercDesconto','cpValorDesconto','cpPercAcrescimo','cpValorAcrescimo','cpPercMulta',
+     'cpValorMulta','cpPercJurosMes','cpValorJuroMes','cpValorPago'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('cpQuitada').checked = false;
+    document.getElementById('cpCancelada').checked = false;
+    document.getElementById('cpControle').value = '';
+    toggleValorPagoPagar();
+
+    await carregarPickerGenerico(PICKERS_CADASTRO_PAGAR);
+
+    if (modo === 'criar') {
+      document.getElementById('cpTitle').textContent = 'Nova Conta a Pagar';
+      document.getElementById('cpNparcela').value = 1;
+      document.getElementById('cpQtdeparcela').value = 1;
+      setModoCamposCadastroPagar(false);
+      document.getElementById('btnExcluirCadastroPagar').style.display = 'none'; // nada a excluir ainda
+      showModal('modalCadastroPagar');
+      return;
+    }
+
+    setModoCamposCadastroPagar(true);
+    document.getElementById('cpTitle').textContent = modo === 'consultar' ? 'Consultar Conta a Pagar' : 'Editar Conta a Pagar';
+    showModal('modalCadastroPagar');
+    try {
+      const url = `/api/erp/${_empresa.uuid}/contas/apagar/${controle}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) throw new Error(`Erro ao buscar registro (HTTP ${res.status})`);
+      const r = await res.json();
+      document.getElementById('cpControle').value = r.controle;
+      document.getElementById('cpDocumento').value = r.documento || '';
+      document.getElementById('cpNparcela').value = r.nparcela || '';
+      document.getElementById('cpQtdeparcela').value = r.qtdeparcela || '';
+      document.getElementById('cpDescricao').value = r.descricaolancamento || '';
+      document.getElementById('cpVencimento').value = (r.datavencimento || '').slice(0, 10);
+      document.getElementById('cpPagamento').value = (r.datapagamento || '').slice(0, 10);
+      document.getElementById('cpCodbarra').value = r.codbarra || '';
+      document.getElementById('cpObs').value = r.obs || '';
+      document.getElementById('cpValorOriginal').value = r.valororiginal ?? '';
+      document.getElementById('cpPercDesconto').value = r.percdesconto ?? '';
+      document.getElementById('cpValorDesconto').value = r.valordesconto ?? '';
+      document.getElementById('cpPercAcrescimo').value = r.percacrescimo ?? '';
+      document.getElementById('cpValorAcrescimo').value = r.valoracrescimo ?? '';
+      document.getElementById('cpPercMulta').value = r.percmulta ?? '';
+      document.getElementById('cpValorMulta').value = r.valormulta ?? '';
+      document.getElementById('cpPercJurosMes').value = r.percjurosaomes ?? '';
+      document.getElementById('cpValorJuroMes').value = r.valorjuroaomes ?? '';
+      document.getElementById('cpValorPago').value = r.valorpago ?? '';
+      document.getElementById('cpQuitada').checked = r.quitada === 'SIM';
+      document.getElementById('cpCancelada').checked = r.cancelada === 'SIM';
+      toggleValorPagoPagar();
+      selecionarPickerPorCodigo('cpPickerFuncionario', r.codfuncionario);
+      selecionarPickerPorCodigo('cpPickerFornecedor', r.codfornecedor);
+      selecionarPickerPorCodigo('cpPickerPlanoConta', r.codplanoconta);
+      selecionarPickerPorCodigo('cpPickerCentroCusto', r.codcentrocusto);
+      selecionarPickerPorCodigo('cpPickerEspecie', r.codespecie);
+      // Só "consultar" fica bloqueado — "editar" libera os campos depois que os
+      // dados terminam de carregar (ficavam travados o tempo todo por engano).
+      if (modo === 'editar') setModoCamposCadastroPagar(false);
+    } catch (err) {
+      document.getElementById('modalCadastroPagarError').textContent = err.message;
+    }
+  }
+
+  async function salvarCadastroPagar() {
+    const errEl = document.getElementById('modalCadastroPagarError');
+    errEl.textContent = '';
+    const controle = document.getElementById('cpControle').value;
+    const descricao = document.getElementById('cpDescricao').value.trim();
+    const valor = toNum(document.getElementById('cpValorOriginal').value);
+    const vencimento = document.getElementById('cpVencimento').value;
+    if (!descricao) { errEl.textContent = 'Informe a descrição do lançamento.'; return; }
+    if (!(valor > 0)) { errEl.textContent = 'Informe um valor original válido.'; return; }
+    if (!vencimento) { errEl.textContent = 'Informe a data de vencimento.'; return; }
+
+    const fornecedor = valorSelecionado('cpPickerFornecedor');
+    const funcionario = valorSelecionado('cpPickerFuncionario');
+    const planoconta = valorSelecionado('cpPickerPlanoConta');
+    const centrocusto = valorSelecionado('cpPickerCentroCusto');
+    const especie = valorSelecionado('cpPickerEspecie');
+    if (!fornecedor.codigo)  { errEl.textContent = 'Selecione o fornecedor.'; return; }
+    if (!planoconta.codigo)  { errEl.textContent = 'Selecione o plano de contas.'; return; }
+    if (!centrocusto.codigo) { errEl.textContent = 'Selecione o centro de custo.'; return; }
+    if (!especie.codigo)     { errEl.textContent = 'Selecione a espécie.'; return; }
+
+    const quitada = document.getElementById('cpQuitada').checked ? 'SIM' : 'NAO';
+    const pagamentoRaw = document.getElementById('cpPagamento').value;
+    const body = {
+      documento: document.getElementById('cpDocumento').value.trim(),
+      descricaolancamento: descricao,
+      nparcela: Number(document.getElementById('cpNparcela').value) || 1,
+      qtdeparcela: Number(document.getElementById('cpQtdeparcela').value) || 1,
+      datavencimento: dateToApi(vencimento),
+      datapagamento: pagamentoRaw ? dateToApi(pagamentoRaw) : '',
+      codbarra: document.getElementById('cpCodbarra').value.trim(),
+      obs: document.getElementById('cpObs').value.trim(),
+      codfuncionario: funcionario.codigo, funcionario: funcionario.nome,
+      codfornecedor: fornecedor.codigo, fornecedor: fornecedor.nome,
+      codplanoconta: planoconta.codigo, planoconta: planoconta.nome,
+      codcentrocusto: centrocusto.codigo, centrocusto: centrocusto.nome,
+      codespecie: especie.codigo, especie: especie.nome,
+      valororiginal: valor,
+      percdesconto: toNum(document.getElementById('cpPercDesconto').value),
+      valordesconto: toNum(document.getElementById('cpValorDesconto').value),
+      percacrescimo: toNum(document.getElementById('cpPercAcrescimo').value),
+      valoracrescimo: toNum(document.getElementById('cpValorAcrescimo').value),
+      percmulta: toNum(document.getElementById('cpPercMulta').value),
+      valormulta: toNum(document.getElementById('cpValorMulta').value),
+      percjurosaomes: toNum(document.getElementById('cpPercJurosMes').value),
+      valorjuroaomes: toNum(document.getElementById('cpValorJuroMes').value),
+      valorpago: toNum(document.getElementById('cpValorPago').value),
+      quitada,
+      cancelada: document.getElementById('cpCancelada').checked ? 'SIM' : 'NAO',
+      origem: 'PAGAR',
+    };
+
+    const btn = document.getElementById('btnSalvarCadastroPagar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Salvando…';
+    try {
+      const url = controle
+        ? `/api/erp/${_empresa.uuid}/contas/apagar/${controle}`
+        : `/api/erp/${_empresa.uuid}/contas/apagar`;
+      const res = await fetch(url, {
+        method: controle ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_token}` },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) { const msg = await res.text(); throw new Error(`Erro ao salvar (HTTP ${res.status}): ${msg}`); }
+      hideModal('modalCadastroPagar');
+      gerarCadastroPagar(controle ? _crudPagarPagina : 1);
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Salvar';
+    }
+  }
+
+  async function excluirCadastroPagar() {
+    const controle = document.getElementById('cpControle').value;
+    if (!controle) return;
+    if (!confirm('Excluir esta conta a pagar? Esta ação não pode ser desfeita.')) return;
+    const errEl = document.getElementById('modalCadastroPagarError');
+    try {
+      const url = `/api/erp/${_empresa.uuid}/contas/apagar/${controle}`;
+      const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) { const msg = await res.text(); throw new Error(`Erro ao excluir (HTTP ${res.status}): ${msg}`); }
+      hideModal('modalCadastroPagar');
+      gerarCadastroPagar(_crudPagarPagina);
+    } catch (err) {
+      errEl.textContent = err.message;
+    }
+  }
+
+  // ═══ CONTAS A RECEBER ═══
+  const PICKERS_CADASTRO_RECEBER = [
+    { endpoint: '/clientes',     selectId: 'crPickerCliente', getCodigo: r => r.controle, getNome: r => (r.fantasia && r.fantasia.trim()) ? `${r.cliente} (${r.fantasia})` : r.cliente },
+    { endpoint: '/funcionarios', selectId: 'crPickerVendedor', getCodigo: r => r.controle, getNome: r => r.funcionario },
+    { endpoint: '/planocontas',  selectId: 'crPickerPlanoConta',  getCodigo: r => r.controle, getNome: r => r.planoconta },
+    { endpoint: '/centrocustos', selectId: 'crPickerCentroCusto', getCodigo: r => r.controle, getNome: r => r.centrocusto },
+    { endpoint: '/especies',     selectId: 'crPickerEspecie',     getCodigo: r => r.controle, getNome: r => r.especie },
+  ];
+
+  function setCrudReceberStatus(msg, type = '') {
+    const el = document.getElementById('crudReceberStatusMsg');
+    el.textContent = msg; el.className = 'dash-status' + (type ? ' ' + type : '');
+  }
+
+  async function gerarCadastroReceber(pagina) {
+    if (pagina) _crudReceberPagina = pagina;
+    _crudReceberCarregado = true;
+    setCrudReceberStatus('Carregando…');
+    document.getElementById('crudReceberWrapper').style.display = 'none';
+
+    const dtDe  = document.getElementById('crudReceber_de').value;
+    const dtAte = document.getElementById('crudReceber_ate').value;
+    const status = document.getElementById('crudReceberStatus').value;
+    const params = new URLSearchParams({ pagina: _crudReceberPagina, tamanhopagina: TAMANHO_PAGINA_CRUD });
+    if (dtDe)  params.set('dt_de', dateToApi(dtDe));
+    if (dtAte) params.set('dt_ate', dateToApi(dtAte));
+    if (status) params.set('quitada', status);
+
+    try {
+      const url = `/api/erp/${_empresa.uuid}/contas/areceber-paginado?${params.toString()}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) throw new Error(`Erro ao buscar dados (HTTP ${res.status})`);
+      const data = await res.json();
+      _crudReceberDados = data.dados || [];
+      _crudReceberTotalPaginas = data.totalpaginas || 1;
+      _crudReceberPagina = data.pagina || 1;
+      renderTbodyCrudReceber();
+      setCrudReceberStatus('');
+      document.getElementById('crudReceberWrapper').style.display = 'block';
+      document.getElementById('crudReceberInfo').textContent =
+        `Página ${_crudReceberPagina} de ${_crudReceberTotalPaginas} — ${data.total ?? 0} registro(s)`;
+      document.getElementById('btnCrudReceberPrev').disabled = _crudReceberPagina <= 1;
+      document.getElementById('btnCrudReceberNext').disabled = _crudReceberPagina >= _crudReceberTotalPaginas;
+    } catch (err) {
+      setCrudReceberStatus(err.message, 'error');
+    }
+  }
+
+  function mudarPaginaCrudReceber(delta) {
+    const alvo = _crudReceberPagina + delta;
+    if (alvo < 1 || alvo > _crudReceberTotalPaginas) return;
+    gerarCadastroReceber(alvo);
+  }
+
+  function renderTbodyCrudReceber() {
+    const tbody = document.getElementById('tbodyCrudReceber');
+    const empty = document.getElementById('crudReceberEmpty');
+    if (!_crudReceberDados.length) {
+      tbody.innerHTML = '';
+      empty.style.display = 'block';
+      return;
+    }
+    empty.style.display = 'none';
+    tbody.innerHTML = _crudReceberDados.map(r => `
+      <tr>
+        <td>${r.controle}</td>
+        <td>${truncate(r.documento || '', 14)}</td>
+        <td>${truncate(r.descricaolancamento || '', 30)}</td>
+        <td>${truncate(r.cliente || '', 24)}</td>
+        <td>${r.datavencimento || ''}</td>
+        <td>${r.datarecebimento || ''}</td>
+        <td class="num">${fmtNum(r.valororiginal)}</td>
+        <td class="num">${fmtNum(r.valorpago)}</td>
+        <td>${r.quitada === 'SIM' ? '<span class="badge badge-green">Sim</span>' : '<span class="badge badge-yellow">Não</span>'}</td>
+        <td>${r.cancelada === 'SIM' ? '<span class="badge badge-red">Sim</span>' : '—'}</td>
+        <td style="text-align:center;white-space:nowrap">
+          <button class="btn-icon" title="Consultar" onclick="abrirModalCadastroReceber('consultar', ${r.controle})">👁</button>
+          <button class="btn-icon" title="Editar" onclick="abrirModalCadastroReceber('editar', ${r.controle})">✎</button>
+        </td>
+      </tr>`).join('');
+  }
+
+  function toggleValorPagoReceber() {
+    document.getElementById('crLinhaValorPago').style.display =
+      document.getElementById('crQuitada').checked ? 'flex' : 'none';
+  }
+
+  function setModoCamposCadastroReceber(somenteLeitura) {
+    document.querySelectorAll('#modalCadastroReceber input, #modalCadastroReceber select')
+      .forEach(el => { if (el.id !== 'crControle') el.disabled = somenteLeitura; });
+    document.getElementById('btnSalvarCadastroReceber').style.display = somenteLeitura ? 'none' : '';
+    document.getElementById('btnExcluirCadastroReceber').style.display = somenteLeitura ? 'none' : '';
+  }
+
+  async function abrirModalCadastroReceber(modo, controle) {
+    document.getElementById('modalCadastroReceberError').textContent = '';
+    ['crDocumento','crNparcela','crQtdeparcela','crDescricao','crVencimento','crRecebimento','crCodbarra','crObs',
+     'crValorOriginal','crPercDesconto','crValorDesconto','crPercAcrescimo','crValorAcrescimo','crPercMulta',
+     'crValorMulta','crPercJurosMes','crValorJuroMes','crValorPago'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('crQuitada').checked = false;
+    document.getElementById('crCancelada').checked = false;
+    document.getElementById('crControle').value = '';
+    toggleValorPagoReceber();
+
+    await carregarPickerGenerico(PICKERS_CADASTRO_RECEBER);
+
+    if (modo === 'criar') {
+      document.getElementById('crTitle').textContent = 'Nova Conta a Receber';
+      document.getElementById('crNparcela').value = 1;
+      document.getElementById('crQtdeparcela').value = 1;
+      setModoCamposCadastroReceber(false);
+      document.getElementById('btnExcluirCadastroReceber').style.display = 'none'; // nada a excluir ainda
+      showModal('modalCadastroReceber');
+      return;
+    }
+
+    setModoCamposCadastroReceber(true);
+    document.getElementById('crTitle').textContent = modo === 'consultar' ? 'Consultar Conta a Receber' : 'Editar Conta a Receber';
+    showModal('modalCadastroReceber');
+    try {
+      const url = `/api/erp/${_empresa.uuid}/contas/areceber/${controle}`;
+      const res = await fetch(url, { headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) throw new Error(`Erro ao buscar registro (HTTP ${res.status})`);
+      const r = await res.json();
+      document.getElementById('crControle').value = r.controle;
+      document.getElementById('crDocumento').value = r.documento || '';
+      document.getElementById('crNparcela').value = r.nparcela || '';
+      document.getElementById('crQtdeparcela').value = r.qtdeparcela || '';
+      document.getElementById('crDescricao').value = r.descricaolancamento || '';
+      document.getElementById('crVencimento').value = (r.datavencimento || '').slice(0, 10);
+      document.getElementById('crRecebimento').value = (r.datarecebimento || '').slice(0, 10);
+      document.getElementById('crCodbarra').value = r.codbarra || '';
+      document.getElementById('crObs').value = r.obs || '';
+      document.getElementById('crValorOriginal').value = r.valororiginal ?? '';
+      document.getElementById('crPercDesconto').value = r.percdesconto ?? '';
+      document.getElementById('crValorDesconto').value = r.valordesconto ?? '';
+      document.getElementById('crPercAcrescimo').value = r.percacrescimo ?? '';
+      document.getElementById('crValorAcrescimo').value = r.valoracrescimo ?? '';
+      document.getElementById('crPercMulta').value = r.percmulta ?? '';
+      document.getElementById('crValorMulta').value = r.valormulta ?? '';
+      document.getElementById('crPercJurosMes').value = r.percjurosaomes ?? '';
+      document.getElementById('crValorJuroMes').value = r.valorjuroaomes ?? '';
+      document.getElementById('crValorPago').value = r.valorpago ?? '';
+      document.getElementById('crQuitada').checked = r.quitada === 'SIM';
+      document.getElementById('crCancelada').checked = r.cancelada === 'SIM';
+      toggleValorPagoReceber();
+      selecionarPickerPorCodigo('crPickerCliente', r.codcliente);
+      selecionarPickerPorCodigo('crPickerVendedor', r.codvendedor || r.codfuncionario);
+      selecionarPickerPorCodigo('crPickerPlanoConta', r.codplanoconta);
+      selecionarPickerPorCodigo('crPickerCentroCusto', r.codcentrocusto);
+      selecionarPickerPorCodigo('crPickerEspecie', r.codespecie);
+      // Só "consultar" fica bloqueado — "editar" libera os campos depois que os
+      // dados terminam de carregar (ficavam travados o tempo todo por engano).
+      if (modo === 'editar') setModoCamposCadastroReceber(false);
+    } catch (err) {
+      document.getElementById('modalCadastroReceberError').textContent = err.message;
+    }
+  }
+
+  async function salvarCadastroReceber() {
+    const errEl = document.getElementById('modalCadastroReceberError');
+    errEl.textContent = '';
+    const controle = document.getElementById('crControle').value;
+    const descricao = document.getElementById('crDescricao').value.trim();
+    const valor = toNum(document.getElementById('crValorOriginal').value);
+    const vencimento = document.getElementById('crVencimento').value;
+    if (!descricao) { errEl.textContent = 'Informe a descrição do lançamento.'; return; }
+    if (!(valor > 0)) { errEl.textContent = 'Informe um valor original válido.'; return; }
+    if (!vencimento) { errEl.textContent = 'Informe a data de vencimento.'; return; }
+
+    const cliente = valorSelecionado('crPickerCliente');
+    const vendedor = valorSelecionado('crPickerVendedor');
+    const planoconta = valorSelecionado('crPickerPlanoConta');
+    const centrocusto = valorSelecionado('crPickerCentroCusto');
+    const especie = valorSelecionado('crPickerEspecie');
+    if (!cliente.codigo)     { errEl.textContent = 'Selecione o cliente.'; return; }
+    if (!planoconta.codigo)  { errEl.textContent = 'Selecione o plano de contas.'; return; }
+    if (!centrocusto.codigo) { errEl.textContent = 'Selecione o centro de custo.'; return; }
+    if (!especie.codigo)     { errEl.textContent = 'Selecione a espécie.'; return; }
+
+    const quitada = document.getElementById('crQuitada').checked ? 'SIM' : 'NAO';
+    const recebimentoRaw = document.getElementById('crRecebimento').value;
+    const body = {
+      documento: document.getElementById('crDocumento').value.trim(),
+      descricaolancamento: descricao,
+      nparcela: Number(document.getElementById('crNparcela').value) || 1,
+      qtdeparcela: Number(document.getElementById('crQtdeparcela').value) || 1,
+      datavencimento: dateToApi(vencimento),
+      datarecebimento: recebimentoRaw ? dateToApi(recebimentoRaw) : '',
+      codbarra: document.getElementById('crCodbarra').value.trim(),
+      obs: document.getElementById('crObs').value.trim(),
+      codcliente: cliente.codigo, cliente: cliente.nome,
+      codfuncionario: vendedor.codigo, funcionario: vendedor.nome,
+      codvendedor: vendedor.codigo, vendedor: vendedor.nome,
+      codplanoconta: planoconta.codigo, planoconta: planoconta.nome,
+      codcentrocusto: centrocusto.codigo, centrocusto: centrocusto.nome,
+      codespecie: especie.codigo, especie: especie.nome,
+      valororiginal: valor,
+      percdesconto: toNum(document.getElementById('crPercDesconto').value),
+      valordesconto: toNum(document.getElementById('crValorDesconto').value),
+      percacrescimo: toNum(document.getElementById('crPercAcrescimo').value),
+      valoracrescimo: toNum(document.getElementById('crValorAcrescimo').value),
+      percmulta: toNum(document.getElementById('crPercMulta').value),
+      valormulta: toNum(document.getElementById('crValorMulta').value),
+      percjurosaomes: toNum(document.getElementById('crPercJurosMes').value),
+      valorjuroaomes: toNum(document.getElementById('crValorJuroMes').value),
+      valorpago: toNum(document.getElementById('crValorPago').value),
+      quitada,
+      cancelada: document.getElementById('crCancelada').checked ? 'SIM' : 'NAO',
+      origem: 'RECEBER',
+    };
+
+    const btn = document.getElementById('btnSalvarCadastroReceber');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Salvando…';
+    try {
+      const url = controle
+        ? `/api/erp/${_empresa.uuid}/contas/areceber/${controle}`
+        : `/api/erp/${_empresa.uuid}/contas/areceber`;
+      const res = await fetch(url, {
+        method: controle ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${_token}` },
+        body: JSON.stringify(body)
+      });
+      if (!res.ok) { const msg = await res.text(); throw new Error(`Erro ao salvar (HTTP ${res.status}): ${msg}`); }
+      hideModal('modalCadastroReceber');
+      gerarCadastroReceber(controle ? _crudReceberPagina : 1);
+    } catch (err) {
+      errEl.textContent = err.message;
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Salvar';
+    }
+  }
+
+  async function excluirCadastroReceber() {
+    const controle = document.getElementById('crControle').value;
+    if (!controle) return;
+    if (!confirm('Excluir esta conta a receber? Esta ação não pode ser desfeita.')) return;
+    const errEl = document.getElementById('modalCadastroReceberError');
+    try {
+      const url = `/api/erp/${_empresa.uuid}/contas/areceber/${controle}`;
+      const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${_token}` } });
+      if (!res.ok) { const msg = await res.text(); throw new Error(`Erro ao excluir (HTTP ${res.status}): ${msg}`); }
+      hideModal('modalCadastroReceber');
+      gerarCadastroReceber(_crudReceberPagina);
+    } catch (err) {
+      errEl.textContent = err.message;
     }
   }
 
