@@ -89,9 +89,21 @@ async function fetchXxx(dtDe, dtAte, relSelId) {
   return res.json();
 }
 ```
-- Datas no formato `DD.MM.YYYY` (função `dateToApi` converte de `YYYY-MM-DD`)
+- Datas enviadas à API no formato `DD.MM.YYYY` (função `dateToApi` converte de `YYYY-MM-DD`, formato nativo de `<input type="date">`)
 - Autenticação sempre via header `Authorization: Bearer <token>` (o proxy repassa esse header para o ERP sem alterá-lo)
 - O proxy também envia `EMP-UUID: <uuid da empresa>` em toda chamada ao ERP (exigido pela fonte de dados para identificar a empresa)
+
+## Formato de datas exibidas
+
+Datas vindas da API (`YYYY-MM-DD`, às vezes com hora colada) são exibidas em
+tabelas/relatórios usando `fmtData(v)`, que chama `toLocaleDateString()`
+**sem locale explícito** — ou seja, segue o idioma/região configurado no
+navegador do usuário (`dd/mm/yyyy`, `mm/dd/yyyy` etc., conforme o caso), em
+vez de um formato fixo. Não hardcodar `'pt-BR'` nem montar a string de data
+manualmente para exibição.
+
+- `<input type="date">` continua sempre em `YYYY-MM-DD` no `.value` (exigência do HTML) — o navegador já exibe esse campo no formato local sozinho, então não usar `fmtData` neles, só na leitura pra preencher/enviar.
+- `fmtData` é só para exibição (texto em `<td>`, labels etc.); o envio pra API continua via `dateToApi`.
 
 ## Utilitários disponíveis
 
@@ -100,6 +112,7 @@ toNum(v)          // parseFloat seguro, retorna 0 se NaN
 fmtNum(v)         // formata com 2 casas decimais pt-BR
 fmtPct(v)         // formata percentual com 1 casa decimal pt-BR
 dateToApi(v)      // YYYY-MM-DD → YYYY.MM.DD
+fmtData(v)        // YYYY-MM-DD (API) → formato de data do idioma do navegador (toLocaleDateString)
 truncate(s, n)    // corta string em n chars com '…'
 badgeMargem(pct)  // retorna HTML de badge colorido por faixa de margem
 sha256(text)      // retorna Promise<string hex>
@@ -158,3 +171,4 @@ hideModal(id)     // oculta modal overlay
 - Não introduzir dependências npm de frontend — sem bundler disponível
 - Não adicionar lógica de negócio no server.js — ele só gerencia configuração local e faz o proxy passthrough `/api/erp/:empresaId/*` (repasse puro, sem transformar dados)
 - Não usar `cepcliente` na tabela de detalhes de vendas — substituído por `ndav`
+- Não decidir regra de negócio no frontend (nem no server.js) quando ela pode morar na API do ERP (Delphi) — o front só traduz a escolha do usuário em parâmetros de query e repassa. Exemplo: no CRUD de Contas a Pagar/Receber, qual coluna de data usar pro filtro (`datavencimento` vs `datapagamento`/`datarecebimento`, dependendo do status escolhido) e a ordenação decrescente por data são decididas em SQL nos endpoints `/sgbrbi/contas/apagar-paginado` e `/sgbrbi/contas/areceber-paginado`; o `index.html` só monta os parâmetros `quitada`/`cancelada`/`dt_de`/`dt_ate` (ver `statusParaParamsCrud`)

@@ -312,7 +312,8 @@
     .btn-save   { background: var(--blue); color: #fff; border: none; border-radius: 7px; padding: 8px 18px; font-size: .84rem; font-weight: 600; cursor: pointer; }
     .btn-save:hover { filter: brightness(1.15); }
     .btn-danger { background: #fde8e8; color: var(--red); border: none; border-radius: 7px; padding: 8px 14px; font-size: .82rem; font-weight: 600; cursor: pointer; }
-    .btn-danger:hover { background: #fbd0d0; }
+    .btn-danger:hover:not(:disabled) { background: #fbd0d0; }
+    .btn-danger:disabled { opacity: .5; cursor: not-allowed; }
 
     /* loader */
     .loader { display: inline-block; width: 15px; height: 15px; border: 2.5px solid rgba(255,255,255,.3); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; vertical-align: middle; }
@@ -559,6 +560,12 @@
           <button class="nav-item" id="navConfigLancPagar" onclick="navTo('configlancpagar')">
             <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             Padrões de Lançamento
+          </button>
+
+          <!-- Filtro Padrão (janela de dias usada ao abrir Cadastro Pagar/Receber) -->
+          <button class="nav-item" id="navConfigFiltro" onclick="navTo('configfiltro')">
+            <svg viewBox="0 0 24 24" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+            Filtro Padrão
           </button>
 
         </div>
@@ -1248,15 +1255,43 @@
         </div>
       </div><!-- /secConfigLancPagar -->
 
+      <div id="secConfigFiltro" style="display:none">
+        <div class="panel" style="display:block">
+          <div class="panel-title" style="margin-bottom:6px">Configurações — Filtro Padrão de Datas</div>
+          <div style="font-size:.82rem;color:var(--muted);line-height:1.6;max-width:760px">
+            Ao abrir "Cadastro Pagar" ou "Cadastro Receber" pela primeira vez, as datas inicial e
+            final partem automaticamente dos dias configurados aqui, olhando pro lado que faz
+            sentido pro status filtrado: com "Status" em Todas, Pendentes ou Canceladas (filtra por
+            <strong>vencimento</strong>), vai de hoje até hoje + dias; com "Pagas"/"Recebidas" (filtra
+            por data de pagamento/recebimento), vai de hoje − dias até hoje. Deixe em branco para
+            não preencher as datas automaticamente. Vale só para <strong id="cfgFiltroEmpresaNome">—</strong>.
+          </div>
+        </div>
+
+        <div style="margin:0 24px 24px;background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 6px rgba(0,0,0,.08);max-width:420px">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Dias a partir de hoje</label>
+              <input type="number" id="cfgFiltroDias" step="1" min="0" placeholder="Ex: 60" />
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;margin-top:8px">
+            <button class="btn btn-primary" id="btnSalvarConfigFiltro" onclick="salvarConfigFiltro()">Salvar</button>
+            <span id="configFiltroStatus" style="font-size:.82rem"></span>
+          </div>
+        </div>
+      </div><!-- /secConfigFiltro -->
+
       <!-- ── SEÇÃO: LANÇAMENTO AVULSO DE CONTA A PAGAR (ação rápida) ──── -->
       <div id="secLancamentoAvulso" style="display:none">
         <div class="panel" style="display:block">
           <div class="panel-title" style="margin-bottom:6px">Lançamento Avulso de Conta a Pagar</div>
           <div style="font-size:.82rem;color:var(--muted);line-height:1.6;max-width:760px">
-            Lançamento rápido, só com o essencial — descrição, valor e vencimento. Funcionário, fornecedor,
-            plano de contas, centro de custo e espécie usam os padrões configurados em
-            "Configurações → Padrões de Lançamento". Pra um lançamento com todos os campos, use
-            "Cadastro Pagar → Adicionar".
+            Lançamento rápido, só com o essencial — descrição e valor. Já entra como conta paga hoje
+            (vencimento, pagamento e valor pago iguais à data/valor informados, quitada = Sim).
+            Funcionário, fornecedor, plano de contas, centro de custo e espécie usam os padrões
+            configurados em "Configurações → Padrões de Lançamento". Pra um lançamento com todos os
+            campos (ex.: uma conta em aberto pra pagar depois), use "Cadastro Pagar → Adicionar".
           </div>
         </div>
 
@@ -1269,12 +1304,8 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Valor Original (R$) *</label>
+              <label>Valor Pago (R$) *</label>
               <input type="number" id="lpValor" step="0.01" min="0.01" placeholder="0,00" />
-            </div>
-            <div class="form-group">
-              <label>Data de Vencimento *</label>
-              <input type="date" id="lpVencimento" />
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:14px;margin-top:8px">
@@ -1292,8 +1323,9 @@
             <label>Status</label>
             <select id="crudPagarStatus">
               <option value="">Todas (por vencimento)</option>
-              <option value="NAO">Pendentes</option>
-              <option value="SIM">Pagas</option>
+              <option value="PENDENTE">Pendentes</option>
+              <option value="PAGA">Pagas</option>
+              <option value="CANCELADA">Canceladas</option>
             </select>
           </div>
           <div class="field">
@@ -1342,8 +1374,9 @@
             <label>Status</label>
             <select id="crudReceberStatus">
               <option value="">Todas (por vencimento)</option>
-              <option value="NAO">Pendentes</option>
-              <option value="SIM">Recebidas</option>
+              <option value="PENDENTE">Pendentes</option>
+              <option value="PAGA">Recebidas</option>
+              <option value="CANCELADA">Canceladas</option>
             </select>
           </div>
           <div class="field">
@@ -1628,7 +1661,7 @@
       <div id="modalCadastroPagarError" class="form-error"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-danger" id="btnExcluirCadastroPagar" onclick="excluirCadastroPagar()" style="display:none">🗑 Excluir</button>
+      <button class="btn-danger" id="btnCancelarCadastroPagar" onclick="cancelarCadastroPagar()" style="display:none">🚫 Cancelar Conta</button>
       <div class="spacer"></div>
       <button class="btn-cancel" onclick="hideModal('modalCadastroPagar')">Fechar</button>
       <button class="btn-save" id="btnSalvarCadastroPagar" onclick="salvarCadastroPagar()">Salvar</button>
@@ -1702,7 +1735,7 @@
       <div id="modalCadastroReceberError" class="form-error"></div>
     </div>
     <div class="modal-footer">
-      <button class="btn-danger" id="btnExcluirCadastroReceber" onclick="excluirCadastroReceber()" style="display:none">🗑 Excluir</button>
+      <button class="btn-danger" id="btnCancelarCadastroReceber" onclick="cancelarCadastroReceber()" style="display:none">🚫 Cancelar Conta</button>
       <div class="spacer"></div>
       <button class="btn-cancel" onclick="hideModal('modalCadastroReceber')">Fechar</button>
       <button class="btn-save" id="btnSalvarCadastroReceber" onclick="salvarCadastroReceber()">Salvar</button>
@@ -1781,6 +1814,17 @@
   const fmtNum   = v => toNum(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtPct   = v => toNum(v).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
   const dateToApi = v => v.replace(/-/g, '.');
+  // Data 'YYYY-MM-DD' (ou 'YYYY-MM-DDTHH:NN:SS' vinda da API) → formato de data
+  // do navegador do usuário. toLocaleDateString() sem locale explícito usa o
+  // idioma configurado no navegador (não um formato fixo tipo dd/mm ou mm/dd) —
+  // ver convenção em CLAUDE.md.
+  const fmtData = v => {
+    const s = String(v ?? '').trim();
+    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!m) return s;
+    const dt = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+    return dt.toLocaleDateString();
+  };
   const truncate  = (s, n = 28) => s && s.length > n ? s.substring(0, n) + '…' : (s || '');
   const isSim     = v => String(v ?? '').trim().toUpperCase().startsWith('S'); // 'SIM' ou 'S'
   const mesLabel  = v => { // 'YYYY-MM-DD' ou 'DD.MM.YYYY' → 'MM/YYYY'
@@ -1842,6 +1886,7 @@
       vendadet:    'secVendaDet',
       financeiro:  'secFinanceiro',
       configlancpagar: 'secConfigLancPagar',
+      configfiltro: 'secConfigFiltro',
       lancamentoavulso: 'secLancamentoAvulso',
       cadastropagar: 'secCadastroPagar',
       cadastroreceber: 'secCadastroReceber',
@@ -1863,10 +1908,18 @@
     document.getElementById('navCadastroPagar').classList.toggle('active',   section === 'cadastropagar');
     document.getElementById('navLancamentoAvulso').classList.toggle('active', section === 'lancamentoavulso');
     document.getElementById('navConfigLancPagar').classList.toggle('active', section === 'configlancpagar');
+    document.getElementById('navConfigFiltro').classList.toggle('active', section === 'configfiltro');
     if (section === 'configlancpagar') carregarConfigLancPagar();
+    if (section === 'configfiltro') carregarConfigFiltro();
     if (section === 'lancamentoavulso') limparLancamentoPagar();
-    if (section === 'cadastropagar' && !_crudPagarCarregado) gerarCadastroPagar();
-    if (section === 'cadastroreceber' && !_crudReceberCarregado) gerarCadastroReceber();
+    if (section === 'cadastropagar' && !_crudPagarCarregado) {
+      aplicarFiltroPadraoDatas('crudPagar_de', 'crudPagar_ate', 'crudPagarStatus');
+      gerarCadastroPagar();
+    }
+    if (section === 'cadastroreceber' && !_crudReceberCarregado) {
+      aplicarFiltroPadraoDatas('crudReceber_de', 'crudReceber_ate', 'crudReceberStatus');
+      gerarCadastroReceber();
+    }
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarOverlay').classList.remove('open');
   }
@@ -3649,21 +3702,26 @@
   function limparLancamentoPagar() {
     document.getElementById('lpDescricao').value = '';
     document.getElementById('lpValor').value = '';
-    document.getElementById('lpVencimento').value = '';
     document.getElementById('modalLancarPagarError').textContent = '';
     document.getElementById('modalLancarPagarError').style.color = '';
   }
 
+  // Data de hoje (do dispositivo que está lançando) no formato YYYY-MM-DD,
+  // pronta pra passar por dateToApi — usada como vencimento E pagamento,
+  // já que o lançamento avulso sempre entra como conta já paga.
+  function dataHojeYMD() {
+    const hoje = new Date();
+    return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+  }
+
   async function salvarLancamentoPagar() {
-    const descricao     = document.getElementById('lpDescricao').value.trim();
-    const valor          = toNum(document.getElementById('lpValor').value);
-    const vencimentoRaw = document.getElementById('lpVencimento').value;
-    const errEl          = document.getElementById('modalLancarPagarError');
+    const descricao = document.getElementById('lpDescricao').value.trim();
+    const valor      = toNum(document.getElementById('lpValor').value);
+    const errEl      = document.getElementById('modalLancarPagarError');
     errEl.textContent = '';
 
-    if (!descricao)      { errEl.textContent = 'Informe a descrição do lançamento.'; return; }
-    if (!(valor > 0))    { errEl.textContent = 'Informe um valor original válido.'; return; }
-    if (!vencimentoRaw)  { errEl.textContent = 'Informe a data de vencimento.'; return; }
+    if (!descricao)   { errEl.textContent = 'Informe a descrição do lançamento.'; return; }
+    if (!(valor > 0)) { errEl.textContent = 'Informe um valor válido.'; return; }
 
     const codfuncionario = Number(_empresa?.padrao_codfuncionario) || 0;
     const codfornecedor  = Number(_empresa?.padrao_codfornecedor) || 0;
@@ -3681,10 +3739,13 @@
     btn.innerHTML = '<span class="loader"></span> Lançando…';
 
     try {
+      const hojeApi = dateToApi(dataHojeYMD());
       const body = {
         descricaolancamento: descricao,
         valororiginal: valor,
-        datavencimento: dateToApi(vencimentoRaw),
+        valorpago: valor,
+        datavencimento: hojeApi,
+        datapagamento: hojeApi,
         documento: '',
         qtdeparcela: 1,
         nparcela: 1,
@@ -3695,7 +3756,7 @@
         codespecie,      especie:      _empresa.padrao_especie      || '',
         origem: 'PAGAR',
         cancelada: 'NAO',
-        quitada: 'NAO',
+        quitada: 'SIM',
       };
       const url = `/api/erp/${_empresa.uuid}/contas/apagar`;
       const res = await fetch(url, {
@@ -3842,6 +3903,49 @@
     }
   }
 
+  // ── CONFIGURAÇÕES: FILTRO PADRÃO DE DATAS (Cadastro Pagar/Receber) ───────
+  // Janela em dias aplicada só na primeira abertura da tela (ver
+  // aplicarFiltroPadraoDatas, mais abaixo) e só quando o filtro é por
+  // vencimento — mesma regra de "config do usuário do app, não do admin"
+  // usada em Padrões de Lançamento.
+  function carregarConfigFiltro() {
+    document.getElementById('cfgFiltroEmpresaNome').textContent = _empresa?.nome ?? '—';
+    const statusEl = document.getElementById('configFiltroStatus');
+    statusEl.textContent = ''; statusEl.style.color = '';
+    document.getElementById('cfgFiltroDias').value = _empresa?.padrao_filtro_dias ?? '';
+  }
+
+  async function salvarConfigFiltro() {
+    const statusEl = document.getElementById('configFiltroStatus');
+    statusEl.textContent = ''; statusEl.style.color = '';
+    const diasRaw = document.getElementById('cfgFiltroDias').value.trim();
+
+    const btn = document.getElementById('btnSalvarConfigFiltro');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Salvando…';
+
+    try {
+      const res = await fetch(`/api/empresas/${_empresa.id}/filtro-padrao`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ padrao_filtro_dias: diasRaw === '' ? null : Number(diasRaw) })
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.erro || 'Erro ao salvar.'); }
+      const atualizado = await res.json();
+      Object.assign(_empresa, atualizado);
+      const idx = _empresas.findIndex(e => e.id === _empresa.id);
+      if (idx >= 0) Object.assign(_empresas[idx], atualizado);
+      statusEl.textContent = 'Salvo com sucesso!';
+      statusEl.style.color = 'var(--green)';
+    } catch (err) {
+      statusEl.textContent = err.message;
+      statusEl.style.color = 'var(--red)';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Salvar';
+    }
+  }
+
   // ── CRUD: CADASTRO DE CONTAS A PAGAR / A RECEBER ─────────────────────────
   // Listagem paginada (FIRST/SKIP no Firebird, via /sgbrbi/contas/apagar-paginado
   // e /sgbrbi/contas/areceber-paginado) + modal completo pra criar/editar/consultar,
@@ -3885,6 +3989,50 @@
     if (codigo) sel.value = String(codigo);
   }
 
+  // Traduz o filtro de status da listagem (Todas/Pendentes/Pagas.../Canceladas)
+  // nos parâmetros que a API do Delphi espera. A regra de negócio (qual coluna
+  // de data usar pra filtrar/ordenar em cada status, exclusão de canceladas do
+  // "pendentes" etc.) mora na API — aqui só mapeamos a escolha do usuário pros
+  // parâmetros da query string, sem decidir nada sozinho no front (ver CLAUDE.md).
+  function statusParaParamsCrud(status) {
+    if (status === 'PENDENTE') return { quitada: 'NAO', cancelada: 'NAO' };
+    if (status === 'PAGA')     return { quitada: 'SIM', cancelada: '' };
+    if (status === 'CANCELADA') return { quitada: '', cancelada: 'SIM' };
+    return { quitada: '', cancelada: '' };
+  }
+
+  // Preenche a data inicial/final do filtro na primeira abertura da tela, a
+  // partir do "Filtro Padrão" configurado em Configurações (padrao_filtro_dias).
+  // A janela olha pra um lado ou outro dependendo de qual data o status atual
+  // usa pra filtrar (ver statusParaParamsCrud):
+  //  - por vencimento (Todas/Pendentes/Canceladas, olhando pra frente):
+  //    inicial = hoje, final = hoje + dias.
+  //  - por pagamento/recebimento (Pagas/Recebidas, olhando pra trás):
+  //    inicial = hoje - dias, final = hoje.
+  // Nunca sobrescreve datas que o usuário já tiver preenchido.
+  function aplicarFiltroPadraoDatas(deId, ateId, statusId) {
+    const dias = Number(_empresa?.padrao_filtro_dias);
+    if (!Number.isInteger(dias) || dias <= 0) return;
+
+    const deEl = document.getElementById(deId), ateEl = document.getElementById(ateId);
+    if (deEl.value || ateEl.value) return;
+
+    const { quitada } = statusParaParamsCrud(document.getElementById(statusId).value);
+    const ymd = dt => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
+    const hojeYMD = dataHojeYMD();
+    const [y, m, d] = hojeYMD.split('-').map(Number);
+
+    if (quitada === 'SIM') {
+      // Pagas/Recebidas: janela pra trás, terminando hoje.
+      deEl.value = ymd(new Date(y, m - 1, d - dias));
+      ateEl.value = hojeYMD;
+    } else {
+      // Todas/Pendentes/Canceladas: janela pra frente, começando hoje.
+      deEl.value = hojeYMD;
+      ateEl.value = ymd(new Date(y, m - 1, d + dias));
+    }
+  }
+
   // ═══ CONTAS A PAGAR ═══
   const PICKERS_CADASTRO_PAGAR = [
     { endpoint: '/funcionarios', selectId: 'cpPickerFuncionario', getCodigo: r => r.controle, getNome: r => r.funcionario },
@@ -3908,10 +4056,12 @@
     const dtDe  = document.getElementById('crudPagar_de').value;
     const dtAte = document.getElementById('crudPagar_ate').value;
     const status = document.getElementById('crudPagarStatus').value;
+    const { quitada, cancelada } = statusParaParamsCrud(status);
     const params = new URLSearchParams({ pagina: _crudPagarPagina, tamanhopagina: TAMANHO_PAGINA_CRUD });
     if (dtDe)  params.set('dt_de', dateToApi(dtDe));
     if (dtAte) params.set('dt_ate', dateToApi(dtAte));
-    if (status) params.set('quitada', status);
+    if (quitada)   params.set('quitada', quitada);
+    if (cancelada) params.set('cancelada', cancelada);
 
     try {
       const url = `/api/erp/${_empresa.uuid}/contas/apagar-paginado?${params.toString()}`;
@@ -3954,8 +4104,8 @@
         <td>${truncate(r.documento || '', 14)}</td>
         <td>${truncate(r.descricaolancamento || '', 30)}</td>
         <td>${truncate(r.fornecedor || '', 24)}</td>
-        <td>${r.datavencimento || ''}</td>
-        <td>${r.datapagamento || ''}</td>
+        <td>${fmtData(r.datavencimento)}</td>
+        <td>${fmtData(r.datapagamento)}</td>
         <td class="num">${fmtNum(r.valororiginal)}</td>
         <td class="num">${fmtNum(r.valorpago)}</td>
         <td>${r.quitada === 'SIM' ? '<span class="badge badge-green">Sim</span>' : '<span class="badge badge-yellow">Não</span>'}</td>
@@ -3970,13 +4120,24 @@
   function toggleValorPagoPagar() {
     document.getElementById('cpLinhaValorPago').style.display =
       document.getElementById('cpQuitada').checked ? 'flex' : 'none';
+    atualizarBotaoCancelarPagar();
+  }
+
+  // Conta paga não pode ser cancelada — só dá pra cancelar uma conta ainda em
+  // aberto. Reavaliado sempre que o checkbox "Paga" muda (ou quando o registro
+  // carrega já quitado do ERP).
+  function atualizarBotaoCancelarPagar() {
+    const btn = document.getElementById('btnCancelarCadastroPagar');
+    const quitada = document.getElementById('cpQuitada').checked;
+    btn.disabled = quitada;
+    btn.title = quitada ? 'Conta já paga não pode ser cancelada' : '';
   }
 
   function setModoCamposCadastroPagar(somenteLeitura) {
     document.querySelectorAll('#modalCadastroPagar input, #modalCadastroPagar select')
       .forEach(el => { if (el.id !== 'cpControle') el.disabled = somenteLeitura; });
     document.getElementById('btnSalvarCadastroPagar').style.display = somenteLeitura ? 'none' : '';
-    document.getElementById('btnExcluirCadastroPagar').style.display = somenteLeitura ? 'none' : '';
+    document.getElementById('btnCancelarCadastroPagar').style.display = somenteLeitura ? 'none' : '';
   }
 
   async function abrirModalCadastroPagar(modo, controle) {
@@ -3996,7 +4157,7 @@
       document.getElementById('cpNparcela').value = 1;
       document.getElementById('cpQtdeparcela').value = 1;
       setModoCamposCadastroPagar(false);
-      document.getElementById('btnExcluirCadastroPagar').style.display = 'none'; // nada a excluir ainda
+      document.getElementById('btnCancelarCadastroPagar').style.display = 'none'; // nada a cancelar ainda
       showModal('modalCadastroPagar');
       return;
     }
@@ -4119,19 +4280,31 @@
     }
   }
 
-  async function excluirCadastroPagar() {
+  // Exclusão de conta a pagar não é permitida — o registro fica no ERP, só é
+  // marcado como cancelado (via o mesmo PUT usado por salvarCadastroPagar).
+  // Conta já quitada não pode ser cancelada (botão fica desabilitado nesse
+  // caso — atualizarBotaoCancelarPagar), mas a checagem é repetida aqui
+  // porque o botão desabilitado ainda pode ser acionado programaticamente.
+  async function cancelarCadastroPagar() {
     const controle = document.getElementById('cpControle').value;
     if (!controle) return;
-    if (!confirm('Excluir esta conta a pagar? Esta ação não pode ser desfeita.')) return;
     const errEl = document.getElementById('modalCadastroPagarError');
+    errEl.textContent = '';
+    if (document.getElementById('cpQuitada').checked) {
+      errEl.textContent = 'Esta conta já está paga e não pode ser cancelada.';
+      return;
+    }
+    if (!confirm('Cancelar esta conta a pagar? O lançamento não é excluído do ERP, apenas marcado como cancelado.')) return;
+
+    const btn = document.getElementById('btnCancelarCadastroPagar');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Cancelando…';
     try {
-      const url = `/api/erp/${_empresa.uuid}/contas/apagar/${controle}`;
-      const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${_token}` } });
-      if (!res.ok) { const msg = await res.text(); throw new Error(`Erro ao excluir (HTTP ${res.status}): ${msg}`); }
-      hideModal('modalCadastroPagar');
-      gerarCadastroPagar(_crudPagarPagina);
-    } catch (err) {
-      errEl.textContent = err.message;
+      document.getElementById('cpCancelada').checked = true;
+      await salvarCadastroPagar();
+    } finally {
+      btn.disabled = document.getElementById('cpQuitada').checked;
+      btn.textContent = '🚫 Cancelar Conta';
     }
   }
 
@@ -4158,10 +4331,12 @@
     const dtDe  = document.getElementById('crudReceber_de').value;
     const dtAte = document.getElementById('crudReceber_ate').value;
     const status = document.getElementById('crudReceberStatus').value;
+    const { quitada, cancelada } = statusParaParamsCrud(status);
     const params = new URLSearchParams({ pagina: _crudReceberPagina, tamanhopagina: TAMANHO_PAGINA_CRUD });
     if (dtDe)  params.set('dt_de', dateToApi(dtDe));
     if (dtAte) params.set('dt_ate', dateToApi(dtAte));
-    if (status) params.set('quitada', status);
+    if (quitada)   params.set('quitada', quitada);
+    if (cancelada) params.set('cancelada', cancelada);
 
     try {
       const url = `/api/erp/${_empresa.uuid}/contas/areceber-paginado?${params.toString()}`;
@@ -4204,8 +4379,8 @@
         <td>${truncate(r.documento || '', 14)}</td>
         <td>${truncate(r.descricaolancamento || '', 30)}</td>
         <td>${truncate(r.cliente || '', 24)}</td>
-        <td>${r.datavencimento || ''}</td>
-        <td>${r.datarecebimento || ''}</td>
+        <td>${fmtData(r.datavencimento)}</td>
+        <td>${fmtData(r.datarecebimento)}</td>
         <td class="num">${fmtNum(r.valororiginal)}</td>
         <td class="num">${fmtNum(r.valorpago)}</td>
         <td>${r.quitada === 'SIM' ? '<span class="badge badge-green">Sim</span>' : '<span class="badge badge-yellow">Não</span>'}</td>
@@ -4220,13 +4395,24 @@
   function toggleValorPagoReceber() {
     document.getElementById('crLinhaValorPago').style.display =
       document.getElementById('crQuitada').checked ? 'flex' : 'none';
+    atualizarBotaoCancelarReceber();
+  }
+
+  // Conta já recebida não pode ser cancelada — só dá pra cancelar uma conta
+  // ainda em aberto. Reavaliado sempre que o checkbox "Recebida" muda (ou
+  // quando o registro carrega já quitado do ERP).
+  function atualizarBotaoCancelarReceber() {
+    const btn = document.getElementById('btnCancelarCadastroReceber');
+    const quitada = document.getElementById('crQuitada').checked;
+    btn.disabled = quitada;
+    btn.title = quitada ? 'Conta já recebida não pode ser cancelada' : '';
   }
 
   function setModoCamposCadastroReceber(somenteLeitura) {
     document.querySelectorAll('#modalCadastroReceber input, #modalCadastroReceber select')
       .forEach(el => { if (el.id !== 'crControle') el.disabled = somenteLeitura; });
     document.getElementById('btnSalvarCadastroReceber').style.display = somenteLeitura ? 'none' : '';
-    document.getElementById('btnExcluirCadastroReceber').style.display = somenteLeitura ? 'none' : '';
+    document.getElementById('btnCancelarCadastroReceber').style.display = somenteLeitura ? 'none' : '';
   }
 
   async function abrirModalCadastroReceber(modo, controle) {
@@ -4246,7 +4432,7 @@
       document.getElementById('crNparcela').value = 1;
       document.getElementById('crQtdeparcela').value = 1;
       setModoCamposCadastroReceber(false);
-      document.getElementById('btnExcluirCadastroReceber').style.display = 'none'; // nada a excluir ainda
+      document.getElementById('btnCancelarCadastroReceber').style.display = 'none'; // nada a cancelar ainda
       showModal('modalCadastroReceber');
       return;
     }
@@ -4370,19 +4556,31 @@
     }
   }
 
-  async function excluirCadastroReceber() {
+  // Exclusão de conta a receber não é permitida — o registro fica no ERP, só é
+  // marcado como cancelado (via o mesmo PUT usado por salvarCadastroReceber).
+  // Conta já quitada não pode ser cancelada (botão fica desabilitado nesse
+  // caso — atualizarBotaoCancelarReceber), mas a checagem é repetida aqui
+  // porque o botão desabilitado ainda pode ser acionado programaticamente.
+  async function cancelarCadastroReceber() {
     const controle = document.getElementById('crControle').value;
     if (!controle) return;
-    if (!confirm('Excluir esta conta a receber? Esta ação não pode ser desfeita.')) return;
     const errEl = document.getElementById('modalCadastroReceberError');
+    errEl.textContent = '';
+    if (document.getElementById('crQuitada').checked) {
+      errEl.textContent = 'Esta conta já foi recebida e não pode ser cancelada.';
+      return;
+    }
+    if (!confirm('Cancelar esta conta a receber? O lançamento não é excluído do ERP, apenas marcado como cancelado.')) return;
+
+    const btn = document.getElementById('btnCancelarCadastroReceber');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loader"></span> Cancelando…';
     try {
-      const url = `/api/erp/${_empresa.uuid}/contas/areceber/${controle}`;
-      const res = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${_token}` } });
-      if (!res.ok) { const msg = await res.text(); throw new Error(`Erro ao excluir (HTTP ${res.status}): ${msg}`); }
-      hideModal('modalCadastroReceber');
-      gerarCadastroReceber(_crudReceberPagina);
-    } catch (err) {
-      errEl.textContent = err.message;
+      document.getElementById('crCancelada').checked = true;
+      await salvarCadastroReceber();
+    } finally {
+      btn.disabled = document.getElementById('crQuitada').checked;
+      btn.textContent = '🚫 Cancelar Conta';
     }
   }
 

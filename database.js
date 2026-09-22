@@ -76,6 +76,14 @@ colunasLancamentoPagar.forEach(col => {
   } catch (_) { /* coluna já existe */ }
 });
 
+// migração: janela padrão (em dias) do filtro de data nas telas de Cadastro
+// Pagar/Receber. Quando preenchido, a data inicial do filtro parte de hoje e
+// a final de hoje + N dias — só faz sentido pra filtro por vencimento (dados
+// futuros); vazio/NULL desliga o preenchimento automático.
+try {
+  db.exec('ALTER TABLE empresas ADD COLUMN padrao_filtro_dias INTEGER');
+} catch (_) { /* coluna já existe */ }
+
 // credenciais padrão: admin / admin  →  sha256("admin")
 const adminExists = db.prepare('SELECT COUNT(*) AS n FROM admin_config').get();
 if (adminExists.n === 0) {
