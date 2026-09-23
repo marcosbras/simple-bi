@@ -1636,18 +1636,6 @@
         <div class="form-section-title"><span>Valores (R$)</span></div>
         <div class="form-row">
           <div class="form-group"><label>Valor Original *</label><input type="number" step="0.01" id="cpValorOriginal" /></div>
-          <div class="form-group"><label>% Desconto</label><input type="number" step="0.01" id="cpPercDesconto" /></div>
-          <div class="form-group"><label>Valor Desconto</label><input type="number" step="0.01" id="cpValorDesconto" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>% Acréscimo</label><input type="number" step="0.01" id="cpPercAcrescimo" /></div>
-          <div class="form-group"><label>Valor Acréscimo</label><input type="number" step="0.01" id="cpValorAcrescimo" /></div>
-          <div class="form-group"><label>% Multa</label><input type="number" step="0.01" id="cpPercMulta" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Valor Multa</label><input type="number" step="0.01" id="cpValorMulta" /></div>
-          <div class="form-group"><label>% Juro ao Mês</label><input type="number" step="0.01" id="cpPercJurosMes" /></div>
-          <div class="form-group"><label>Juro ao Mês</label><input type="number" step="0.01" id="cpValorJuroMes" /></div>
         </div>
         <div class="form-row" id="cpLinhaValorPago" style="display:none">
           <div class="form-group"><label>Valor Pago</label><input type="number" step="0.01" id="cpValorPago" /></div>
@@ -1710,18 +1698,6 @@
         <div class="form-section-title"><span>Valores (R$)</span></div>
         <div class="form-row">
           <div class="form-group"><label>Valor Original *</label><input type="number" step="0.01" id="crValorOriginal" /></div>
-          <div class="form-group"><label>% Desconto</label><input type="number" step="0.01" id="crPercDesconto" /></div>
-          <div class="form-group"><label>Valor Desconto</label><input type="number" step="0.01" id="crValorDesconto" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>% Acréscimo</label><input type="number" step="0.01" id="crPercAcrescimo" /></div>
-          <div class="form-group"><label>Valor Acréscimo</label><input type="number" step="0.01" id="crValorAcrescimo" /></div>
-          <div class="form-group"><label>% Multa</label><input type="number" step="0.01" id="crPercMulta" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Valor Multa</label><input type="number" step="0.01" id="crValorMulta" /></div>
-          <div class="form-group"><label>% Juro ao Mês</label><input type="number" step="0.01" id="crPercJurosMes" /></div>
-          <div class="form-group"><label>Juro ao Mês</label><input type="number" step="0.01" id="crValorJuroMes" /></div>
         </div>
         <div class="form-row" id="crLinhaValorPago" style="display:none">
           <div class="form-group"><label>Valor Recebido</label><input type="number" step="0.01" id="crValorPago" /></div>
@@ -3954,6 +3930,16 @@
   let _crudReceberCarregado = false, _crudReceberPagina = 1, _crudReceberTotalPaginas = 1, _crudReceberDados = [];
   const TAMANHO_PAGINA_CRUD = 20;
 
+  // %desconto/valor desconto/%acréscimo/valor acréscimo/%multa/valor multa/
+  // %juro ao mês/valor juro ao mês não aparecem nesse modal (nem em
+  // criar nem em editar) — só a listagem de contas do ERP desktop mexe
+  // nesses ajustes. Ao editar, o valor que já estiver salvo no ERP é
+  // preservado tal como veio (guardado aqui, fora do formulário) e reenviado
+  // sem mudança no PUT — nunca zerado, senão qualquer edição de outro campo
+  // apagaria desconto/acréscimo/multa/juros já lançados na conta.
+  let _cpValoresOcultos = null;
+  let _crValoresOcultos = null;
+
   // Helper genérico de picker — usado pelos dois modais novos. Não mexe no
   // PICKERS_LANCAMENTO_PAGAR/carregarPickersLancPagar da tela de Configurações
   // (já testado, evita regressão): esse aqui é aditivo e recebe a lista de
@@ -4143,11 +4129,11 @@
   async function abrirModalCadastroPagar(modo, controle) {
     document.getElementById('modalCadastroPagarError').textContent = '';
     ['cpDocumento','cpNparcela','cpQtdeparcela','cpDescricao','cpVencimento','cpPagamento','cpCodbarra','cpObs',
-     'cpValorOriginal','cpPercDesconto','cpValorDesconto','cpPercAcrescimo','cpValorAcrescimo','cpPercMulta',
-     'cpValorMulta','cpPercJurosMes','cpValorJuroMes','cpValorPago'].forEach(id => document.getElementById(id).value = '');
+     'cpValorOriginal','cpValorPago'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('cpQuitada').checked = false;
     document.getElementById('cpCancelada').checked = false;
     document.getElementById('cpControle').value = '';
+    _cpValoresOcultos = null;
     toggleValorPagoPagar();
 
     await carregarPickerGenerico(PICKERS_CADASTRO_PAGAR);
@@ -4167,8 +4153,11 @@
       return;
     }
 
-    document.getElementById('cpGrupoPagamento').style.display = '';
-    document.getElementById('cpLinhaStatusPagamento').style.display = '';
+    // Estado inicial enquanto carrega: oculta os campos de pagamento (mesmo
+    // critério do "criar") — se acabar sendo "consultar" ou uma edição
+    // bloqueada por já estar paga, eles voltam a aparecer logo abaixo.
+    document.getElementById('cpGrupoPagamento').style.display = 'none';
+    document.getElementById('cpLinhaStatusPagamento').style.display = 'none';
     setModoCamposCadastroPagar(true);
     document.getElementById('cpTitle').textContent = modo === 'consultar' ? 'Consultar Conta a Pagar' : 'Editar Conta a Pagar';
     showModal('modalCadastroPagar');
@@ -4187,17 +4176,15 @@
       document.getElementById('cpCodbarra').value = r.codbarra || '';
       document.getElementById('cpObs').value = r.obs || '';
       document.getElementById('cpValorOriginal').value = r.valororiginal ?? '';
-      document.getElementById('cpPercDesconto').value = r.percdesconto ?? '';
-      document.getElementById('cpValorDesconto').value = r.valordesconto ?? '';
-      document.getElementById('cpPercAcrescimo').value = r.percacrescimo ?? '';
-      document.getElementById('cpValorAcrescimo').value = r.valoracrescimo ?? '';
-      document.getElementById('cpPercMulta').value = r.percmulta ?? '';
-      document.getElementById('cpValorMulta').value = r.valormulta ?? '';
-      document.getElementById('cpPercJurosMes').value = r.percjurosaomes ?? '';
-      document.getElementById('cpValorJuroMes').value = r.valorjuroaomes ?? '';
       document.getElementById('cpValorPago').value = r.valorpago ?? '';
       document.getElementById('cpQuitada').checked = r.quitada === 'SIM';
       document.getElementById('cpCancelada').checked = r.cancelada === 'SIM';
+      _cpValoresOcultos = {
+        percdesconto: r.percdesconto ?? 0, valordesconto: r.valordesconto ?? 0,
+        percacrescimo: r.percacrescimo ?? 0, valoracrescimo: r.valoracrescimo ?? 0,
+        percmulta: r.percmulta ?? 0, valormulta: r.valormulta ?? 0,
+        percjurosaomes: r.percjurosaomes ?? 0, valorjuroaomes: r.valorjuroaomes ?? 0,
+      };
       toggleValorPagoPagar();
       selecionarPickerPorCodigo('cpPickerFuncionario', r.codfuncionario);
       selecionarPickerPorCodigo('cpPickerFornecedor', r.codfornecedor);
@@ -4207,12 +4194,18 @@
       // "consultar" sempre fica bloqueado; "editar" libera os campos depois que
       // os dados terminam de carregar (ficavam travados o tempo todo por
       // engano) — MAS uma conta já paga não pode ser editada, só consultada,
-      // então nesse caso o "editar" continua bloqueado igual "consultar".
+      // então nesse caso o "editar" continua bloqueado igual "consultar", e
+      // os campos de pagamento (ocultos por padrão acima) voltam a aparecer
+      // pra dar visibilidade do que já foi pago.
       if (modo === 'editar' && r.quitada !== 'SIM') {
         setModoCamposCadastroPagar(false);
-      } else if (modo === 'editar') {
-        document.getElementById('cpTitle').textContent = 'Conta a Pagar Paga (somente consulta)';
-        document.getElementById('modalCadastroPagarError').textContent = 'Esta conta já está paga e não pode mais ser editada.';
+      } else {
+        document.getElementById('cpGrupoPagamento').style.display = '';
+        document.getElementById('cpLinhaStatusPagamento').style.display = '';
+        if (modo === 'editar') {
+          document.getElementById('cpTitle').textContent = 'Conta a Pagar Paga (somente consulta)';
+          document.getElementById('modalCadastroPagarError').textContent = 'Esta conta já está paga e não pode mais ser editada.';
+        }
       }
     } catch (err) {
       document.getElementById('modalCadastroPagarError').textContent = err.message;
@@ -4257,14 +4250,16 @@
       codcentrocusto: centrocusto.codigo, centrocusto: centrocusto.nome,
       codespecie: especie.codigo, especie: especie.nome,
       valororiginal: valor,
-      percdesconto: toNum(document.getElementById('cpPercDesconto').value),
-      valordesconto: toNum(document.getElementById('cpValorDesconto').value),
-      percacrescimo: toNum(document.getElementById('cpPercAcrescimo').value),
-      valoracrescimo: toNum(document.getElementById('cpValorAcrescimo').value),
-      percmulta: toNum(document.getElementById('cpPercMulta').value),
-      valormulta: toNum(document.getElementById('cpValorMulta').value),
-      percjurosaomes: toNum(document.getElementById('cpPercJurosMes').value),
-      valorjuroaomes: toNum(document.getElementById('cpValorJuroMes').value),
+      // Não editáveis neste modal (ver _cpValoresOcultos) — reenvia exatamente
+      // o que já estava salvo no ERP (0 se for um agendamento novo).
+      percdesconto: _cpValoresOcultos?.percdesconto ?? 0,
+      valordesconto: _cpValoresOcultos?.valordesconto ?? 0,
+      percacrescimo: _cpValoresOcultos?.percacrescimo ?? 0,
+      valoracrescimo: _cpValoresOcultos?.valoracrescimo ?? 0,
+      percmulta: _cpValoresOcultos?.percmulta ?? 0,
+      valormulta: _cpValoresOcultos?.valormulta ?? 0,
+      percjurosaomes: _cpValoresOcultos?.percjurosaomes ?? 0,
+      valorjuroaomes: _cpValoresOcultos?.valorjuroaomes ?? 0,
       valorpago: toNum(document.getElementById('cpValorPago').value),
       quitada,
       cancelada: document.getElementById('cpCancelada').checked ? 'SIM' : 'NAO',
@@ -4442,11 +4437,11 @@
   async function abrirModalCadastroReceber(modo, controle) {
     document.getElementById('modalCadastroReceberError').textContent = '';
     ['crDocumento','crNparcela','crQtdeparcela','crDescricao','crVencimento','crRecebimento','crCodbarra','crObs',
-     'crValorOriginal','crPercDesconto','crValorDesconto','crPercAcrescimo','crValorAcrescimo','crPercMulta',
-     'crValorMulta','crPercJurosMes','crValorJuroMes','crValorPago'].forEach(id => document.getElementById(id).value = '');
+     'crValorOriginal','crValorPago'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('crQuitada').checked = false;
     document.getElementById('crCancelada').checked = false;
     document.getElementById('crControle').value = '';
+    _crValoresOcultos = null;
     toggleValorPagoReceber();
 
     await carregarPickerGenerico(PICKERS_CADASTRO_RECEBER);
@@ -4466,8 +4461,11 @@
       return;
     }
 
-    document.getElementById('crGrupoPagamento').style.display = '';
-    document.getElementById('crLinhaStatusPagamento').style.display = '';
+    // Estado inicial enquanto carrega: oculta os campos de pagamento (mesmo
+    // critério do "criar") — se acabar sendo "consultar" ou uma edição
+    // bloqueada por já estar recebida, eles voltam a aparecer logo abaixo.
+    document.getElementById('crGrupoPagamento').style.display = 'none';
+    document.getElementById('crLinhaStatusPagamento').style.display = 'none';
     setModoCamposCadastroReceber(true);
     document.getElementById('crTitle').textContent = modo === 'consultar' ? 'Consultar Conta a Receber' : 'Editar Conta a Receber';
     showModal('modalCadastroReceber');
@@ -4486,17 +4484,15 @@
       document.getElementById('crCodbarra').value = r.codbarra || '';
       document.getElementById('crObs').value = r.obs || '';
       document.getElementById('crValorOriginal').value = r.valororiginal ?? '';
-      document.getElementById('crPercDesconto').value = r.percdesconto ?? '';
-      document.getElementById('crValorDesconto').value = r.valordesconto ?? '';
-      document.getElementById('crPercAcrescimo').value = r.percacrescimo ?? '';
-      document.getElementById('crValorAcrescimo').value = r.valoracrescimo ?? '';
-      document.getElementById('crPercMulta').value = r.percmulta ?? '';
-      document.getElementById('crValorMulta').value = r.valormulta ?? '';
-      document.getElementById('crPercJurosMes').value = r.percjurosaomes ?? '';
-      document.getElementById('crValorJuroMes').value = r.valorjuroaomes ?? '';
       document.getElementById('crValorPago').value = r.valorpago ?? '';
       document.getElementById('crQuitada').checked = r.quitada === 'SIM';
       document.getElementById('crCancelada').checked = r.cancelada === 'SIM';
+      _crValoresOcultos = {
+        percdesconto: r.percdesconto ?? 0, valordesconto: r.valordesconto ?? 0,
+        percacrescimo: r.percacrescimo ?? 0, valoracrescimo: r.valoracrescimo ?? 0,
+        percmulta: r.percmulta ?? 0, valormulta: r.valormulta ?? 0,
+        percjurosaomes: r.percjurosaomes ?? 0, valorjuroaomes: r.valorjuroaomes ?? 0,
+      };
       toggleValorPagoReceber();
       selecionarPickerPorCodigo('crPickerCliente', r.codcliente);
       selecionarPickerPorCodigo('crPickerVendedor', r.codvendedor || r.codfuncionario);
@@ -4507,12 +4503,17 @@
       // os dados terminam de carregar (ficavam travados o tempo todo por
       // engano) — MAS uma conta já recebida não pode ser editada, só
       // consultada, então nesse caso o "editar" continua bloqueado igual
-      // "consultar".
+      // "consultar", e os campos de pagamento (ocultos por padrão acima)
+      // voltam a aparecer pra dar visibilidade do que já foi recebido.
       if (modo === 'editar' && r.quitada !== 'SIM') {
         setModoCamposCadastroReceber(false);
-      } else if (modo === 'editar') {
-        document.getElementById('crTitle').textContent = 'Conta a Receber Recebida (somente consulta)';
-        document.getElementById('modalCadastroReceberError').textContent = 'Esta conta já foi recebida e não pode mais ser editada.';
+      } else {
+        document.getElementById('crGrupoPagamento').style.display = '';
+        document.getElementById('crLinhaStatusPagamento').style.display = '';
+        if (modo === 'editar') {
+          document.getElementById('crTitle').textContent = 'Conta a Receber Recebida (somente consulta)';
+          document.getElementById('modalCadastroReceberError').textContent = 'Esta conta já foi recebida e não pode mais ser editada.';
+        }
       }
     } catch (err) {
       document.getElementById('modalCadastroReceberError').textContent = err.message;
@@ -4558,14 +4559,16 @@
       codcentrocusto: centrocusto.codigo, centrocusto: centrocusto.nome,
       codespecie: especie.codigo, especie: especie.nome,
       valororiginal: valor,
-      percdesconto: toNum(document.getElementById('crPercDesconto').value),
-      valordesconto: toNum(document.getElementById('crValorDesconto').value),
-      percacrescimo: toNum(document.getElementById('crPercAcrescimo').value),
-      valoracrescimo: toNum(document.getElementById('crValorAcrescimo').value),
-      percmulta: toNum(document.getElementById('crPercMulta').value),
-      valormulta: toNum(document.getElementById('crValorMulta').value),
-      percjurosaomes: toNum(document.getElementById('crPercJurosMes').value),
-      valorjuroaomes: toNum(document.getElementById('crValorJuroMes').value),
+      // Não editáveis neste modal (ver _crValoresOcultos) — reenvia exatamente
+      // o que já estava salvo no ERP (0 se for um agendamento novo).
+      percdesconto: _crValoresOcultos?.percdesconto ?? 0,
+      valordesconto: _crValoresOcultos?.valordesconto ?? 0,
+      percacrescimo: _crValoresOcultos?.percacrescimo ?? 0,
+      valoracrescimo: _crValoresOcultos?.valoracrescimo ?? 0,
+      percmulta: _crValoresOcultos?.percmulta ?? 0,
+      valormulta: _crValoresOcultos?.valormulta ?? 0,
+      percjurosaomes: _crValoresOcultos?.percjurosaomes ?? 0,
+      valorjuroaomes: _crValoresOcultos?.valorjuroaomes ?? 0,
       valorpago: toNum(document.getElementById('crValorPago').value),
       quitada,
       cancelada: document.getElementById('crCancelada').checked ? 'SIM' : 'NAO',
