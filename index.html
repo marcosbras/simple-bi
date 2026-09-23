@@ -1616,7 +1616,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>Data de Vencimento *</label><input type="date" id="cpVencimento" /></div>
-        <div class="form-group"><label>Data de Pagamento</label><input type="date" id="cpPagamento" /></div>
+        <div class="form-group" id="cpGrupoPagamento"><label>Data de Pagamento</label><input type="date" id="cpPagamento" /></div>
         <div class="form-group"><label>Código de Barras / PIX</label><input type="text" id="cpCodbarra" /></div>
       </div>
       <div class="form-row">
@@ -1654,7 +1654,7 @@
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" id="cpLinhaStatusPagamento">
         <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="cpQuitada" onchange="toggleValorPagoPagar()" /> Paga</label></div>
         <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="cpCancelada" /> Cancelada</label></div>
       </div>
@@ -1690,7 +1690,7 @@
       </div>
       <div class="form-row">
         <div class="form-group"><label>Data de Vencimento *</label><input type="date" id="crVencimento" /></div>
-        <div class="form-group"><label>Data de Recebimento</label><input type="date" id="crRecebimento" /></div>
+        <div class="form-group" id="crGrupoPagamento"><label>Data de Recebimento</label><input type="date" id="crRecebimento" /></div>
         <div class="form-group"><label>Código de Barras / PIX</label><input type="text" id="crCodbarra" /></div>
       </div>
       <div class="form-row">
@@ -1728,7 +1728,7 @@
         </div>
       </div>
 
-      <div class="form-row">
+      <div class="form-row" id="crLinhaStatusPagamento">
         <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="crQuitada" onchange="toggleValorPagoReceber()" /> Recebida</label></div>
         <div class="form-group" style="flex:0"><label class="form-check"><input type="checkbox" id="crCancelada" /> Cancelada</label></div>
       </div>
@@ -4153,6 +4153,11 @@
     await carregarPickerGenerico(PICKERS_CADASTRO_PAGAR);
 
     if (modo === 'criar') {
+      // Agendamento (criar) é só o compromisso futuro — pagamento (valor pago,
+      // quitada, cancelada, data de pagamento) é outro lançamento no ERP,
+      // feito depois, não faz sentido pedir aqui.
+      document.getElementById('cpGrupoPagamento').style.display = 'none';
+      document.getElementById('cpLinhaStatusPagamento').style.display = 'none';
       document.getElementById('cpTitle').textContent = 'Nova Conta a Pagar';
       document.getElementById('cpNparcela').value = 1;
       document.getElementById('cpQtdeparcela').value = 1;
@@ -4162,6 +4167,8 @@
       return;
     }
 
+    document.getElementById('cpGrupoPagamento').style.display = '';
+    document.getElementById('cpLinhaStatusPagamento').style.display = '';
     setModoCamposCadastroPagar(true);
     document.getElementById('cpTitle').textContent = modo === 'consultar' ? 'Consultar Conta a Pagar' : 'Editar Conta a Pagar';
     showModal('modalCadastroPagar');
@@ -4197,9 +4204,16 @@
       selecionarPickerPorCodigo('cpPickerPlanoConta', r.codplanoconta);
       selecionarPickerPorCodigo('cpPickerCentroCusto', r.codcentrocusto);
       selecionarPickerPorCodigo('cpPickerEspecie', r.codespecie);
-      // Só "consultar" fica bloqueado — "editar" libera os campos depois que os
-      // dados terminam de carregar (ficavam travados o tempo todo por engano).
-      if (modo === 'editar') setModoCamposCadastroPagar(false);
+      // "consultar" sempre fica bloqueado; "editar" libera os campos depois que
+      // os dados terminam de carregar (ficavam travados o tempo todo por
+      // engano) — MAS uma conta já paga não pode ser editada, só consultada,
+      // então nesse caso o "editar" continua bloqueado igual "consultar".
+      if (modo === 'editar' && r.quitada !== 'SIM') {
+        setModoCamposCadastroPagar(false);
+      } else if (modo === 'editar') {
+        document.getElementById('cpTitle').textContent = 'Conta a Pagar Paga (somente consulta)';
+        document.getElementById('modalCadastroPagarError').textContent = 'Esta conta já está paga e não pode mais ser editada.';
+      }
     } catch (err) {
       document.getElementById('modalCadastroPagarError').textContent = err.message;
     }
@@ -4256,6 +4270,16 @@
       cancelada: document.getElementById('cpCancelada').checked ? 'SIM' : 'NAO',
       origem: 'PAGAR',
     };
+
+    if (!controle) {
+      // Agendamento (criar) não lança pagamento — isso é outro lançamento no
+      // ERP, feito depois. Força os defaults independente do que os campos
+      // (ocultos nesse modo) tenham no DOM.
+      body.datapagamento = '';
+      body.valorpago = 0;
+      body.quitada = 'NAO';
+      body.cancelada = 'NAO';
+    }
 
     const btn = document.getElementById('btnSalvarCadastroPagar');
     btn.disabled = true;
@@ -4428,6 +4452,11 @@
     await carregarPickerGenerico(PICKERS_CADASTRO_RECEBER);
 
     if (modo === 'criar') {
+      // Agendamento (criar) é só o compromisso futuro — recebimento (valor
+      // pago, quitada, cancelada, data de recebimento) é outro lançamento no
+      // ERP, feito depois, não faz sentido pedir aqui.
+      document.getElementById('crGrupoPagamento').style.display = 'none';
+      document.getElementById('crLinhaStatusPagamento').style.display = 'none';
       document.getElementById('crTitle').textContent = 'Nova Conta a Receber';
       document.getElementById('crNparcela').value = 1;
       document.getElementById('crQtdeparcela').value = 1;
@@ -4437,6 +4466,8 @@
       return;
     }
 
+    document.getElementById('crGrupoPagamento').style.display = '';
+    document.getElementById('crLinhaStatusPagamento').style.display = '';
     setModoCamposCadastroReceber(true);
     document.getElementById('crTitle').textContent = modo === 'consultar' ? 'Consultar Conta a Receber' : 'Editar Conta a Receber';
     showModal('modalCadastroReceber');
@@ -4472,9 +4503,17 @@
       selecionarPickerPorCodigo('crPickerPlanoConta', r.codplanoconta);
       selecionarPickerPorCodigo('crPickerCentroCusto', r.codcentrocusto);
       selecionarPickerPorCodigo('crPickerEspecie', r.codespecie);
-      // Só "consultar" fica bloqueado — "editar" libera os campos depois que os
-      // dados terminam de carregar (ficavam travados o tempo todo por engano).
-      if (modo === 'editar') setModoCamposCadastroReceber(false);
+      // "consultar" sempre fica bloqueado; "editar" libera os campos depois que
+      // os dados terminam de carregar (ficavam travados o tempo todo por
+      // engano) — MAS uma conta já recebida não pode ser editada, só
+      // consultada, então nesse caso o "editar" continua bloqueado igual
+      // "consultar".
+      if (modo === 'editar' && r.quitada !== 'SIM') {
+        setModoCamposCadastroReceber(false);
+      } else if (modo === 'editar') {
+        document.getElementById('crTitle').textContent = 'Conta a Receber Recebida (somente consulta)';
+        document.getElementById('modalCadastroReceberError').textContent = 'Esta conta já foi recebida e não pode mais ser editada.';
+      }
     } catch (err) {
       document.getElementById('modalCadastroReceberError').textContent = err.message;
     }
@@ -4532,6 +4571,16 @@
       cancelada: document.getElementById('crCancelada').checked ? 'SIM' : 'NAO',
       origem: 'RECEBER',
     };
+
+    if (!controle) {
+      // Agendamento (criar) não lança recebimento — isso é outro lançamento
+      // no ERP, feito depois. Força os defaults independente do que os
+      // campos (ocultos nesse modo) tenham no DOM.
+      body.datarecebimento = '';
+      body.valorpago = 0;
+      body.quitada = 'NAO';
+      body.cancelada = 'NAO';
+    }
 
     const btn = document.getElementById('btnSalvarCadastroReceber');
     btn.disabled = true;
