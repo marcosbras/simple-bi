@@ -562,12 +562,6 @@
             Padrões de Lançamento
           </button>
 
-          <!-- Filtro Padrão (janela de dias usada ao abrir Cadastro Pagar/Receber) -->
-          <button class="nav-item" id="navConfigFiltro" onclick="navTo('configfiltro')">
-            <svg viewBox="0 0 24 24" stroke-width="2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-            Filtro Padrão
-          </button>
-
         </div>
 
       </nav>
@@ -1255,33 +1249,6 @@
         </div>
       </div><!-- /secConfigLancPagar -->
 
-      <div id="secConfigFiltro" style="display:none">
-        <div class="panel" style="display:block">
-          <div class="panel-title" style="margin-bottom:6px">Configurações — Filtro Padrão de Datas</div>
-          <div style="font-size:.82rem;color:var(--muted);line-height:1.6;max-width:760px">
-            Ao abrir "Cadastro Pagar" ou "Cadastro Receber" pela primeira vez, as datas inicial e
-            final partem automaticamente dos dias configurados aqui, olhando pro lado que faz
-            sentido pro status filtrado: com "Status" em Todas, Pendentes ou Canceladas (filtra por
-            <strong>vencimento</strong>), vai de hoje até hoje + dias; com "Pagas"/"Recebidas" (filtra
-            por data de pagamento/recebimento), vai de hoje − dias até hoje. Deixe em branco para
-            não preencher as datas automaticamente. Vale só para <strong id="cfgFiltroEmpresaNome">—</strong>.
-          </div>
-        </div>
-
-        <div style="margin:0 24px 24px;background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 6px rgba(0,0,0,.08);max-width:420px">
-          <div class="form-row">
-            <div class="form-group">
-              <label>Dias a partir de hoje</label>
-              <input type="number" id="cfgFiltroDias" step="1" min="0" placeholder="Ex: 60" />
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;gap:14px;margin-top:8px">
-            <button class="btn btn-primary" id="btnSalvarConfigFiltro" onclick="salvarConfigFiltro()">Salvar</button>
-            <span id="configFiltroStatus" style="font-size:.82rem"></span>
-          </div>
-        </div>
-      </div><!-- /secConfigFiltro -->
-
       <!-- ── SEÇÃO: LANÇAMENTO AVULSO DE CONTA A PAGAR (ação rápida) ──── -->
       <div id="secLancamentoAvulso" style="display:none">
         <div class="panel" style="display:block">
@@ -1862,7 +1829,6 @@
       vendadet:    'secVendaDet',
       financeiro:  'secFinanceiro',
       configlancpagar: 'secConfigLancPagar',
-      configfiltro: 'secConfigFiltro',
       lancamentoavulso: 'secLancamentoAvulso',
       cadastropagar: 'secCadastroPagar',
       cadastroreceber: 'secCadastroReceber',
@@ -1884,16 +1850,14 @@
     document.getElementById('navCadastroPagar').classList.toggle('active',   section === 'cadastropagar');
     document.getElementById('navLancamentoAvulso').classList.toggle('active', section === 'lancamentoavulso');
     document.getElementById('navConfigLancPagar').classList.toggle('active', section === 'configlancpagar');
-    document.getElementById('navConfigFiltro').classList.toggle('active', section === 'configfiltro');
     if (section === 'configlancpagar') carregarConfigLancPagar();
-    if (section === 'configfiltro') carregarConfigFiltro();
     if (section === 'lancamentoavulso') limparLancamentoPagar();
     if (section === 'cadastropagar' && !_crudPagarCarregado) {
-      aplicarFiltroPadraoDatas('crudPagar_de', 'crudPagar_ate', 'crudPagarStatus');
+      aplicarDataAtualPadrao('crudPagar_de', 'crudPagar_ate');
       gerarCadastroPagar();
     }
     if (section === 'cadastroreceber' && !_crudReceberCarregado) {
-      aplicarFiltroPadraoDatas('crudReceber_de', 'crudReceber_ate', 'crudReceberStatus');
+      aplicarDataAtualPadrao('crudReceber_de', 'crudReceber_ate');
       gerarCadastroReceber();
     }
     document.getElementById('sidebar').classList.remove('open');
@@ -3879,49 +3843,6 @@
     }
   }
 
-  // ── CONFIGURAÇÕES: FILTRO PADRÃO DE DATAS (Cadastro Pagar/Receber) ───────
-  // Janela em dias aplicada só na primeira abertura da tela (ver
-  // aplicarFiltroPadraoDatas, mais abaixo) e só quando o filtro é por
-  // vencimento — mesma regra de "config do usuário do app, não do admin"
-  // usada em Padrões de Lançamento.
-  function carregarConfigFiltro() {
-    document.getElementById('cfgFiltroEmpresaNome').textContent = _empresa?.nome ?? '—';
-    const statusEl = document.getElementById('configFiltroStatus');
-    statusEl.textContent = ''; statusEl.style.color = '';
-    document.getElementById('cfgFiltroDias').value = _empresa?.padrao_filtro_dias ?? '';
-  }
-
-  async function salvarConfigFiltro() {
-    const statusEl = document.getElementById('configFiltroStatus');
-    statusEl.textContent = ''; statusEl.style.color = '';
-    const diasRaw = document.getElementById('cfgFiltroDias').value.trim();
-
-    const btn = document.getElementById('btnSalvarConfigFiltro');
-    btn.disabled = true;
-    btn.innerHTML = '<span class="loader"></span> Salvando…';
-
-    try {
-      const res = await fetch(`/api/empresas/${_empresa.id}/filtro-padrao`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ padrao_filtro_dias: diasRaw === '' ? null : Number(diasRaw) })
-      });
-      if (!res.ok) { const d = await res.json(); throw new Error(d.erro || 'Erro ao salvar.'); }
-      const atualizado = await res.json();
-      Object.assign(_empresa, atualizado);
-      const idx = _empresas.findIndex(e => e.id === _empresa.id);
-      if (idx >= 0) Object.assign(_empresas[idx], atualizado);
-      statusEl.textContent = 'Salvo com sucesso!';
-      statusEl.style.color = 'var(--green)';
-    } catch (err) {
-      statusEl.textContent = err.message;
-      statusEl.style.color = 'var(--red)';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Salvar';
-    }
-  }
-
   // ── CRUD: CADASTRO DE CONTAS A PAGAR / A RECEBER ─────────────────────────
   // Listagem paginada (FIRST/SKIP no Firebird, via /sgbrbi/contas/apagar-paginado
   // e /sgbrbi/contas/areceber-paginado) + modal completo pra criar/editar/consultar,
@@ -3987,36 +3908,15 @@
     return { quitada: '', cancelada: '' };
   }
 
-  // Preenche a data inicial/final do filtro na primeira abertura da tela, a
-  // partir do "Filtro Padrão" configurado em Configurações (padrao_filtro_dias).
-  // A janela olha pra um lado ou outro dependendo de qual data o status atual
-  // usa pra filtrar (ver statusParaParamsCrud):
-  //  - por vencimento (Todas/Pendentes/Canceladas, olhando pra frente):
-  //    inicial = hoje, final = hoje + dias.
-  //  - por pagamento/recebimento (Pagas/Recebidas, olhando pra trás):
-  //    inicial = hoje - dias, final = hoje.
-  // Nunca sobrescreve datas que o usuário já tiver preenchido.
-  function aplicarFiltroPadraoDatas(deId, ateId, statusId) {
-    const dias = Number(_empresa?.padrao_filtro_dias);
-    if (!Number.isInteger(dias) || dias <= 0) return;
-
+  // Preenche a data inicial e final do filtro, na primeira abertura da tela,
+  // com a data atual do sistema (dispositivo do usuário) — não sobrescreve
+  // datas que o usuário já tiver preenchido.
+  function aplicarDataAtualPadrao(deId, ateId) {
     const deEl = document.getElementById(deId), ateEl = document.getElementById(ateId);
     if (deEl.value || ateEl.value) return;
-
-    const { quitada } = statusParaParamsCrud(document.getElementById(statusId).value);
-    const ymd = dt => `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`;
     const hojeYMD = dataHojeYMD();
-    const [y, m, d] = hojeYMD.split('-').map(Number);
-
-    if (quitada === 'SIM') {
-      // Pagas/Recebidas: janela pra trás, terminando hoje.
-      deEl.value = ymd(new Date(y, m - 1, d - dias));
-      ateEl.value = hojeYMD;
-    } else {
-      // Todas/Pendentes/Canceladas: janela pra frente, começando hoje.
-      deEl.value = hojeYMD;
-      ateEl.value = ymd(new Date(y, m - 1, d + dias));
-    }
+    deEl.value = hojeYMD;
+    ateEl.value = hojeYMD;
   }
 
   // ═══ CONTAS A PAGAR ═══

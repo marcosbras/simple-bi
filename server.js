@@ -120,26 +120,6 @@ app.put('/api/empresas/:id/lancamento-pagar-padrao', (req, res) => {
   res.json(empresa);
 });
 
-// Janela padrão (dias) do filtro de data nas telas de Cadastro Pagar/Receber
-// — ver gerarCadastroPagar()/gerarCadastroReceber() no front. Também é
-// configuração do usuário do app (não do admin), por isso endpoint próprio,
-// separado do CRUD de empresas.
-app.put('/api/empresas/:id/filtro-padrao', (req, res) => {
-  const id = Number(req.params.id);
-  const dias = req.body.padrao_filtro_dias;
-  const valor = (dias === '' || dias === null || dias === undefined) ? null : Number(dias);
-  if (valor !== null && (!Number.isInteger(valor) || valor < 0))
-    return res.status(400).json({ erro: 'Dias deve ser um número inteiro maior ou igual a zero.' });
-
-  const info = db.prepare(
-    'UPDATE empresas SET padrao_filtro_dias = ? WHERE id = ? AND ativo = 1'
-  ).run(valor, id);
-  if (info.changes === 0) return res.status(404).json({ erro: 'Empresa não encontrada.' });
-
-  const empresa = db.prepare('SELECT id, padrao_filtro_dias FROM empresas WHERE id = ?').get(id);
-  res.json(empresa);
-});
-
 // ── PROXY PARA A FONTE DE DADOS (ERP) ────────────────────────────────────
 // O navegador nunca chama a API do ERP diretamente — sempre esta própria
 // origem. O api_base real fica só no banco, do lado do servidor.
